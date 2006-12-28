@@ -30,13 +30,12 @@ do {							\
     }							\
 } while (0)
 
-#define ERROR(cond,message) 					\
-if (cond) {					\
-	Set_Current_Attr(ATTRIB(RED, GRAY|BRIGHT));	\
-	Print("Failed assertion in %s: %s at %s, line %d\n. Message: %s.\n",\
-		__func__, #cond, __FILE__, __LINE__,message);			\
-	Set_Current_Attr(ATTRIB(BLACK, GRAY)); \
-}
+#define DEBUG(message) 					\
+Set_Current_Attr(ATTRIB(RED, GRAY|BRIGHT));	\
+Print("Failed assertion in %s: at %s, line %d\n. Message: %s.\n",\
+		__func__, __FILE__, __LINE__,message);	\
+Set_Current_Attr(ATTRIB(BLACK, GRAY));
+	
 
 #define TODO(message)					\
 do {							\
