@@ -25,6 +25,7 @@
 #include <geekos/floppy.h>
 #include <geekos/pfat.h>
 #include <geekos/vfs.h>
+#include <geekos/user.h>
 
 
 /*
@@ -98,19 +99,11 @@ static void Mount_Root_Filesystem(void)
 }
 
 
-/* Spawner is a a thread that accomodates the program to be loaded & executed
- * it is started from main.c
- */
 
-void Spawner(unsigned long arg);
+
+
 
 static void Spawn_Init_Process(void)
 {
-  /* this thread will load&run  ELF files, see the rest in lprog.c */
-  Print("Starting the Spawner thread...\n");
-  Start_Kernel_Thread( Spawner, 0, PRIORITY_NORMAL, true );
+    TODO("Spawn the init process");
 }
-
-
-
-

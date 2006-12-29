@@ -2,7 +2,6 @@
  * User program entry point function
  * Copyright (c) 2003, Jeffrey K. Hollingsworth <hollings@cs.umd.edu>
  * Copyright (c) 2004, David H. Hovemeyer <daveho@cs.umd.edu>
- * Copyright (c) 2004, Iulian Neamtiu <neamtiu@cs.umd.edu>
  * $Revision: 1.10 $
  *
  * This is free software.  You are permitted to use,
@@ -19,13 +18,12 @@ void Exit(int exitCode);
  */
 void _Entry(void)
 {
+    struct Argument_Block *argBlock;
 
-    /* Call main(); arguments won't be needed */
-    main(0, 0);
+    /* The argument block pointer is in the ESI register. */
+    __asm__ __volatile__ ("movl %%esi, %0" : "=r" (argBlock));
 
-    /* make the inter-selector jump back */
-  __asm__ __volatile__ ("leave");
-  __asm__ __volatile__ ("lret");
-
+    /* Call main(), and then exit with whatever value it returns. */
+    Exit(main(argBlock->argc, argBlock->argv));
 }
 

@@ -58,6 +58,17 @@ INTERRUPT_STATE_SIZE equ 64
 	add	esp, 8	; skip int num and error code
 %endmacro
 
+; Code to activate a new user context (if necessary), before returning
+; to executing a thread.  Should be called just before restoring
+; registers (because the interrupt context is used).
+%macro Activate_User_Context 0
+	; If the new thread has a user context which is not the current
+	; one, activate it.
+	push    esp                     ; Interrupt_State pointer
+	push    dword [g_currentThread] ; Kernel_Thread pointer
+	call    Switch_To_User_Context
+	add     esp, 8                  ; clear 2 arguments
+%endmacro
 
 ; Number of bytes between the top of the stack and
 ; the interrupt number after the general-purpose and segment
@@ -109,6 +120,8 @@ IMPORT Get_Next_Runnable
 ; Function to put a thread on the run queue.
 IMPORT Make_Runnable
 
+; Function to activate a new user context (if needed).
+IMPORT Switch_To_User_Context
 
 ; Sizes of interrupt handler entry points for interrupts with
 ; and without error codes.  The code in idt.c uses this
@@ -229,6 +242,8 @@ Handle_Interrupt:
 	mov	[g_needReschedule], dword 0
 
 .restore:
+	; Activate the user context, if necessary.
+	Activate_User_Context
 
 	; Restore registers
 	Restore_Registers
@@ -297,6 +312,8 @@ Switch_To_Thread:
 	mov	[g_currentThread], eax
 	mov	esp, [eax+0]
 
+	; Activate the user context, if necessary.
+	Activate_User_Context
 
 	; Restore general purpose and segment registers, and clear interrupt
 	; number and error code.

@@ -297,6 +297,24 @@ static void Setup_Kernel_Thread(
     Push(kthread, 0);  /* gs */
 }
 
+/*
+ * Set up the a user mode thread.
+ */
+/*static*/ void Setup_User_Thread(
+    struct Kernel_Thread* kthread, struct User_Context* userContext)
+{
+    /*
+     * Hints:
+     * - Call Attach_User_Context() to attach the user context
+     *   to the Kernel_Thread
+     * - Set up initial thread stack to make it appear that
+     *   the thread was interrupted while in user mode
+     *   just before the entry point instruction was executed
+     * - The esi register should contain the address of
+     *   the argument block
+     */
+    TODO("Create a new thread to execute in user mode");
+}
 
 
 /*
@@ -480,6 +498,24 @@ struct Kernel_Thread* Start_Kernel_Thread(
     }
 
     return kthread;
+}
+
+/*
+ * Start a user-mode thread (i.e., a process), using given user context.
+ * Returns pointer to the new thread if successful, null otherwise.
+ */
+struct Kernel_Thread*
+Start_User_Thread(struct User_Context* userContext, bool detached)
+{
+    /*
+     * Hints:
+     * - Use Create_Thread() to create a new "raw" thread object
+     * - Call Setup_User_Thread() to get the thread ready to
+     *   execute in user mode
+     * - Call Make_Runnable_Atomic() to schedule the process
+     *   for execution
+     */
+    TODO("Start user thread");
 }
 
 /*

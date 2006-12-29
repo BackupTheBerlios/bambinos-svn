@@ -15,6 +15,7 @@
 #include <geekos/pfat.h>
 #include <geekos/malloc.h>
 #include <geekos/string.h>
+#include <geekos/user.h>
 #include <geekos/elf.h>
 
 
