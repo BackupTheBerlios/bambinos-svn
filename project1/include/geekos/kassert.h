@@ -32,7 +32,7 @@ do {							\
 
 #define DEBUG(message) 					\
 Set_Current_Attr(ATTRIB(RED, GRAY|BRIGHT));	\
-Print("Failed assertion in %s: at %s, line %d\n. Message: %s.\n",\
+Print("Debug message in %s: at %s, line %d\n. Message: %s.\n",\
 		__func__, __FILE__, __LINE__,message);	\
 Set_Current_Attr(ATTRIB(BLACK, GRAY));
 	
