@@ -46,9 +46,6 @@ endif
 ALL_TARGETS := fd.img diskc.img
 
 
-# Kernel source file containing implementation of user address space support
-USER_IMP_C := userseg.c
-
 # Kernel source files
 KERNEL_C_SRCS := idt.c int.c trap.c irq.c io.c \
 	keyboard.c screen.c timer.c \
@@ -56,16 +53,17 @@ KERNEL_C_SRCS := idt.c int.c trap.c irq.c io.c \
 	gdt.c tss.c segment.c \
 	bget.c malloc.c \
 	synch.c kthread.c \
-	user.c $(USER_IMP_C) argblock.c syscall.c dma.c floppy.c \
+	dma.c floppy.c \
 	elf.c blockdev.c ide.c \
 	vfs.c pfat.c bitset.c \
+	lprog.c \
 	main.c
 
 # Kernel object files built from C source files
 KERNEL_C_OBJS := $(KERNEL_C_SRCS:%.c=geekos/%.o)
 
 # Kernel assembly files
-KERNEL_ASM_SRCS := lowlevel.asm
+KERNEL_ASM_SRCS := lowlevel.asm lspawn.asm
 
 
 # Kernel object files build from assembler source files
@@ -88,7 +86,6 @@ COMMON_C_OBJS := $(COMMON_C_SRCS:%.c=common/%.o)
 
 # User libc source files.
 LIBC_C_SRCS := \
-	compat.c process.c\
 	conio.c 
 
 # User libc object files.
@@ -100,8 +97,7 @@ GENERATED_LIBC_SRCS := libc/errno.c
 
 # User program source files.
 USER_C_SRCS := \
-	null.c long.c \
-	shell.c b.c c.c
+	a.c
 # User executables
 USER_PROGS := $(USER_C_SRCS:%.c=user/%.exe)
 
