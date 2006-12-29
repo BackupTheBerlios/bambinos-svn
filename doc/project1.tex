@@ -1,0 +1,26 @@
+\documentclass{article}
+
+\begin{document}
+
+
+
+
+
+\section{ELF}
+
+
+\subsection{Roadmap}
+\begin{itemize}
+  \item check file integrity (if file is not NULL)
+  \item verify correctness of the ``Magic Number'' (first 4 bytes of the ELF Header)%TODO what is the magic number and link 
+  \item verify the maximum number of executable segments GeekOS allows  (defined in EXE\_MAX\_SEGMENTS)%TODO more
+  \item fill in the struct: \textit{Exe\_Format}
+\end{itemize}
+
+
+
+\end{document}
+A struct concisely representing all information needed to
+ * load an execute an executable.
+ */
+struct Exe_Format {
