@@ -54,6 +54,7 @@ typedef struct {
 #define PF_W	0x2	 /* Pages of segment are writable. */
 #define PF_X	0x1	 /* Pages of segment are executable. */
 
+#define ELF_MAGIC_NUMBER 0x7f454c46
 /*
  * A segment of an executable.
  * It specifies a region of the executable file to be loaded
