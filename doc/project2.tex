@@ -1,0 +1,50 @@
+%\documentclass{article}
+
+%\begin{document}
+
+
+\section{}
+
+For this project, you will need to understand segments and local descriptor tables.
+
+
+
+\subsection{Roadmap}
+\begin{itemize}
+  \item In src/geekos/user.c, you will implement the functions Spawn(), which starts a new user process
+  \item and Switch\_To\_User\_Context(), 
+		which is called by the scheduler before executing a thread in order to switch user address spaces if required.
+  \item Exe\_Format data structure passed as a parameter. 
+  		This data structure will be used by the Spawn() function to determine how to load the executable.
+  \item In src/geekos/userseg.c, 
+   		you will implement functions which provide support for the high level operations in src/geekos/user.c.
+   		\subitem Destroy\_User\_Context(), frees the memory resources used by a user process
+   		\subitem Load\_User\_Program() builds the User\_Context structure for a new process by loading parts of the executable program into memory.
+   		\subitem xxx
+\end{itemize}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+%\end{document}
