@@ -3,13 +3,16 @@
 %\begin{document}
 
 
-\section{}
-
-For this project, you will need to understand segments and local descriptor tables.
+\section{User Process}
 
 
+The user process will be loaded as a single, unseperated chunk in the physical memory.
+To provide memory protection for user process, GeekOS uses segmentation.
+A segment provides a private adress space inside the user process. This private adress space is used for the text and data segments of the process.
 
-\subsection{Roadmap}
+
+
+\subsection{Roadmap (this section is just copied)}
 \begin{itemize}
   \item In src/geekos/user.c, you will implement the functions Spawn(), which starts a new user process
   \item and Switch\_To\_User\_Context(), 
@@ -20,7 +23,11 @@ For this project, you will need to understand segments and local descriptor tabl
    		you will implement functions which provide support for the high level operations in src/geekos/user.c.
    		\subitem Destroy\_User\_Context(), frees the memory resources used by a user process
    		\subitem Load\_User\_Program() builds the User\_Context structure for a new process by loading parts of the executable program into memory.
-   		\subitem xxx
+   		\subitem The Copy\_From_User() and Copy\_To\_User() functions copy data between the user address space and the kernel address space. 
+   		\subitem The Switch\_To\_Address\_Space() function activates a user address space by loading the processor's LDT register with the LDT of a process.
+   \item In src/geekos/kthread.c, you will implement functions which take a completed User\_Context data structure and create a thread which is ready to execute in user mode. 
+   \item The Setup_User_Thread()
+   \item Start\_User_Thread() is a higher level operation which takes a User\_Context object and uses it to start
 \end{itemize}
 
 
