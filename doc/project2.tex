@@ -25,12 +25,17 @@ A segment provides a private adress space inside the user process. This private 
 
 \subsection{Memory Segments}
 A memory segment consists of a region of memory and the privilege level that is required to access the memory.
+Features of memory segments:
+\begin{itemize}
+  \item allow programms to use relative memory references. //TODO which programms
+  \item due to relative memory references linking is easy: it doesn't need to specify where a program will sit in memory, only where the parts of the program will be //TODO nit guat formuliert
+  \item 
+\end{itemize}
 
 
 
 
-
-\subsection{Roadmap (this section is just copied)}
+\subsection{Roadmap for project2 (this section is just copied)}
 \begin{itemize}
   \item In src/geekos/user.c, you will implement the functions Spawn(), which starts a new user process
   \item and Switch\_To\_User\_Context(), 
@@ -39,10 +44,10 @@ A memory segment consists of a region of memory and the privilege level that is 
   		This data structure will be used by the Spawn() function to determine how to load the executable.
   \item In src/geekos/userseg.c, 
    		you will implement functions which provide support for the high level operations in src/geekos/user.c.
-   		\subitem Destroy\_User\_Context(), frees the memory resources used by a user process
-   		\subitem Load\_User\_Program() builds the User\_Context structure for a new process by loading parts of the executable program into memory.
-   		\subitem The Copy\_From\_User() and Copy\_To\_User() functions copy data between the user address space and the kernel address space. 
-   		\subitem The Switch\_To\_Address\_Space() function activates a user address space by loading the processor's LDT register with the LDT of a process.
+   \subitem Destroy\_User\_Context(), frees the memory resources used by a user process
+   \subitem Load\_User\_Program() builds the User\_Context structure for a new process by loading parts of the executable program into memory.
+   \subitem The Copy\_From\_User() and Copy\_To\_User() functions copy data between the user address space and the kernel address space. 
+   \subitem The Switch\_To\_Address\_Space() function activates a user address space by loading the processor's LDT register with the LDT of a process.
    \item In src/geekos/kthread.c, you will implement functions which take a completed User\_Context data structure and create a thread which is ready to execute in user mode. 
    \item The Setup\_User\_Thread()
    \item Start\_User\_Thread() is a higher level operation which takes a User\_Context object and uses it to start
