@@ -1,14 +1,32 @@
-%\documentclass{article}
-
-%\begin{document}
-
-
 \section{User Process}
 
-
+Since the kernel process run whith full privileges, we need a user process to run programs executing safely, at lower privilege.
+The user process is a mechanism to protect the operating system from malicious code. A program can do following bad things:
+\begin{itemize}
+  \item it can crash the operating system
+  \item it can crash other user/kernel threads
+  \item access control, to protect data and information of disk and/or other processes/threads
+  \item incorrect usage e.g. of hardware
+  \item TODO
+\end{itemize}
+How can you avoid these sorts of mistake, by:
+\begin{itemize}
+  \item memory protection
+  \item limit the set of machine operations
+  \item TODO
+\end{itemize}
 The user process will be loaded as a single, unseperated chunk in the physical memory.
 To provide memory protection for user process, GeekOS uses segmentation.
 A segment provides a private adress space inside the user process. This private adress space is used for the text and data segments of the process.
+
+
+
+\section{Memory Management}
+
+\subsection{Memory Segments}
+A memory segment consists of a region of memory and the privilege level that is required to access the memory.
+
+
 
 
 
@@ -23,35 +41,9 @@ A segment provides a private adress space inside the user process. This private 
    		you will implement functions which provide support for the high level operations in src/geekos/user.c.
    		\subitem Destroy\_User\_Context(), frees the memory resources used by a user process
    		\subitem Load\_User\_Program() builds the User\_Context structure for a new process by loading parts of the executable program into memory.
-   		\subitem The Copy\_From_User() and Copy\_To\_User() functions copy data between the user address space and the kernel address space. 
+   		\subitem The Copy\_From\_User() and Copy\_To\_User() functions copy data between the user address space and the kernel address space. 
    		\subitem The Switch\_To\_Address\_Space() function activates a user address space by loading the processor's LDT register with the LDT of a process.
    \item In src/geekos/kthread.c, you will implement functions which take a completed User\_Context data structure and create a thread which is ready to execute in user mode. 
-   \item The Setup_User_Thread()
-   \item Start\_User_Thread() is a higher level operation which takes a User\_Context object and uses it to start
+   \item The Setup\_User\_Thread()
+   \item Start\_User\_Thread() is a higher level operation which takes a User\_Context object and uses it to start
 \end{itemize}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-%\end{document}

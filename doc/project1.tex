@@ -1,10 +1,17 @@
-%\documentclass{article}
+\section{GeekOS}
 
-%\begin{document}
+\begin{itemize}
+  \item GeekOS uses files to store executeables, these files are in ELF format.
+  \item 
+\end{itemize}
 
-
-
-
+\subsection{dangling points}
+In GeekOS loading ELF executeables is straight forward.
+\begin{itemize}
+  \item First you need to locate the ELF program headers
+  \item you will fill in the fields of the \textit{Exe\_Format} data structure in the function \textit{Parse\_ELF\_Executable}
+  \item 
+\end{itemize}
 
 \section{ELF}
 Every ELF file consists of several  
@@ -24,7 +31,7 @@ Every ELF file consists of several
 
 
 
-\subsection{Roadmap}
+\subsection{Roadmap for project1}
 \begin{itemize}
   \item check file integrity (if file is not NULL)
   \item verify correctness of the ``Magic Number'' (first 4 bytes of the ELF Header)%TODO what is the magic number and link 
@@ -32,6 +39,3 @@ Every ELF file consists of several
   \item fill in the struct: \textit{Exe\_Format}
 \end{itemize}
 
-
-
-%\end{document}
