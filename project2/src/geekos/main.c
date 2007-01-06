@@ -98,12 +98,14 @@ static void Mount_Root_Filesystem(void)
 
 }
 
-
-
-
-
-
 static void Spawn_Init_Process(void)
 {
-    TODO("Spawn the init process");
+  Print("Starting a new user thread...\n");
+  
+  int pid;
+  struct Kernel_Thread *pThread;
+  pid = Spawn("/c/shell.exe", "a.exe", &pThread);
+  Print("pid: %i", pid);
+  
 }
+
