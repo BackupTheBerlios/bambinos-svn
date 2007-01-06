@@ -21,6 +21,7 @@
 #include <geekos/elf.h>
 #include <geekos/vfs.h>
 
+
 /* housekeeping routines, not much relevant */
 extern void Trampoline(unsigned short CodeSelector, unsigned short DataSelector, unsigned long entry);
 static void Printrap_Handler(struct Interrupt_State* state);
