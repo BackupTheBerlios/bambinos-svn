@@ -178,7 +178,6 @@ void Init_Timer(void)
 
     Print("Initializing timer...\n");
 
-
     /* Calibrate for delay loop */
     Calibrate_Delay();
     Print("Delay loop: %d iterations per tick\n", s_spinCountPerTick);
