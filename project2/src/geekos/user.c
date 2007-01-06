@@ -98,7 +98,40 @@ int Spawn(const char *program, const char *command, struct Kernel_Thread **pThre
      * If all goes well, store the pointer to the new thread in
      * pThread and return 0.  Otherwise, return an error code.
      */
-    TODO("Spawn a process by reading an executable from a filesystem");
+    //TODO("Spawn a process by reading an executable from a filesystem");
+    
+	int pid;
+	int retval;
+	void *buffer;
+	ulong_t fileLength;
+
+	/* load the entire executable into a memory buffer */
+	retval = Read_Fully(program, &buffer, &fileLength);
+	if (retval != 0) {
+		Print("Fehler beim Laden des ELF-Headers");
+		return (-1);	
+	} 
+
+	if (retval == 0) {
+    	/*	
+		 * verify that the executable is valid, and populate an Exe_Format data 
+		 * structure describing how the executable should be loaded
+		 */
+		struct Exe_Format exeFormat;
+		retval = Parse_ELF_Executable(buffer, fileLength, &exeFormat);	
+		
+		struct User_Context *pCurrent_User_Context;
+		//sCurrent_User_Context = (**pThread).userContext;
+		retval = Load_User_Program(buffer, fileLength, &exeFormat, program, &pCurrent_User_Context);
+		if (retval == 0) {
+			Print("Program loaded successfully\n");		
+		}
+		Start_User_Thread(pCurrent_User_Context, true);
+	}
+	
+	pid = (*pThread)->pid;
+	
+	return pid;
 }
 
 /*
@@ -117,6 +150,16 @@ void Switch_To_User_Context(struct Kernel_Thread* kthread, struct Interrupt_Stat
      * the Set_Kernel_Stack_Pointer() and Switch_To_Address_Space()
      * functions.
      */
-    TODO("Switch to a new user address space, if necessary");
+    //TODO("Switch to a new user address space, if necessary");
+    
+    if (kthread->esp != 0) {
+    	Set_Kernel_Stack_Pointer(kthread->esp);
+    }
+    
+    if (kthread->userContext != NULL) {
+    	Switch_To_Address_Space(kthread->userContext);
+    }
+    
+    
 }
 
