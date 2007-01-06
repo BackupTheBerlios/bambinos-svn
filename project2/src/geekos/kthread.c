@@ -313,7 +313,13 @@ static void Setup_Kernel_Thread(
      * - The esi register should contain the address of
      *   the argument block
      */
-    TODO("Create a new thread to execute in user mode");
+    //TODO("Create a new thread to execute in user mode");
+    void Attach_User_Context(struct Kernel_Thread*, struct User_Context*);
+    Attach_User_Context(kthread, userContext);
+	
+	//Push(kthread, (*userContext).dsSelector);
+	
+    
 }
 
 
@@ -515,7 +521,14 @@ Start_User_Thread(struct User_Context* userContext, bool detached)
      * - Call Make_Runnable_Atomic() to schedule the process
      *   for execution
      */
-    TODO("Start user thread");
+    //TODO("Start user thread");
+    struct Kernel_Thread *sKernel_Thread;
+    sKernel_Thread = Create_Thread(PRIORITY_NORMAL, true);
+
+  
+    Setup_User_Thread(sKernel_Thread, userContext);
+
+    return sKernel_Thread;
 }
 
 /*
