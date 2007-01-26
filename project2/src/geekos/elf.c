@@ -31,6 +31,7 @@
 int Parse_ELF_Executable(char *exeFileData, ulong_t exeFileLength,
     struct Exe_Format *exeFormat)
 {
+	// ruap, lacki
     int i=0;
     int iNumber_Of_Segments = 0;
 
