@@ -17,6 +17,7 @@
 #include <geekos/vfs.h>
 #include <geekos/tss.h>
 #include <geekos/user.h>
+#include <geekos/elf.h>
 
 /*
  * This module contains common functions for implementation of user
@@ -58,12 +59,12 @@ void Detach_User_Context(struct Kernel_Thread* kthread)
     if (old != 0) {
 	int refCount;
 
-	Disable_Interrupts();
+	Disable_Interrupts();	
         --old->refCount;
 	refCount = old->refCount;
 	Enable_Interrupts();
 
-	/*Print("User context refcount == %d\n", refCount);*/
+	//Print("User context refcount == %d\n", refCount);
         if (refCount == 0)
             Destroy_User_Context(old);
     }
@@ -85,6 +86,8 @@ void Detach_User_Context(struct Kernel_Thread* kthread)
  */
 int Spawn(const char *program, const char *command, struct Kernel_Thread **pThread)
 {
+	
+	//lacki
     /*
      * Hints:
      * - Call Read_Fully() to load the entire executable into a memory buffer
@@ -107,8 +110,9 @@ int Spawn(const char *program, const char *command, struct Kernel_Thread **pThre
 
 	/* load the entire executable into a memory buffer */
 	retval = Read_Fully(program, &buffer, &fileLength);
-	if (retval != 0) {
-		Print("Fehler beim Laden des ELF-Headers");
+	if (retval < 0) {
+		//Print("Fehler beim Laden des ELF-Headers");
+		Print("Command \"%s\" not found. ", program);
 		return (-1);	
 	} 
 
@@ -118,15 +122,31 @@ int Spawn(const char *program, const char *command, struct Kernel_Thread **pThre
 		 * structure describing how the executable should be loaded
 		 */
 		struct Exe_Format exeFormat;
-		retval = Parse_ELF_Executable(buffer, fileLength, &exeFormat);	
+		retval = Parse_ELF_Executable((char *)buffer, fileLength, &exeFormat);
+		
+		if (retval < 0) {
+			DEBUG("Error parsing ELF executable\n");
+		} else {
+			Print("parsing executable: SUCCESS \n");
+		}
 		
 		struct User_Context *pCurrent_User_Context;
-		//sCurrent_User_Context = (**pThread).userContext;
+		
+		pCurrent_User_Context = (*pThread)->userContext;
 		retval = Load_User_Program(buffer, fileLength, &exeFormat, program, &pCurrent_User_Context);
-		if (retval == 0) {
-			Print("Program loaded successfully\n");		
+		if (retval < 0) {
+			DEBUG("Error loading User Program\n");		
+		} else {
+			Print("loading user program: SUCCESS \n");
 		}
-		Start_User_Thread(pCurrent_User_Context, true);
+		
+		*pThread = Start_User_Thread(pCurrent_User_Context, false);
+		if (pThread == NULL) {
+			DEBUG("Error starting User Thread");
+		} else {
+			Print("starting user_thread: SUCCESS \n");
+		}
+		
 	}
 	
 	pid = (*pThread)->pid;
@@ -145,6 +165,7 @@ int Spawn(const char *program, const char *command, struct Kernel_Thread **pThre
  */
 void Switch_To_User_Context(struct Kernel_Thread* kthread, struct Interrupt_State* state)
 {
+	//lacki
     /*
      * Hint: Before executing in user mode, you will need to call
      * the Set_Kernel_Stack_Pointer() and Switch_To_Address_Space()
@@ -153,7 +174,7 @@ void Switch_To_User_Context(struct Kernel_Thread* kthread, struct Interrupt_Stat
     //TODO("Switch to a new user address space, if necessary");
     
     if (kthread->esp != 0) {
-    	Set_Kernel_Stack_Pointer(kthread->esp);
+    	Set_Kernel_Stack_Pointer(((ulong_t)kthread->stackPage)+PAGE_SIZE);
     }
     
     if (kthread->userContext != NULL) {
