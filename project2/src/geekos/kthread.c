@@ -16,6 +16,12 @@
 #include <geekos/string.h>
 #include <geekos/kthread.h>
 #include <geekos/malloc.h>
+#include <geekos/user.h>
+
+/*
+ * Include lowlevel funktions from lowlevel.asm
+ */ 
+ulong_t Get_Current_EFLAGS(void);
 
 
 /* ----------------------------------------------------------------------
@@ -160,7 +166,7 @@ static __inline__ void Push(struct Kernel_Thread* kthread, ulong_t value)
  */
 static void Destroy_Thread(struct Kernel_Thread* kthread)
 {
-
+	//lacki
     /* Dispose of the thread's memory. */
     Disable_Interrupts();
     Free_Page(kthread->stackPage);
@@ -303,6 +309,7 @@ static void Setup_Kernel_Thread(
 /*static*/ void Setup_User_Thread(
     struct Kernel_Thread* kthread, struct User_Context* userContext)
 {
+	//lacki
     /*
      * Hints:
      * - Call Attach_User_Context() to attach the user context
@@ -314,10 +321,56 @@ static void Setup_Kernel_Thread(
      *   the argument block
      */
     //TODO("Create a new thread to execute in user mode");
-    void Attach_User_Context(struct Kernel_Thread*, struct User_Context*);
-    Attach_User_Context(kthread, userContext);
+    
+	Attach_User_Context(kthread, userContext);
+    
+    
+	/* data selector */
+	Push(kthread, (*userContext).dsSelector);
+	/* stackPointer */
+	Push(kthread, (*userContext).stackPointerAddr);
 	
-	//Push(kthread, (*userContext).dsSelector);
+	/*
+	 * EFLAGS_IF is a 32bit int with the 9th bit 1 and the other bits 0
+	 * EFLAGS OR EFLAGS_IF return the EFLAGS with bit 9 set to 1
+	 * EFLAGS_IF is defined in int.h
+	 */
+	//Print("original eflags: %lu \n", Get_Current_EFLAGS()); 
+	ulong_t eflags = Get_Current_EFLAGS() | EFLAGS_IF;
+	//Print("current eflags: %lu \n", eflags);
+	Push(kthread, eflags);
+	
+	/* code Selector */
+	Push(kthread, (*userContext).csSelector);
+	/* code entry address */
+	Push(kthread, (*userContext).entryAddr);
+	/* error code */
+	Push(kthread, 0);
+	/* Interrupt Number */
+	Push(kthread, 0);
+	
+	/* EAX */
+	Push(kthread, 0);
+	/* EBX */
+	Push(kthread, 0);
+	/* ECX */
+	Push(kthread, 0);
+	/* EDX */
+	Push(kthread, 0);
+		/* esi */
+	Push(kthread, (*userContext).argBlockAddr);
+	/* EDI */
+	Push(kthread, 0);
+	/* EBP */
+	Push(kthread, 0);
+	/* ds */
+	Push(kthread, (*userContext).dsSelector);
+	/* es */
+	Push(kthread, (*userContext).dsSelector);
+	/* fs */
+	Push(kthread, (*userContext).dsSelector);
+	/* gs */
+	Push(kthread, (*userContext).dsSelector);
 	
     
 }
@@ -513,6 +566,7 @@ struct Kernel_Thread* Start_Kernel_Thread(
 struct Kernel_Thread*
 Start_User_Thread(struct User_Context* userContext, bool detached)
 {
+	//lacki
     /*
      * Hints:
      * - Use Create_Thread() to create a new "raw" thread object
@@ -521,14 +575,21 @@ Start_User_Thread(struct User_Context* userContext, bool detached)
      * - Call Make_Runnable_Atomic() to schedule the process
      *   for execution
      */
-    //TODO("Start user thread");
-    struct Kernel_Thread *sKernel_Thread;
-    sKernel_Thread = Create_Thread(PRIORITY_NORMAL, true);
+    //TODO("Start user thread");    
+    
+	struct Kernel_Thread *pKernel_Thread = Create_Thread(PRIORITY_NORMAL, detached);
 
-  
-    Setup_User_Thread(sKernel_Thread, userContext);
-
-    return sKernel_Thread;
+	if (pKernel_Thread != 0) 
+	{
+	   	Setup_User_Thread(pKernel_Thread, userContext);
+    	Make_Runnable_Atomic(pKernel_Thread);
+    	return pKernel_Thread;
+    }
+	else {
+		DEBUG("ERROR: Start_User_Thread - not able to create thread");
+		return 0;
+	}
+    
 }
 
 /*
@@ -645,6 +706,8 @@ void Exit(int exitCode)
     /* Remove the thread's implicit reference to itself. */
     Detach_Thread(g_currentThread);
 
+    
+    
     /*
      * Schedule a new thread.
      * Since the old thread wasn't placed on any
