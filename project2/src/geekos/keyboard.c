@@ -116,7 +116,7 @@ static const Keycode s_scanTableWithShift[] = {
     '"', '~', KEY_LSHIFT, '|',          /* 0x28 - 0x2B */
     'Z', 'X', 'C', 'V',                 /* 0x2C - 0x2F */
     'B', 'N', 'M', '<',                 /* 0x30 - 0x33 */
-    '>', '?', KEY_RSHIFT, KEY_PRINTSCRN, /* 0x34 - 0x37 */
+    '>', '/', KEY_RSHIFT, KEY_PRINTSCRN, /* 0x34 - 0x37 */
     KEY_LALT, ' ', KEY_CAPSLOCK, KEY_F1, /* 0x38 - 0x3B */
     KEY_F2, KEY_F3, KEY_F4, KEY_F5,     /* 0x3C - 0x3F */
     KEY_F6, KEY_F7, KEY_F8, KEY_F9,     /* 0x40 - 0x43 */
