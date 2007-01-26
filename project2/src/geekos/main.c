@@ -100,12 +100,21 @@ static void Mount_Root_Filesystem(void)
 
 static void Spawn_Init_Process(void)
 {
+  //lacki
   Print("Starting a new user thread...\n");
   
   int pid;
   struct Kernel_Thread *pThread;
-  pid = Spawn("/c/shell.exe", "a.exe", &pThread);
-  Print("pid: %i", pid);
   
+  pid = Spawn("/c/shell.exe", "shell.exe", &pThread);
+  Print("pid: %i\n", pid);
+  
+  if (pid < 0) {
+      Print("not able to spawn shell.exe\n");
+  } else {
+      /* Wait for it to exit */
+      int exitCode = Join(pThread);
+      Print("shell.exe exited with code %d\n", exitCode);
+  }
 }
 
