@@ -1,7 +1,12 @@
 package compiler;
 
+import sun.security.action.GetBooleanAction;
+
 public class Parser {
 
+	
+	
+	
 	/**
 	 * Start Compiling 
 	 * 		-> fetch token from Scanner
@@ -12,7 +17,7 @@ public class Parser {
 	 */
 	public static void main(String[] args) {
 		
-		
+		Scanner.get();
 		
 
 	}
