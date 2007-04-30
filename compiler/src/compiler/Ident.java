@@ -71,9 +71,11 @@ public class Ident {
 
 		STRONG_SYM, // Grenze
 
+		TPACKAGE,
+		TIMPORT,
 		TIDENT,
 
-		TIF, TELSE, TWHILE
+		TIF, TELSE, TWHILE, TPUBLIC
 
 	}
 
