@@ -23,6 +23,7 @@ public class Scanner {
 	 */
 	public static Ident getSym() {
 
+		ident.ident_type=TPACKAGE;
 		return ident;
 
 	}

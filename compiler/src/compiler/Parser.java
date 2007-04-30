@@ -19,7 +19,6 @@ public class Parser {
 
 	public static void main(String[] args) {
 
-		Scanner.getSym();
 		Scanner.testSetID(TOR);
 		program();
 	}
@@ -32,12 +31,15 @@ public class Parser {
 		switch (nextToken().ident_type) {
 		case TPACKAGE:
 			packageDeclaration();
+			break;
 		case TIMPORT:
 			packageImport();
+			break;
 		case TPUBLIC:
 			classDeclaration();
+			break;
 		default:
-			error("Illegal class header at line: ", nextToken().line_number);
+			error("Illegal class header, at line: ", nextToken().line_number);
 			classDeclaration(); // go on parsing
 		}
 	}
