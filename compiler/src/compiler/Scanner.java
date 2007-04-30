@@ -1,7 +1,6 @@
 package compiler;
 
 import static compiler.Ident.TokenID.*;
-
 import compiler.Ident.TokenID;
 
 public class Scanner {
@@ -23,7 +22,6 @@ public class Scanner {
 	 */
 	public static Ident getSym() {
 
-		ident.ident_type=TPACKAGE;
 		return ident;
 
 	}
