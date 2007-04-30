@@ -1,5 +1,9 @@
 package compiler;
 
+import static compiler.Ident.TokenID.*;
+
+import compiler.Ident.TokenID;
+
 public class Scanner {
 	
 	
@@ -30,20 +34,24 @@ public class Scanner {
 	static Ident ident = new Ident();
 	static Ident identLook = new Ident();
 	
-	public static void get(){
+	void testSetID(TokenID tid){
 		
-		//return null;
-		int x=5;
-		System.out.println("Hello");
-		
+		ident.ident_number=TAND;
 	}
 	
-	/*
-	 * what is the next one ?
-	 * 
-	 */
-	public static void lookadhead(){
+	
+	public static Ident get(){
 		
+		return ident;
+		
+	}
+
+	
+	
+	
+	public static Ident lookadhead(){
+		
+		return identLook;
 		
 	}
 	
