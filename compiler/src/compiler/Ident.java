@@ -1,8 +1,17 @@
 package compiler;
 
+/**
+ * Class Ident serves as interface for the Parser and Scanner communication.
+ *  
+ * TokenIDs are ordered. Week Symbols first, then Strong symbols. 
+ * Placeholder STRONG_SYM is the boarder.
+ * 
+ * @author rgratz
+ * 
+ */
 public class Ident {
 
-	TokenID ident_number; // type
+	TokenID ident_type; // type
 	String ident_value; // value
 
 	int line_number;
@@ -15,7 +24,7 @@ public class Ident {
 		return new String(ident_value);
 	}
 
-	public enum TokenID {
+	public static enum TokenID {
 
 		TNULL, TDIV, // "/"
 		// MOD,
@@ -48,7 +57,8 @@ public class Ident {
 		 * Strong symbol kommt und faengt dann an wieder zu parsen.
 		 * 
 		 * Alle Strong Symbols fangen einfach bei einem hoeherem Integer Wert
-		 * an. Bei Enum ordinal Zahl. Man nennt das naechste strong symbol einen Synchronization point
+		 * an. Bei Enum ordinal Zahl. Man nennt das naechste strong symbol einen
+		 * Synchronization point
 		 * 
 		 * strong symbols bei uns: class package import methods declaration
 		 * (public methods call (in EBNF nachtragen) if while declarations
@@ -60,12 +70,10 @@ public class Ident {
 		 */
 
 		STRONG_SYM, // Grenze
-		
+
 		TIDENT,
-		
-		TIF,
-		TELSE,
-		TWHILE
+
+		TIF, TELSE, TWHILE
 
 	}
 
