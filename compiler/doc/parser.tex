@@ -1,12 +1,14 @@
 \section{Parser}
 
+The first set is very interesting for a top down parser. The parser compares the actual token with the first-sets symbol and takes decisions between alternatives. To guarantee that the decision between two alternatives is correct, the first set of the alternatives must be disjunctive. 
+
 % TODO umschreiben (ANFANG)
-We defined the first-sets and follow-sets to check that we can really achieve that a lookahead of one symbol is sufficient.
+%We defined the first-sets and follow-sets to check that we can really achieve that a lookahead of one symbol is sufficient.
 
-The first set very interesting for a top down analysis, because it determines the progress of the analysis.
-The first set of a node contains all token, by which the parser will be guided to the node.
+%The first set very interesting for a top down analysis, because it determines the progress of the analysis.
+%The first set of a node contains all token, by which the parser will be guided to the node.
 
-If the actual text isn't matched by one of the token of the first set, an other node will be chosen, namely the node with the first set that contains a token, which matches. If there is no such alternative the parsing is stopped with an error message. To guarantee that the decision between alternatives is definite, the first sets of the alternatives must be disjunctive, i.e.: there may not be a token contained in two alternative first sets. 
+%If the actual text isn't matched by one of the token of the first set, an other node will be chosen, namely the node with the first set that contains a token, which matches. If there is no such alternative the parsing is stopped with an error message. To guarantee that the decision between alternatives is definite, the first sets of the alternatives must be disjunctive, i.e.: there may not be a token contained in two alternative first sets. 
 
 % TODO umschreiben (ENDE)
 
@@ -48,3 +50,15 @@ If the actual text isn't matched by one of the token of the first set, an other 
 	digit\_non\_zero & 1 2 3 4 5 6 7 8 9 \\
 	digit\_zero & 0 \\
 \end{tabular}
+
+
+\begin{figure}
+	\begin{center}
+	\includegraphics[scale=0.4]{Diagram_Small.png}
+% Diagram_Small.eps: 300dpi, width=10.83cm, height=12.67cm, bb=0 0 1279 1497 ,bb=0 0 1279 1497
+% width=15cm,height=15cm
+	
+	\label{dep_diagram}
+	\caption {Dependencies representation of parsing procedures (simplified).}
+	\end{center}
+\end{figure}
