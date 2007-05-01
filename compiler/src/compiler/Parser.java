@@ -16,19 +16,21 @@ public class Parser {
 	 * Code Generation will stop on any parsing error!
 	 */
 	static boolean setCodeGeneration = true;
-
+	static Ident currentToken = new Ident();
+	
 	public static void main(String[] args) {
 
 		Scanner.testSetID(TOR);
 		program();
 	}
 
-	static Ident nextToken() {
-		return Scanner.getSym();
+	static void nextToken() {
+		currentToken=Scanner.getSym();
 	}
 
 	static private void program() {
-		switch (nextToken().ident_type) {
+		nextToken();
+		switch (currentToken.ident_type) {
 		case TPACKAGE:
 			packageDeclaration();
 			break;
@@ -39,7 +41,7 @@ public class Parser {
 			classDeclaration();
 			break;
 		default:
-			error("Illegal class header, at line: ", nextToken().line_number);
+			error("Illegal class header, at line: ", currentToken.line_number);
 			classDeclaration(); // go on parsing
 		}
 	}
