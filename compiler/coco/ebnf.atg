@@ -9,25 +9,15 @@ letter    = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".
 digit     = "0123456789".
 digitNonZero = "123456789".
 
-hex       = "0123456789abcdef".
-
 cr        = '\r'.
 lf        = '\n'.
 tab       = '\t'.
 
-char  = ANY - '"' - '\\' - '\'' - cr - lf. // muessen wir natuerlich umschreiben (Any weg!)
-
-printable = '\u0020' .. '\u007e'.
+//ANY = any symbol from the ASCII Character Set
+char  = ANY - '"' - '\\' - '\'' - cr - lf.
 
 
 TOKENS
-
-// Das und die Schlusselworter sind unsere Tokens
-
-//commentStart = /*".
-//commentEnd = "*/".
-
-// Hex fehlt noch
 
 equal = '='.
 greater = '>'.
@@ -36,15 +26,20 @@ not = '!'.
 AND = "&&".
 OR = "||".
 
+commentStart = "/*".
+commentEnd = "*/".
+
 number = digitNonZero{digit}| "0".
 
 simpleIdentifier = letter{letter|digit}.
 StringValue = '"'char{char}'"'.
 
-charValue = '\'' ( char | '\\' printable { hex } ) '\''. // umschreiben !
+charValue = '\''char'\''.
 
-COMMENTS FROM "/*" TO "*/" NESTED // umschreiben 
+COMMENTS FROM "/*" TO "*/" NESTED 
 COMMENTS FROM "//" TO cr lf
+//multilineComment = commentStart {char} commentEnd.
+//singlelineComment = "//" {char} lf.
 
 IGNORE cr + lf + tab
 
@@ -64,14 +59,11 @@ classBlock = {datatypeDeclaration} {methodDeclaration}.
 
 methodDeclaration = "public" "static" ("void"|datatype) simpleIdentifier"("[datatypeDescriptor{"," datatypeDescriptor}]")" "{" bodyBlock "}".
 
-// datatypeDeclaration umgeschrieben, muss - sollte aber inhaltlich genau das selbe sein wie vorher
-// ausser muss ab jetzt immer static sein.
-datatypeDeclaration = "static" ["final"] datatypeDescriptor [ "=" ( expression | 
-								"new" (( object "(" [expression] | "["number"]" ")" ) |  (primitive"["number"]")))].
+datatypeDeclaration = "static" ["final"] datatypeDescriptor [ equal ( expression | "new" object ("(" [expression] ")" | "["number"]"))].
 
 assOrMethodCall = identifier (methodCall | assignment).
 methodCall = "("[expression {"," expression}]")".
-assignment = [arraySelector] "=" (expression | identifier "("[expression {"," expression}]")").
+assignment = [arraySelector] equal expression .
 
 bodyBlock = { whileStatement | ifStatement | returnStatement | assOrMethodCall | datatypeDeclaration  }.
 
@@ -81,15 +73,15 @@ returnStatement = "return" expression.
 
 datatypeDescriptor = datatype identifier [arraySelector].
 
-identifier = simpleIdentifier{'.' simpleIdentifier}.
+identifier = simpleIdentifier {("."simpleIdentifier)}.
 arraySelector = "[" [expression] "]".
 
 
-value = identifier [arraySelector] | intValue | charValue | booleanValue | StringValue | "NULL" | not value.
+value = identifier [arraySelector | ("("[expression {"," expression}]")")] | intValue | charValue | booleanValue | StringValue | "NULL" | not value.
 factor = value {('*' | '/' | '%') value}.
 term = factor {("+" | "-") factor}.
 expression = term {(AND|OR) term}.
-condition = expression [(equal equal | not equal | greater | greater equal | smaller | smaller equal) expression].
+condition = expression [(equal equal | not equal | greater [equal] | smaller [equal]) expression].
 
 intValue = ["-"]number.
 booleanValue = "true" | "false".
@@ -100,12 +92,5 @@ object = "String" | identifier.
 datatype = primitive | object.
 
 END program.
-
- // TODO folgender Fehlermeldung noch aufloesen. Mit der 1. weiss ich noch nicht genau was los ist. Siehe Coco UserManual
- 
- // LL1 warning in datatypeDeclaration: simpleIdentifier is start & successor of deletable structure
- // LL1 warning in assignment: simpleIdentifier is start of several alternatives
- // LL1 warning in condition: greater is start of several alternatives
- // LL1 warning in condition: smaller is start of several alternatives
 
 
