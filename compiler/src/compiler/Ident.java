@@ -1,5 +1,6 @@
 package compiler;
 
+
 /**
  * Class Ident serves as interface for the Parser and Scanner communication.
  *  
@@ -11,39 +12,54 @@ package compiler;
  */
 public class Ident {
 
-	TokenID ident_type; // type
-	String ident_value; // value
+
+	TokenID type; // type
+	String value; // value
 
 	int line_number;
 
+	public void Ident() {
+		setIdentValue("");
+	}
+	
 	public void setIdentValue(String id_value) {
-		ident_value = id_value;
+		value = id_value;
 	}
 
 	public String getIdentValue() {
-		return new String(ident_value);
+		return new String(value);
 	}
 
-	public static enum TokenID {
 
-		TNULL, TDIV, // "/"
+	public static enum TokenID {
+		TNULL,
+		TDIV, // "/"
 		// MOD,
-		TAND, // "&"
+		TAND, // "&&"
 		TOR, // "||"
-		TPLUS, TMINUS, TEQL, // "=="
+		TPLUS, // "+" 
+		TMINUS, // "-" 
+		TEQL, // "="
 		TNEQ, // "!="
 		TLSS, // "<"
-		TGEQ, TLEQ, TGTR,
-
+		TGEQ, // ">=" 
+		TLEQ, // "<="
+		TGTR, // ">"
 		TCOMMA, // ","
 		TCOLON, // ":"
 		TSEMICOLON, // ";"
 
-		TRPAREN, // "}"
-		TRBRAK, // ")"
-		TLPAREN, // "{"
-		TLBRAK, // "("
-
+		TRPAREN, // right parenthesis ")"
+		TLPAREN, // left parenthesis "("
+		
+		TRBRACK, // right square brackets "]"
+		TLBRACK, // left square brackets "["
+		
+		TRBRACES, // right curly braces "}"
+		TLBRACES, // left curly braces "{"
+				
+		TDQUOTE, // """
+		TSQUOTE, // "'"
 		TNOT, // "!"
 
 		/*
@@ -70,14 +86,22 @@ public class Ident {
 		 */
 
 		STRONG_SYM, // Grenze
-
 		TPACKAGE, // "package"
-		TIMPORT, TPUBLIC,
-
+		TIMPORT, 
+		TPUBLIC,
+		TSTATIC,
+		TFINAL,
+		TCLASS,
 		TIDENT, // identifier
-
-		TIF, TELSE, TWHILE,
+		TPRIM, // primitive
+		TRETURN, // return
+		TNEW, // "new"
+		TIF, 
+		TELSE, 
+		TWHILE;
 
 	}
 
+
 }
+
