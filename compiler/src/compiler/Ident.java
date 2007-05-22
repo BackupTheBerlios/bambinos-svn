@@ -98,7 +98,9 @@ public class Ident {
 		TNEW, // "new"
 		TIF, 
 		TELSE, 
-		TWHILE;
+		TWHILE,
+		
+		TEOF; // end of file
 
 	}
 
