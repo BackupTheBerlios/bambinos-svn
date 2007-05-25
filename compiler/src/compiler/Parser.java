@@ -1,6 +1,5 @@
+package compiler;
 
-
-import static compiler.Ident.TokenID.TIDENT;
 import static compiler.Ident.TokenID.*;
 import static compiler.Util.debug;
 
@@ -15,7 +14,7 @@ import compiler.Ident.TokenID;
  * 		-> fetch token from Scanner 
  * 		-> initiazile Code Generation
  * 
- * @author Gratz Rupert 1
+ * @author wondn ruap
  */
 public class Parser {
 
@@ -30,52 +29,128 @@ public class Parser {
 
 	public static void main(String[] args) {
 
+		Scanner scanny = new Scanner();
 		Scanner
 				.importSource("/folk/rgratz/share/docu/uni/compiler/ws/compiler/src/compiler/Scanner.java");
 		program();
 	}
 
 	/**
-	 * Initial method in EBNF
+	 * Start method in EBNF
 	 */
 	static private void program() {
 		debug("Method: program");
 		nextToken();
 
-		if (currentToken.type.equals(TPACKAGE)) {
+		if (currentToken.type.equals(TPACKAGE))
 			packageDeclaration(); // optional 1x
-			nextToken();
-		}
 
-		while (currentToken.type.equals(TIMPORT)) {
+		while (currentToken.type.equals(TIMPORT))
 			packageImport(); // optional 0,n
-			nextToken();
-		}
 
-		expect(TPUBLIC);
 		classDeclaration();
 	}
 
-	/**
+	/*
 	 * EBNF: packageDeclaration="package" identifier ;
 	 * 
+	 * optional 1x
 	 */
 	static private void packageDeclaration() {
-		tokenList.add(currentToken);
-		expect(TIDENT);
+		expect(TPACKAGE);
+		identifier();
 		expect(TSEMICOLON);
-		// TODO sentence is complete, start with Code generation !		
-
 	}
 
+	// optional 0,n 
 	static private void packageImport() {
-		tokenList.add(currentToken);
-		expect(TIDENT);
+		expect(TIMPORT);
+		identifier();
+		expect(TSEMICOLON);
+	}
+
+	//obligat
+	static private void classDeclaration() {
+		expect(TPUBLIC);
+		expect(TCLASS);
+		expect(TSIDENT);
+		expect(TLBRACES);
+		classBlock();
+		expect(TRBRACES);
+		// no semicolon expected at class end
+	}
+
+	// obligat hm... method must not have a token
+	private static void classBlock() {
+		while (currentToken.type == TSTATIC)
+			dataTypeDeclaration();
+		while (currentToken.type == TPUBLIC)
+			methodDeclaration();
+	}
+
+	private static void methodDeclaration() {
+		expect(TPUBLIC);
+		expect(TSTATIC);
+
+		if (currentToken.type == TVOID)
+			expect(TVOID);
+		else if (currentToken.type.startSetDataType())
+			dataType();
+		else
+			syntaxError("Illegal Method Declaration" + currentToken.line_number);
+
+		expect(TSIDENT);
+		expect(TLPAREN);
+		if (currentToken.type.startSetDataType()) { // if dataTypeDescriptor (startSet is dataType )
+			dataTypeDescriptor();
+			while (currentToken.type == TCOMMA) {
+				dataTypeDescriptor();
+			}
+		}
+		expect(TRPAREN);
+		expect(TLBRACES);
+		bodyBlock();
+		expect(TLBRACES);
+	}
+
+	
+
+	/*
+	 * static final int x = 3;
+	 * static Ident myIdent = new Ident(); // TODO derzeit ist static obligat
+	 */
+	private static void dataTypeDeclaration() {
+		expect(TSTATIC);
+		if (currentToken.type==TFINAL)
+			expect(TFINAL);
+		dataTypeDescriptor();
+		if (currentToken.type == TEQL){
+			expect(TEQL);
+			//if(currentToken.type.startSetExpression())
+				//TODO fertig machen EBND stimmt hier leider nicht ganz
+		}
+		
+	}
+	
+	private static void bodyBlock() {
+	
+		
+		
+	}
+
+	private static void dataTypeDescriptor() {
 
 	}
 
-	static private void classDeclaration() {
+	private static void dataType() {
 
+	}
+
+	static private void identifier() {
+		expect(TSIDENT);
+		while (currentToken.type == TDOT) {
+			expect(TSIDENT);
+		}
 	}
 
 	/**
@@ -99,11 +174,13 @@ public class Parser {
 	 */
 	private static void expect(TokenID expectedID) {
 		if (currentToken.type != expectedID) {
-			syntaxError(currentToken.type.toString(), currentToken.line_number);
+			syntaxError("Expected: " + currentToken.type.toString(),
+					currentToken.line_number);
 
 		} else {
 			tokenList.add(currentToken);
 		}
+		nextToken();
 	}
 
 	/**
