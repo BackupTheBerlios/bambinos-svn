@@ -59,13 +59,13 @@ classBlock = {datatypeDeclaration} {methodDeclaration}.
 
 methodDeclaration = "public" "static" ("void"|datatype) simpleIdentifier"("[datatypeDescriptor{"," datatypeDescriptor}]")" "{" bodyBlock "}".
 
-datatypeDeclaration = "static" ["final"] datatypeDescriptor [ equal ( expression | "new" object ("(" [expression] ")" | "["number"]"))].
+datatypeDeclaration = ["static"] ["final"] datatypeDescriptor [ equal ( expression | "new" object ("(" [expression] ")" | "["number"]"))].
 
 assOrMethodCall = identifier (methodCall | assignment).
 methodCall = "("[expression {"," expression}]")".
 assignment = [arraySelector] equal expression .
 
-bodyBlock = { whileStatement | ifStatement | returnStatement | assOrMethodCall | datatypeDeclaration  }.
+bodyBlock = { whileStatement | ifStatement | returnStatement | assOrMethodCall | datatypeDeclaration }.
 
 whileStatement = "while" "(" condition ")" "{" bodyBlock "}".
 ifStatement = "if" "(" condition ")" "{" bodyBlock "}" [ "else" "{" bodyBlock "}" ].
