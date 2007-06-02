@@ -54,30 +54,32 @@ packageDeclaration = "package" identifier.
 packageImport = "import" identifier [".*"].
 
 classDeclaration = "public" "class" simpleIdentifier "{" classBlock "}".
+classBlock = { objectDeclaration | simpleDeclaration } { methodDeclaration }.
 
-classBlock = { objectDeclaration | primitiveDeclaration | stringDeclaration } { methodDeclaration }.
+objectDeclaration = object objectDeclarationSuffix. 
+simpleDeclaration = primitiveDeclaration | primitiveArrayDeclaration | stringDeclaration | stringArrayDeclaration. 
 
-methodDeclaration = "public" "static" ("void"|datatype) object"("[datatypeDescriptor{"," datatypeDescriptor}]")" "{" bodyBlock "}".
-
-objectDeclaration = object objectDeclarationSuffix.
+methodDeclaration = "public" "static" ("void"|datatype) simpleIdentifier "("[datatypeDescriptor{"," datatypeDescriptor}]")" "{" bodyBlock "}".
 
 primitiveDeclaration = primitive identifier.
+primitiveArrayDeclaration = primitiveArray identifier equal "new" primitive "[" number "]".
 stringDeclaration = "String" identifier equal "new" "String()".
-objectDeclarationAssignmentMethodcall = object ( objectDeclarationSuffix | objectAssignmentSuffix | methodCallSuffix ).
+stringArrayDeclaration = "String[]" identifier equal "new" "String" "["number"]".
 
-objectDeclarationSuffix = identifier[arraySelector] equal "new" object ("(" [expression] ")" | "["number"]").
-objectAssignmentSuffix = [arraySelector] equal expression .
+objectDeclarationAssignmentMethodcall = object ( arrayDeclarationSuffix | methodCallSuffix ).
+
+objectDeclarationSuffix = identifier equal "new" (object ( "("[expression]")" | "["number"]" ) | primitive "["number"]") .
+objectAssignmentSuffix = equal expression .
 methodCallSuffix = "("[expression {"," expression}]")".
+arrayDeclarationSuffix = "[]" ( objectDeclarationSuffix | objectAssignmentSuffix).
 
-
-bodyBlock = { whileStatement | ifStatement | returnStatement | primitiveDeclaration | stringDeclaration | objectDeclarationAssignmentMethodcall }.
+bodyBlock = { whileStatement | ifStatement | returnStatement | simpleDeclaration | objectDeclarationAssignmentMethodcall }.
 
 whileStatement = "while" "(" condition ")" "{" bodyBlock "}".
 ifStatement = "if" "(" condition ")" "{" bodyBlock "}" [ "else" "{" bodyBlock "}" ].
 returnStatement = "return" expression.
 
 datatypeDescriptor = datatype identifier [arraySelector].
-
 
 value = identifier [arraySelector | ("("[expression {"," expression}]")")] | intValue | charValue | booleanValue | StringValue | "NULL" | not value.
 factor = value {('*' | '/' | '%') value}.
@@ -90,13 +92,12 @@ booleanValue = "true" | "false".
 
 primitive = "int" | "boolean" | "char".
 primitiveArray = "int[]" | "boolean[]" | "char[]".
-object = simpleIdentifier | primitiveArray.
+object = simpleIdentifier.
 
 datatype = primitive | "String" | object.
 
 identifier = simpleIdentifier {("."simpleIdentifier)}.
 arraySelector = "[" [expression] "]".
-
 
 END program.
 
