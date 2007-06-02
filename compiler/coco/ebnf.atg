@@ -55,17 +55,22 @@ packageImport = "import" identifier [".*"].
 
 classDeclaration = "public" "class" simpleIdentifier "{" classBlock "}".
 
-classBlock = {datatypeDeclaration} {methodDeclaration}.
+classBlock = { ObjectDeclaration | PrimitiveDeclaration | StringDeclaration } { methodDeclaration }.
 
-methodDeclaration = "public" "static" ("void"|datatype) simpleIdentifier"("[datatypeDescriptor{"," datatypeDescriptor}]")" "{" bodyBlock "}".
+methodDeclaration = "public" "static" ("void"|datatype) object"("[datatypeDescriptor{"," datatypeDescriptor}]")" "{" bodyBlock "}".
 
-datatypeDeclaration = ["static"] ["final"] datatypeDescriptor [ equal ( expression | "new" object ("(" [expression] ")" | "["number"]"))].
+ObjectDeclaration = object ObjectDeclarationSuffix.
 
-assOrMethodCall = identifier (methodCall | assignment).
-methodCall = "("[expression {"," expression}]")".
-assignment = [arraySelector] equal expression .
+PrimitiveDeclaration = primitive identifier.
+StringDeclaration = "String" identifier equal "new" "String()".
+ObjectDeclarationAssignmentMethodcall = object ( ObjectDeclarationSuffix | ObjectAssignmentSuffix | MethodCallSuffix ).
 
-bodyBlock = { whileStatement | ifStatement | returnStatement | assOrMethodCall | datatypeDeclaration }.
+ObjectDeclarationSuffix = identifier[arraySelector] equal "new" object ("(" [expression] ")" | "["number"]").
+ObjectAssignmentSuffix = [arraySelector] equal expression .
+MethodCallSuffix = "("[expression {"," expression}]")".
+
+
+bodyBlock = { whileStatement | ifStatement | returnStatement | PrimitiveDeclaration | StringDeclaration | ObjectDeclarationAssignmentMethodcall }.
 
 whileStatement = "while" "(" condition ")" "{" bodyBlock "}".
 ifStatement = "if" "(" condition ")" "{" bodyBlock "}" [ "else" "{" bodyBlock "}" ].
@@ -73,8 +78,6 @@ returnStatement = "return" expression.
 
 datatypeDescriptor = datatype identifier [arraySelector].
 
-identifier = simpleIdentifier {("."simpleIdentifier)}.
-arraySelector = "[" [expression] "]".
 
 
 value = identifier [arraySelector | ("("[expression {"," expression}]")")] | intValue | charValue | booleanValue | StringValue | "NULL" | not value.
@@ -87,9 +90,13 @@ intValue = ["-"]number.
 booleanValue = "true" | "false".
 
 primitive = "int" | "boolean" | "char".
-object = "String" | identifier.
+object = simpleIdentifier.
 
-datatype = primitive | object.
+datatype = primitive | "String" | object.
+
+identifier = simpleIdentifier {("."simpleIdentifier)}.
+arraySelector = "[" [expression] "]".
+
 
 END program.
 
