@@ -65,24 +65,21 @@ public class Ident {
 		TBOOL, // "boolean"
 		TCHAR, // "character"
 		TSTRING, // "String"
-		
-		TINT_ARRAY, // int[]
-		TBOOL_ARRAY, // boolean[]
-		TCHAR_ARRAY, // char[]
-		
-		
+
+		TINT_ARRAY, // "int[]"
+		TBOOL_ARRAY, // "boolean[]"
+		TCHAR_ARRAY, // "char[]"
+		TSTRING_ARRAY, // "String[]"
 
 		TSTRING_VALUE, TCHAR_VALUE, TINT_VALUE,
-		
-		TBOOL_VALUE, // lets see ....
+
 		TTRUE, // "true"
 		TFALSE, // "false"
 
 		TNUMBER, // number
 
 		STRONG_SYM, // Grenze
-		
-		
+
 		TPACKAGE, // "package"
 		TIMPORT, TPUBLIC, TSTATIC, TFINAL, TCLASS, TVOID, TSIDENT, // simple identifier
 		TRETURN, // return
@@ -121,7 +118,57 @@ public class Ident {
 			default:
 				return false;
 			}
+		}
 
+		public boolean startSetPrimitive() {
+			switch (this) {
+			case TINT:
+			case TBOOL:
+			case TCHAR:
+				return true;
+			default:
+				return false;
+			}
+		}
+
+		public boolean startSetPrimitiveArray() {
+			switch (this) {
+			case TINT_ARRAY:
+			case TBOOL_ARRAY:
+			case TCHAR_ARRAY:
+				return true;
+			default:
+				return false;
+			}
+
+		}
+
+		public boolean startSetSimpleDeclaration() {
+			if (this.startSetPrimitive())
+				return true;
+			if (this.startSetPrimitiveArray())
+				return true;
+			switch (this) {
+			case TSTRING:
+			case TSTRING_ARRAY:
+				return true;
+			default:
+				return false;
+			}
+		}
+
+		public boolean startSetBodyBlock() {
+			if (this.startSetSimpleDeclaration())
+				return true;
+			switch (this) {
+			case TSIDENT:
+			case TWHILE:
+			case TIF:
+			case TRETURN:
+				return true;
+			default:
+				return false;
+			}
 		}
 	}
 
