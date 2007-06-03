@@ -29,8 +29,11 @@ public class Ident {
 	}
 
 	public static enum TokenID {
-		TNULL, TDIV, // "/"
-		// MOD,
+		TNULL, // "null" 
+
+		TDIV, // "/"
+		TMULT, // *
+		TMOD, // modulo %
 		TAND, // "&&"
 		TOR, // "||"
 		TPLUS, // "+" 
@@ -62,41 +65,26 @@ public class Ident {
 		TBOOL, // "boolean"
 		TCHAR, // "character"
 		TSTRING, // "String"
+		
+		TINT_ARRAY, // int[]
+		TBOOL_ARRAY, // boolean[]
+		TCHAR_ARRAY, // char[]
+		
+		
 
-		TSTRING_VALUE, // string value (char....)
-		TCHAR_VALUE,
-
+		TSTRING_VALUE, TCHAR_VALUE, TINT_VALUE,
+		
+		TBOOL_VALUE, // lets see ....
 		TTRUE, // "true"
 		TFALSE, // "false"
 
 		TNUMBER, // number
-		/*
-		 * laut Wirth:
-		 * 
-		 * Hier muss man zwischen week und strong symbols unterscheiden. Denn
-		 * der Parser wird bei einem leichtem Fehler e.g. (Klammer zu, Semikolon
-		 * vergessen) weiterparsen
-		 * 
-		 * Bei einem Schwerem Fehler hoert der parser auf, bis das naechste
-		 * Strong symbol kommt und faengt dann an wieder zu parsen.
-		 * 
-		 * Alle Strong Symbols fangen einfach bei einem hoeherem Integer Wert
-		 * an. Bei Enum ordinal Zahl. Man nennt das naechste strong symbol einen
-		 * Synchronization point
-		 * 
-		 * strong symbols bei uns: class package import methods declaration
-		 * (public methods call (in EBNF nachtragen) if while declarations
-		 * (int,char,string,boolean) datatype_declaration (object) ??? datatype
-		 * assignments ?
-		 * 
-		 * 
-		 * 
-		 */
 
 		STRONG_SYM, // Grenze
+		
+		
 		TPACKAGE, // "package"
 		TIMPORT, TPUBLIC, TSTATIC, TFINAL, TCLASS, TVOID, TSIDENT, // simple identifier
-		TPRIM, // primitive
 		TRETURN, // return
 		TNEW, // "new"
 		TIF, // "if"
