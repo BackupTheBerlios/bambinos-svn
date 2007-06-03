@@ -24,20 +24,19 @@ public class Parser {
 	static boolean setCodeGeneration = true;
 	static Ident currentToken = new Ident();
 
+	String test = new String("hallo");
+
 	//Liste von tokens, die bei jedem Zeilenende an den Code Generator weitergegeben werden
 	static ArrayList<Ident> tokenList = new ArrayList<Ident>();
 
 	public static void main(String[] args) {
-
 		Scanner scanny = new Scanner();
 		Scanner
 				.importSource("/folk/rgratz/share/docu/uni/compiler/ws/compiler/src/compiler/Scanner.java");
 		program();
 	}
 
-	/**
-	 * Start method in EBNF
-	 */
+	//Start method in EBNF
 	static private void program() {
 		debug("Method: program");
 		nextToken();
@@ -82,8 +81,14 @@ public class Parser {
 
 	// obligat hm... method must not have a token
 	private static void classBlock() {
-		while (currentToken.type == TSTATIC)
-			dataTypeDeclaration();
+		debug("ClassBlock");
+		while (currentToken.type == TSIDENT ||
+				currentToken.type.startSetSimpleDeclaration()) {
+			if (currentToken.type == TSIDENT)
+				objectDeclaration();
+			if (currentToken.type.startSetSimpleDeclaration())
+				simpleDeclaration();
+		}
 		while (currentToken.type == TPUBLIC)
 			methodDeclaration();
 	}
@@ -97,7 +102,9 @@ public class Parser {
 		else if (currentToken.type.startSetDataType())
 			dataType();
 		else
-			syntaxError("Illegal Method Declaration" + currentToken.line_number);
+			syntaxError("Illegal Method Declaration. Token: " +
+					currentToken.type.toString() + "not valid. in line:" +
+					currentToken.line_number);
 
 		expect(TSIDENT);
 		expect(TLPAREN);
@@ -113,29 +120,139 @@ public class Parser {
 		expect(TLBRACES);
 	}
 
-	
-
-	/*
-	 * static final int x = 3;
-	 * static Ident myIdent = new Ident(); // TODO derzeit ist static obligat
-	 */
-	private static void dataTypeDeclaration() {
-		expect(TSTATIC);
-		if (currentToken.type==TFINAL)
-			expect(TFINAL);
-		dataTypeDescriptor();
-		if (currentToken.type == TEQL){
-			expect(TEQL);
-			//if(currentToken.type.startSetExpression())
-				//TODO fertig machen EBND stimmt hier leider nicht ganz
-		}
-		
+	private static void objectDeclaration() {
+		debug("ObjectDeclaration");
+		object();
+		objectDeclarationSuffix();
 	}
-	
+
+	private static void simpleDeclaration() {
+		debug("SimpleDeclaration");
+		if (currentToken.type.startSetPrimitive())
+			primitiveDeclaration();
+		if (currentToken.type.startSetPrimitiveArray())
+			primitiveArrayDeclaration();
+		if (currentToken.type == TSTRING)
+			stringDeclaration();
+		if (currentToken.type == TSTRING_ARRAY)
+			stringArrayDeclaration();
+	}
+
+	private static void primitiveDeclaration() {
+		primitive();
+		identifier();
+		if (currentToken.type == TEQL)
+			assignmentSuffix();
+	}
+
+	private static void primitiveArrayDeclaration() {
+		debug("primitiveArrayDeclaration");
+		primitiveArray();
+		identifier();
+		expect(TEQL);
+		expect(TNEW);
+		primitive();
+		expect(TLBRACK);
+		expect(TNUMBER);
+		expect(TRBRACK);
+	}
+
+	private static void stringDeclaration() {
+		debug("stringDeclaration");
+		expect(TSTRING);
+		identifier();
+		expect(TEQL);
+		expect(TNEW);
+		expect(TSTRING);
+		expect(TLPAREN);
+		if (currentToken.type == TSTRING_VALUE)
+			expect(TSTRING_VALUE);
+		expect(TRPAREN);
+	}
+
+	private static void stringArrayDeclaration() {
+		debug("stringArrayDeclaration");
+		expect(TSTRING_ARRAY);
+		identifier();
+		expect(TEQL);
+		expect(TNEW);
+		expect(TSTRING);
+		expect(TLBRACK);
+		expect(TNUMBER);
+		expect(TRBRACK);
+	}
+
+	private static void objectDeclarationAssignmentMethodCall() {
+		object();
+		if (currentToken.type == TEQL || currentToken.type == TSIDENT ||
+				currentToken.type == TLBRACK)
+			arrayDeclarationSuffix();
+		if (currentToken.type == TLPAREN)
+			methodCallSuffix();
+	}
+
+	private static objectDeclarationSuffix() {
+		identifier();
+		expect(TEQL);
+		expect(TNEW);
+		if (currentToken.type == TSIDENT) {
+			object();
+			if (currentToken.type == TLPAREN) {
+				expect(TLPAREN);
+				if (currentToken.type.startSetExpression()) { // expression ist optional
+					expression();
+				}
+				expect(TRPAREN);
+			} else {
+				expect(TLBRACK);
+				expect(TNUMBER);
+				expect(TRBRACK);
+			}
+		} else if (currentToken.type.startSetPrimitive()) {
+			primitive();
+			expect(TLBRACK);
+			expect(TNUMBER);
+			expect(TRBRACK);
+		} else {
+			syntaxError("Illeag token: " + currentToken.type.toString() +
+					" in objectDeclaration", currentToken.line_number);
+		}
+	}
+
+	private static void assignmentSuffix() {
+		expect(TEQL);
+		expression();
+	}
+
+	private static void methodCallSuffix() {
+		expect(TLPAREN);
+		if (currentToken.type.startSetExpression())
+			expression();
+		while (currentToken.type.startSetExpression())
+			expect(TCOMMA);
+		expression();
+	}
+
+	private static void arrayDeclarationSuffix() {
+		if (currentToken.type == TLBRACK)
+			arraySelector();
+		if (currentToken.type == TSIDENT)
+			objectDeclarationSuffix();
+		if (currentToken.type == TEQL)
+			assignmentSuffix();
+	}
+
 	private static void bodyBlock() {
-	
-		
-		
+		if (currentToken.type == TWHILE)
+			whileStatement();
+		if (currentToken.type == TIF)
+			ifStatement();
+		if (currentToken.type == TRETURN)
+			returnStatement();
+		if (currentToken.type.startSetSimpleDeclaration())
+			simpleDeclaration();
+		if (currentToken.type == TSIDENT)
+			objectDeclarationAssignmentMethodCall();
 	}
 
 	private static void dataTypeDescriptor() {
