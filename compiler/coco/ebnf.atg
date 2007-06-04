@@ -81,7 +81,7 @@ returnStatement = "return" expression.
 
 datatypeDescriptor = datatype identifier [arraySelector].
 
-value = identifier [arraySelector | ("("[expression {"," expression}]")")] | intValue | charValue | booleanValue | StringValue | "NULL" | not value.
+value = identifier [arraySelector | (methodCallSuffix)] | intValue | charValue | booleanValue | StringValue | "NULL" | not value.
 factor = value {('*' | '/' | '%') value}.
 term = factor {("+" | "-") factor}.
 expression = term {(AND|OR) term}.
