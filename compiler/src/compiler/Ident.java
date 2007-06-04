@@ -30,7 +30,7 @@ public class Ident {
 
 	public static enum TokenID {
 		TNULL, // "null" 
-
+		
 		TDIV, // "/"
 		TMULT, // *
 		TMOD, // modulo %
@@ -71,7 +71,7 @@ public class Ident {
 		TCHAR_ARRAY, // "char[]"
 		TSTRING_ARRAY, // "String[]"
 
-		TSTRING_VALUE, TCHAR_VALUE, TINT_VALUE,
+		TSTRING_VALUE, TCHAR_VALUE, 
 
 		TTRUE, // "true"
 		TFALSE, // "false"
