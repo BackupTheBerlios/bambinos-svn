@@ -30,6 +30,7 @@ public class Ident {
 
 	public static enum TokenID {
 		TNULL, // "null" 
+		TERROR,// invalid Token 
 		
 		TDIV, // "/"
 		TMULT, // *
