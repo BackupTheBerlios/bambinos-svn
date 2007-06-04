@@ -39,7 +39,6 @@ public class Ident {
 		TPLUS, // "+" 
 		TMINUS, // "-" 
 		TEQL, // "="
-		TNEQ, // "!="
 		TLSS, // "<"
 		TGEQ, // ">=" 
 		TLEQ, // "<="
