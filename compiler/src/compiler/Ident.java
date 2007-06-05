@@ -16,8 +16,12 @@ public class Ident {
 
 	int line_number;
 
-	public void Ident() {
+	public Ident() {
 		setIdentValue("");
+	}
+	
+	public Ident(TokenID type){
+		this.type=type;
 	}
 
 	public void setIdentValue(String id_value) {
