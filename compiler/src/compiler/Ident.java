@@ -30,8 +30,8 @@ public class Ident {
 
 	public static enum TokenID {
 		TNULL, // "null" 
-		TERROR,// invalid Token 
-		
+		TERROR, // invalid Token 
+
 		TDIV, // "/"
 		TMULT, // *
 		TMOD, // modulo %
@@ -71,7 +71,7 @@ public class Ident {
 		TCHAR_ARRAY, // "char[]"
 		TSTRING_ARRAY, // "String[]"
 
-		TSTRING_VALUE, TCHAR_VALUE, 
+		TSTRING_VALUE, TCHAR_VALUE,
 
 		TTRUE, // "true"
 		TFALSE, // "false"
@@ -97,6 +97,20 @@ public class Ident {
 			case TINT:
 			case TBOOL:
 			case TCHAR:
+				return true;
+			default:
+				return false;
+			}
+		}
+
+		public boolean allBracketTypes() {
+			switch (this) {
+			case TRBRACES:
+			case TLBRACES:
+			case TRBRACK:
+			case TLBRACK:
+			case TRPAREN:
+			case TLPAREN:
 				return true;
 			default:
 				return false;
