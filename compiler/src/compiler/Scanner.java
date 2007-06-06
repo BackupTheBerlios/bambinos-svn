@@ -96,6 +96,8 @@ public class Scanner {
 				//System.out.println("tab - NOP");
 			} else if(currentByte == 10) {
 				//System.out.println("new line - NOP");
+			} else if(currentByte == 13) {
+				//System.out.println("new line - NOP");
 			// comment	
 			} else if((currentByte == 47) &&  (nextByte == 47)) {
 				passSinglelineComment();
@@ -346,7 +348,7 @@ public class Scanner {
 		}
 		
 		// followSymbol definies the available symbols that can follow the identifier
-		byte[] followSymbols = {61, 60, 62, 33, 32, 38, 124, 59, 40, 41, 91, 93, 44, 42, 47, 37, 43, 45};
+		byte[] followSymbols = {61, 60, 62, 33, 32, 38, 124, 59, 40, 41, 91, 93, 44, 42, 47, 37, 43, 45, 123, 125};
 		
 		while (endOfSymbol == false) {
 
