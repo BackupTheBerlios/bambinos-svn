@@ -1,4 +1,4 @@
-public 112{
+public class Quicksort{
 
 	static int k = 0;
 
