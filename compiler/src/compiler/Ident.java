@@ -78,7 +78,7 @@ public class Ident {
 		
 		TINT, // "int"
 		TBOOL, // "boolean"
-		TCHAR, // "character"
+		TCHAR, // "char"
 		TSTRING, // "String"
 
 		TINT_ARRAY, // "int[]"
@@ -95,6 +95,7 @@ public class Ident {
 		TWHILE, // "while"
 
 		TEOF; // end of file
+		
 
 		// some startsets implemented as enum methods
 		public boolean startSetDataType() {
