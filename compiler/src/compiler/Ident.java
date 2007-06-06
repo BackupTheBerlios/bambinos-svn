@@ -63,8 +63,19 @@ public class Ident {
 
 		TDQUOTE, // """
 		TSQUOTE, // "'"
-		TNOT, // "!"
 
+		TSTRING_VALUE, TCHAR_VALUE,
+
+		TNOT, // "!"
+		TTRUE, // "true"
+		TFALSE, // "false"
+
+		TNUMBER, // number
+
+		TSTATIC, TCLASS, TVOID, // are no Strong symbols, because we always start with public !
+		
+		STRONG_SYM, // Symbols serving as Synchronisation points:
+		
 		TINT, // "int"
 		TBOOL, // "boolean"
 		TCHAR, // "character"
@@ -74,18 +85,9 @@ public class Ident {
 		TBOOL_ARRAY, // "boolean[]"
 		TCHAR_ARRAY, // "char[]"
 		TSTRING_ARRAY, // "String[]"
-
-		TSTRING_VALUE, TCHAR_VALUE,
-
-		TTRUE, // "true"
-		TFALSE, // "false"
-
-		TNUMBER, // number
-
-		STRONG_SYM, // Grenze
-
+		
 		TPACKAGE, // "package"
-		TIMPORT, TPUBLIC, TSTATIC, TFINAL, TCLASS, TVOID, TSIDENT, // simple identifier
+		TIMPORT, TPUBLIC,  TSIDENT, // simple identifier
 		TRETURN, // return
 		TNEW, // "new"
 		TIF, // "if"
