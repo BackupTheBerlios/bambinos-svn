@@ -151,15 +151,9 @@ public class Scanner {
 		symbolValue = "";
 		Ident currentIdentifier = new Ident();
 		
-		// "!" or "!="
+		// "!" 
 		if(currentByte == 33) {
-			
-			if (nextByte == 61) {
-				currentIdentifier.type = TokenID.TNEQ;
-			} else {
-				currentIdentifier.type = TokenID.TNOT;	
-			}
-			
+			currentIdentifier.type = TokenID.TNOT;	
 		// ";"
 		} else if(currentByte == 59) {
 			currentIdentifier.type = TokenID.TSEMICOLON;
@@ -491,8 +485,6 @@ public class Scanner {
 			identifier.type = TokenID.TPUBLIC;
 		} else if (symbolValue.compareTo("static") == 0) {
 			identifier.type = TokenID.TSTATIC;
-		} else if (symbolValue.compareTo("final") == 0) {
-			identifier.type = TokenID.TFINAL;
 		} else if (symbolValue.compareTo("return") == 0) {
 			identifier.type = TokenID.TRETURN;
 		} else if (symbolValue.compareTo("void") == 0) {
