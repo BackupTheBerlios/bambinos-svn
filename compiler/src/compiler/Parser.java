@@ -1,5 +1,7 @@
 package compiler;
 
+import static compiler.Ident.TokenID.STRONG_SYM_BB;
+import static compiler.Ident.TokenID.STRONG_SYM_CB;
 import static compiler.Ident.TokenID.TAND;
 import static compiler.Ident.TokenID.TBOOL;
 import static compiler.Ident.TokenID.TBOOL_ARRAY;
@@ -47,7 +49,7 @@ import static compiler.Ident.TokenID.TSTRING_ARRAY;
 import static compiler.Ident.TokenID.TSTRING_VALUE;
 import static compiler.Ident.TokenID.TTRUE;
 import static compiler.Ident.TokenID.TVOID;
-import static compiler.Ident.TokenID.TWHILE;
+import static compiler.Ident.TokenID.*;
 import static compiler.Util.debug;
 
 import java.util.ArrayList;
@@ -67,9 +69,9 @@ public class Parser {
 	* Code Generation will stop on any parsing error!
 	*/
 	static boolean setCodeGeneration = true;
-	static Ident currentToken = new Ident();
+	private static int countTLBRACES;
 
-	String test = new String("hallo");
+	static Ident currentToken = new Ident();
 
 	//Liste von tokens, die bei jedem Zeilenende an den Code Generator weitergegeben werden
 	static ArrayList<Ident> tokenList = new ArrayList<Ident>();
@@ -80,14 +82,12 @@ public class Parser {
 		Scanner
 				.importSource("/folk/rgratz/share/docu/uni/compiler/ws/compiler/src/compiler/Quicksort.java");
 		program();
-	}
-
-//	@SuppressWarnings("serial")
-//	public class IllegalTokenException extends RuntimeException {
-//		public IllegalTokenException(String s) {
-//			super(s);
+//		while (true){
+//			nextToken();
+//			if (currentToken.type == TEOF)
+//				break;
 //		}
-//	}
+	}
 
 	/**
 	 * Fetch next Token from Scanner.
@@ -96,7 +96,8 @@ public class Parser {
 	 */
 	private static void nextToken() {
 		currentToken = Scanner.getSym();
-		debug("Current Token: " + currentToken.type);
+		debug("Current Token: " + currentToken.type + " line: " +
+				currentToken.line_number);
 
 	}
 
@@ -119,25 +120,45 @@ public class Parser {
 			throws IllegalTokenException {
 		boolean nextToken = true;
 		if (currentToken.type != expectedID) {
-			if (l == ErrorLevel.WEEK) { // Error Handling week Errors (Missing any kind of Brackets, ...)
-				System.out.println("Warning: missing symbol: " + expectedID);
-				tokenList.add(new Ident(expectedID)); // insert missing Identifier
-				nextToken = false; //dont fetch next token when "missing Brackets Error" is true !
-			} else {
+
+			/* Error Handling week Errors (Missing any kind of Brackets, ...)
+			 * missing token will be inserted
+			 */
+			if (l == ErrorLevel.WEEK) {
+				System.out.println("Warning: missing symbol: " + expectedID +
+						" in line " + currentToken.line_number);
+
+				if (expectedID == TSEMICOLON)
+					generateCode();
+				else
+					tokenList.add(new Ident(expectedID)); // insert missing Identifier into code Generation List
+
+				nextToken = false; //dont fetch next token on Week Error !
+			}
+			// Strong Error Level
+			else {
 				syntaxError("Error: mismatch token: " +
 						currentToken.type.toString() + " expected: " +
 						expectedID.toString() + " at line: " +
 						currentToken.line_number);
 			}
-		} else {
-			tokenList.add(currentToken);
 		}
+
+		if (currentToken.type == TSEMICOLON)
+			generateCode(); // This can work here, because when semicolon is missing, it will be inserted !
+		else {
+			if (nextToken)
+				tokenList.add(currentToken); // dont add Semicolon
+		}
+		// Hack for Body block, when only two } are missing - end body block
+		if (currentToken.type == TLBRACES)
+			countTLBRACES = +1;
+		else if (currentToken.type == TRBRACES)
+			countTLBRACES = -1;
+
+		// fetch next token when no Token is missing
 		if (nextToken) {
 			nextToken();
-			if (currentToken.type == TSEMICOLON) {
-				generateCode();
-				nextToken();
-			}
 		}
 		if (currentToken.type == TERROR) {
 			syntaxError("Error: Token: \"Error\" received, thats not good !");
@@ -162,7 +183,14 @@ public class Parser {
 	 * @return null
 	 */
 	private static void generateCode() {
-
+		int i = 0;
+		String print = "     SENTENCE: ";
+		while (i < tokenList.size()) {
+			print = print.concat((new Ident(tokenList.get(i).type).type
+					.toString() + " "));
+			i++;
+		}
+		debug(print);
 		tokenList.clear();
 	}
 
@@ -190,10 +218,12 @@ public class Parser {
 
 		while (currentToken.type.equals(TIMPORT))
 			try {
-				packageImport();
+				packageImport(); // optional 0,n
 			} catch (IllegalTokenException e) {
+				while (currentToken.type.ordinal() < STRONG_SYM_CB.ordinal())
+					nextToken();
 				e.printStackTrace();
-			} // optional 0,n
+			}
 
 		classDeclaration(); // continue parsing even on error
 	}
@@ -226,7 +256,9 @@ public class Parser {
 
 	}
 
-	// hm... method must not have a token
+	/* Error Handling in classBlock:
+	 * When something goes wrong in here, he always searches for the next "public" token !
+	 */
 	private static void classBlock() {
 		debug("ClassBlock");
 		try {
@@ -242,17 +274,20 @@ public class Parser {
 
 		} catch (IllegalTokenException e) {
 			e.printStackTrace();
+			while (currentToken.type != TPUBLIC)
+				nextToken();
 			classBlock();
 		}
 	}
 
 	private static void methodDeclaration() throws IllegalTokenException {
+		debug("methodDeclaration");
 		expect(TPUBLIC);
 		expectWeek(TSTATIC);
 
 		if (currentToken.type == TVOID)
 			expect(TVOID);
-		else if (currentToken.type.startSetDataType())
+		else if (currentToken.type.startSetDataType()) // TODO: improve-> Object is also Ident, but Object starts always with a upper case letter
 			dataType(); // return type
 		else
 			syntaxError("Illegal Method Declaration, not return type. Token: " +
@@ -261,10 +296,10 @@ public class Parser {
 
 		expect(TSIDENT);
 		expectWeek(TLPAREN);
-		if (currentToken.type.startSetDataType()) { // if dataTypeDescriptor (startSet is dataType )
+		if (currentToken.type.startSetSimpleDeclaration()) { // if dataTypeDescriptor (startSet is dataType )
 			dataTypeDescriptor();
 			while (currentToken.type == TCOMMA ||
-					currentToken.type.startSetDataType()) {
+					currentToken.type.startSetSimpleDeclaration()) {
 				expectWeek(TCOMMA);
 				dataTypeDescriptor();
 			}
@@ -272,33 +307,36 @@ public class Parser {
 		expectWeek(TRPAREN);
 		expectWeek(TLBRACES);
 		bodyBlock();
-		expectWeek(TLBRACES);
+		expectWeek(TRBRACES);
 	}
 
 	private static void objectDeclaration() throws IllegalTokenException {
+		debug("objectDeclaration");
 		debug("ObjectDeclaration");
 		object();
 		objectDeclarationSuffix();
+		expectWeek(TSEMICOLON);
 	}
 
 	private static void simpleDeclaration() throws IllegalTokenException {
 		debug("SimpleDeclaration");
 		if (currentToken.type.startSetPrimitive())
 			primitiveDeclaration();
-		if (currentToken.type.startSetPrimitiveArray())
+		else if (currentToken.type.startSetPrimitiveArray())
 			primitiveArrayDeclaration();
-		if (currentToken.type == TSTRING)
+		else if (currentToken.type == TSTRING)
 			stringDeclaration();
-		if (currentToken.type == TSTRING_ARRAY)
+		else if (currentToken.type == TSTRING_ARRAY)
 			stringArrayDeclaration();
+		expectWeek(TSEMICOLON);
 	}
 
 	private static void primitiveDeclaration() throws IllegalTokenException {
+		debug("primitiveDeclaration");
 		primitive();
 		identifier();
 		if (currentToken.type == TEQL)
 			assignmentSuffix();
-		expectWeek(TSEMICOLON);
 	}
 
 	private static void primitiveArrayDeclaration()
@@ -312,7 +350,6 @@ public class Parser {
 		expectWeek(TLBRACK);
 		expect(TNUMBER);
 		expectWeek(TRBRACK);
-		expectWeek(TSEMICOLON);
 	}
 
 	private static void stringDeclaration() throws IllegalTokenException {
@@ -342,15 +379,18 @@ public class Parser {
 
 	private static void objectDeclarationAssignmentMethodCall()
 			throws IllegalTokenException {
+		debug("objectDeclarationAssignmentMethodCall");
 		object();
 		if (currentToken.type == TEQL || currentToken.type == TSIDENT ||
 				currentToken.type == TLBRACK)
 			arrayDeclarationSuffix();
 		if (currentToken.type == TLPAREN)
 			methodCallSuffix();
+		expectWeek(TSEMICOLON);
 	}
 
 	private static void objectDeclarationSuffix() throws IllegalTokenException {
+		debug("objectDeclarationSuffix");
 		identifier();
 		expectWeek(TEQL);
 		expectWeek(TNEW);
@@ -379,11 +419,13 @@ public class Parser {
 	}
 
 	private static void assignmentSuffix() throws IllegalTokenException {
+		debug("assignmentSuffix");
 		expect(TEQL);
 		expression();
 	}
 
 	private static void methodCallSuffix() throws IllegalTokenException {
+		debug("methodCallSuffix");
 		expect(TLPAREN);
 		if (currentToken.type.startSetExpression())
 			expression();
@@ -396,6 +438,7 @@ public class Parser {
 	}
 
 	private static void arrayDeclarationSuffix() throws IllegalTokenException {
+		debug("arrayDeclarationSuffix");
 		if (currentToken.type == TLBRACK)
 			arraySelector();
 		if (currentToken.type == TSIDENT)
@@ -405,24 +448,36 @@ public class Parser {
 	}
 
 	private static void bodyBlock() {
-		try {
-			if (currentToken.type == TWHILE)
-				whileStatement();
-			else if (currentToken.type == TIF)
-				ifStatement();
-			else if (currentToken.type == TRETURN)
-				returnStatement();
-			else if (currentToken.type.startSetSimpleDeclaration())
-				simpleDeclaration();
-			else if (currentToken.type == TSIDENT)
-				objectDeclarationAssignmentMethodCall();
-			else
-				syntaxError("Unknown Error in Body Block Statement. Token: " +
-						currentToken.type.toString() + " in line: " +
-						currentToken.line_number);
-		} catch (IllegalTokenException e) {
-			e.printStackTrace();
-			bodyBlock();
+		debug("bodyBlock");
+		while (true) {
+			try {
+				if (currentToken.type == TWHILE)
+					whileStatement();
+				else if (currentToken.type == TIF)
+					ifStatement();
+				else if (currentToken.type == TRETURN)
+					returnStatement();
+				else if (currentToken.type.startSetSimpleDeclaration())
+					simpleDeclaration();
+				else if (currentToken.type == TSIDENT)
+					objectDeclarationAssignmentMethodCall();
+				else if (currentToken.type == TRBRACES) {
+					if (countTLBRACES <= 2)
+						return;
+				} else if (currentToken.type.ordinal() < STRONG_SYM_CB
+						.ordinal())
+					nextToken();
+				else {
+					debug("END BODY BLOCK");
+					break;
+				}
+			} catch (IllegalTokenException e) {
+				e.printStackTrace();
+				// goto next Sync Token and retry statement
+				while (currentToken.type.ordinal() < STRONG_SYM_BB.ordinal())
+					nextToken();
+				bodyBlock();
+			}
 		}
 	}
 
@@ -438,6 +493,7 @@ public class Parser {
 	}
 
 	private static void ifStatement() throws IllegalTokenException {
+		debug("ifStatement");
 		expect(TIF);
 		expectWeek(TLPAREN);
 		condition();
@@ -454,11 +510,14 @@ public class Parser {
 	}
 
 	private static void returnStatement() throws IllegalTokenException {
+		debug("returnStatement");
 		expect(TRETURN);
 		expression();
+		expectWeek(TSEMICOLON);
 	}
 
 	private static void dataTypeDescriptor() throws IllegalTokenException {
+		debug("dataTypeDescriptor");
 		dataType();
 		identifier();
 		if (currentToken.type == TLBRACK)
@@ -466,11 +525,12 @@ public class Parser {
 	}
 
 	private static void expression() throws IllegalTokenException {
+		debug("expression");
 		term();
 		while (currentToken.type == TAND || currentToken.type == TOR) {
 			if (currentToken.type == TAND)
 				expect(TAND);
-			if (currentToken.type == TOR)
+			else if (currentToken.type == TOR)
 				expect(TOR);
 			term();
 		}
@@ -483,7 +543,7 @@ public class Parser {
 			while (currentToken.type == TPLUS || currentToken.type == TMINUS) {
 				if (currentToken.type == TPLUS)
 					expect(TPLUS);
-				if (currentToken.type == TMINUS)
+				else if (currentToken.type == TMINUS)
 					expect(TMINUS);
 				factor();
 			}
@@ -496,9 +556,9 @@ public class Parser {
 				currentToken.type == TMOD) {
 			if (currentToken.type == TMULT)
 				expect(TMULT);
-			if (currentToken.type == TDIV)
+			else if (currentToken.type == TDIV)
 				expect(TDIV);
-			if (currentToken.type == TMOD)
+			else if (currentToken.type == TMOD)
 				expect(TMOD);
 			value();
 		}
@@ -512,59 +572,52 @@ public class Parser {
 			if (currentToken.type == TLPAREN) {
 				methodCallSuffix();
 			}
-		}
-		if (currentToken.type == TMINUS || currentToken.type == TNUMBER)
+		} else if (currentToken.type == TMINUS || currentToken.type == TNUMBER)
 			intValue();
-		if (currentToken.type == TCHAR_VALUE)
+		else if (currentToken.type == TCHAR_VALUE)
 			expect(TCHAR_VALUE);
-		if (currentToken.type == TTRUE || currentToken.type == TFALSE)
+		else if (currentToken.type == TTRUE || currentToken.type == TFALSE)
 			booleanValue();
-		if (currentToken.type == TSTRING_VALUE)
+		else if (currentToken.type == TSTRING_VALUE)
 			expect(TSTRING_VALUE);
-		if (currentToken.type == TNULL)
+		else if (currentToken.type == TNULL)
 			expect(TNULL);
-		if (currentToken.type == TNOT) {
+		else if (currentToken.type == TNOT) {
 			expect(TNOT);
 			value();
 		}
 	}
 
 	private static void condition() throws IllegalTokenException {
+		debug("condition");
 		expression();
 		if (currentToken.type == TEQL) {
 			expect(TEQL);
 			expect(TEQL);
-			expression();
-		}
-		if (currentToken.type == TNOT) {
+		} else if (currentToken.type == TNOT) {
 			expect(TNOT);
 			expect(TEQL);
-			expression();
-		}
-
-		if (currentToken.type == TGTR) {
+		} else if (currentToken.type == TGTR) {
 			expect(TGTR);
-			if (currentToken.type == TEQL) {
-				expect(TEQL);
-			}
-			expression();
-		}
-		if (currentToken.type == TLSS) {
+		} else if (currentToken.type == TLEQ) {
+			expect(TLEQ);
+		} else if (currentToken.type == TLSS) {
 			expect(TLSS);
-			if (currentToken.type == TEQL) {
-				expect(TEQL);
-			}
-			expression();
+		} else if (currentToken.type == TGEQ) {
+			expect(TGEQ);
 		}
+		expression();
 	}
 
 	private static void intValue() throws IllegalTokenException {
+		debug("intValue");
 		if (currentToken.type == TMINUS)
 			expect(TMINUS);
 		expect(TNUMBER);
 	}
 
 	private static void booleanValue() throws IllegalTokenException {
+		debug("booleanValue");
 		if (currentToken.type == TTRUE)
 			expect(TTRUE);
 		else if (currentToken.type == TFALSE)
@@ -576,6 +629,7 @@ public class Parser {
 	}
 
 	private static void primitive() throws IllegalTokenException {
+		debug("primitive");
 		if (currentToken.type == TINT)
 			expect(TINT);
 		else if (currentToken.type == TBOOL)
@@ -589,6 +643,7 @@ public class Parser {
 	}
 
 	private static void primitiveArray() throws IllegalTokenException {
+		debug("primitiveArray");
 		if (currentToken.type == TINT_ARRAY)
 			expect(TINT_ARRAY);
 		else if (currentToken.type == TBOOL_ARRAY)
@@ -602,14 +657,20 @@ public class Parser {
 	}
 
 	private static void object() throws IllegalTokenException {
+		debug("object");
 		expect(TSIDENT);
 	}
 
 	private static void dataType() throws IllegalTokenException {
+		debug("dataType");
 		if (currentToken.type.startSetPrimitive())
 			primitive();
+		else if (currentToken.type.startSetPrimitiveArray())
+			primitiveArray();
 		else if (currentToken.type == TSTRING)
 			expect(TSTRING);
+		else if (currentToken.type == TSTRING_ARRAY)
+			expect(TSTRING_ARRAY);
 		else if (currentToken.type == TSIDENT)
 			object();
 		else
@@ -625,6 +686,7 @@ public class Parser {
 	}
 
 	private static void arraySelector() throws IllegalTokenException {
+		debug("arraySelector");
 		expect(TLBRACK);
 		if (currentToken.type.startSetExpression())
 			expression();
