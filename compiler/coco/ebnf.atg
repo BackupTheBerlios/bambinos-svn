@@ -95,7 +95,7 @@ primitive = "int" | "boolean" | "char".
 primitiveArray = "int[]" | "boolean[]" | "char[]".
 object = simpleIdentifier.
 
-datatype = primitive | "String" | object | primitiveArray.
+datatype = primitive | "String" | "String[]" | object | primitiveArray.
 
 identifier = simpleIdentifier {("."simpleIdentifier)}.
 arraySelector = "[" [expression] "]".
