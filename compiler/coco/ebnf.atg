@@ -58,21 +58,21 @@ classDeclaration = "public" "class" simpleIdentifier "{" classBlock "}".
 classBlock = { objectDeclaration | simpleDeclaration } { methodDeclaration }.
 
 objectDeclaration = object objectDeclarationSuffix SEMICOLON. 
-simpleDeclaration = primitiveDeclaration | primitiveArrayDeclaration | stringDeclaration | stringArrayDeclaration. 
+simpleDeclaration = primitiveDeclaration | primitiveArrayDeclaration | stringDeclaration | stringArrayDeclaration SEMICOLON. 
 
 methodDeclaration = "public" "static" ("void"|datatype) simpleIdentifier "("[datatypeDescriptor{"," datatypeDescriptor}]")" "{" bodyBlock "}".
 
-primitiveDeclaration = primitive identifier [assignmentSuffix] SEMICOLON.
-primitiveArrayDeclaration = primitiveArray identifier equal "new" primitive "[" number "]" SEMICOLON.
-stringDeclaration = "String" identifier equal "new" "String" "(" [StringValue] ")" SEMICOLON.
-stringArrayDeclaration = "String[]" identifier equal "new" "String" "["number"]" SEMICOLON.
+primitiveDeclaration = primitive identifier [assignmentSuffix].
+primitiveArrayDeclaration = primitiveArray identifier equal "new" primitive "[" number "]".
+stringDeclaration = "String" identifier equal "new" "String" "(" [StringValue] ")".
+stringArrayDeclaration = "String[]" identifier equal "new" "String" "["number"]".
 
-objectDeclarationAssignmentMethodcall = object ( arrayDeclarationSuffix | methodCallSuffix ).
+objectDeclarationAssignmentMethodcall = object ( arrayDeclarationSuffix | methodCallSuffix ) SEMICOLON.
 
-objectDeclarationSuffix = identifier equal "new" (object ( "("[expression]")" | "["number"]" ) | primitive "["number"]") SEMICOLON.
-assignmentSuffix = equal expression SEMICOLON.
-methodCallSuffix = "("[expression {"," expression}]")" SEMICOLON.
-arrayDeclarationSuffix = [arraySelector]( objectDeclarationSuffix | assignmentSuffix) SEMICOLON.
+objectDeclarationSuffix = identifier equal "new" (object ( "("[expression]")" | "["number"]" ) | primitive "["number"]").
+assignmentSuffix = equal expression.
+methodCallSuffix = "("[expression {"," expression}]")".
+arrayDeclarationSuffix = [arraySelector]( objectDeclarationSuffix | assignmentSuffix).
 
 bodyBlock = { whileStatement | ifStatement | returnStatement | simpleDeclaration | objectDeclarationAssignmentMethodcall }.
 
@@ -95,7 +95,7 @@ primitive = "int" | "boolean" | "char".
 primitiveArray = "int[]" | "boolean[]" | "char[]".
 object = simpleIdentifier.
 
-datatype = primitive | "String" | object.
+datatype = primitive | "String" | object | primitiveArray.
 
 identifier = simpleIdentifier {("."simpleIdentifier)}.
 arraySelector = "[" [expression] "]".
