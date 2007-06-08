@@ -19,9 +19,9 @@ public class Ident {
 	public Ident() {
 		setIdentValue("");
 	}
-	
-	public Ident(TokenID type){
-		this.type=type;
+
+	public Ident(TokenID type) {
+		this.type = type;
 	}
 
 	public void setIdentValue(String id_value) {
@@ -73,8 +73,21 @@ public class Ident {
 		TNUMBER, // number
 
 		TSTATIC, TCLASS, TVOID, // are no Strong symbols, because we always start with public !
+
+		TELSE, // "else"
+
+		TNEW, // "new"
+
+		// strong symbols
 		
-		STRONG_SYM, // Symbols serving as Synchronisation points:
+		TPACKAGE, // "package"
+		STRONG_SYM_BB, // Symbols serving as Synchronisation points: BB...Body Block
+		
+
+		/** bodyblock SYNC points **/
+		TWHILE, // "while"
+		TIF, // "if"
+		TRETURN, // return
 		
 		TINT, // "int"
 		TBOOL, // "boolean"
@@ -86,24 +99,21 @@ public class Ident {
 		TCHAR_ARRAY, // "char[]"
 		TSTRING_ARRAY, // "String[]"
 		
-		TPACKAGE, // "package"
-		TIMPORT, TPUBLIC,  TSIDENT, // simple identifier
-		TRETURN, // return
-		TNEW, // "new"
-		TIF, // "if"
-		TELSE, // "else"
-		TWHILE, // "while"
-
-		TEOF; // end of file
+		TSIDENT, // simple identifier
 		
+        /** bodyblock SYNC points end**/
+		
+		STRONG_SYM_CB, // syn point CB.. Class Block
+		TIMPORT, TPUBLIC,
+		
+		TEOF; // end of file
 
 		// some startsets implemented as enum methods
 		public boolean startSetDataType() {
+			if (this.startSetSimpleDeclaration())
+				return true;
 			switch (this) {
 			case TSIDENT:
-			case TINT:
-			case TBOOL:
-			case TCHAR:
 				return true;
 			default:
 				return false;
