@@ -14,7 +14,7 @@ public class Ident {
 	TokenID type; // type
 	String value; // value
 
-	int line_number;
+	int lineNumber;
 
 	public Ident() {
 		setIdentValue("");
