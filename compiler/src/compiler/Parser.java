@@ -80,7 +80,7 @@ public class Parser {
 		@SuppressWarnings("unused")
 		Scanner scanny = new Scanner();
 		Scanner
-				.importSource("/folk/rgratz/share/docu/uni/compiler/ws/compiler/src/compiler/Quicksort.java");
+				.importSource("/folk/rgratz/share/docu/uni/compiler/ws/compiler/src/examples/SynErrors.java");
 		program();
 //		while (true){
 //			nextToken();
