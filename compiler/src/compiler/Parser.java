@@ -319,7 +319,7 @@ public class Parser {
 	}
 
 	private static void simpleDeclaration() throws IllegalTokenException {
-		debug("SimpleDeclaration");
+		debug("simpleDeclaration");
 		if (currentToken.type.startSetPrimitive())
 			primitiveDeclaration();
 		else if (currentToken.type.startSetPrimitiveArray())
@@ -537,6 +537,7 @@ public class Parser {
 	}
 
 	private static void term() throws IllegalTokenException {
+		debug("term");
 		factor();
 		while (currentToken.type == TPLUS || currentToken.type == TMINUS) {
 			factor();
@@ -551,6 +552,7 @@ public class Parser {
 	}
 
 	private static void factor() throws IllegalTokenException {
+		debug("factor");
 		value();
 		while (currentToken.type == TMULT || currentToken.type == TDIV ||
 				currentToken.type == TMOD) {
@@ -565,6 +567,7 @@ public class Parser {
 	}
 
 	private static void value() throws IllegalTokenException {
+		debug("value");
 		if (currentToken.type == TSIDENT) {
 			identifier();
 			if (currentToken.type == TLBRACK)
@@ -651,7 +654,7 @@ public class Parser {
 		else if (currentToken.type == TCHAR_ARRAY)
 			expect(TCHAR_VALUE);
 		else
-			syntaxError("Wro token " + currentToken.type.toString() +
+			syntaxError("Wrong token " + currentToken.type.toString() +
 					", primitive Array datatype expected, at line: " +
 					currentToken.line_number);
 	}
@@ -690,7 +693,7 @@ public class Parser {
 		expect(TLBRACK);
 		if (currentToken.type.startSetExpression())
 			expression();
-		expect(TRBRACK);
+		expectWeek(TRBRACK);
 
 	}
 }
