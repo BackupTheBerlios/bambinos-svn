@@ -22,6 +22,8 @@ public class Scanner {
 	// nextNextByte is the byte next to nextByte
 	private static Byte nextNextByte;
 	
+	private static int currentLineNumber = 0;
+	
 	/**
 	 * Initialization for Scanner. It opens a filehandle 
 	 * @author lacki
@@ -103,9 +105,6 @@ public class Scanner {
 				passSinglelineComment();
 			} else if((currentByte == 47) &&  (nextByte == 42)) {
 				passMultilineComment();
-			} else if((currentByte == 46) && (charIsLetter(nextByte))) {
-					identifier = readTextSymbol();
-					symbolFound = true;
 			} else {
 				identifier = readSymbol();
 				//System.out.println("ident: " + ident.type.toString());
@@ -117,6 +116,7 @@ public class Scanner {
 			}				
 
 		}
+		identifier.lineNumber = currentLineNumber;
 		return identifier;
 
 	}
@@ -185,6 +185,9 @@ public class Scanner {
 		// "-"
 		} else if(currentByte == 45) {
 			currentIdentifier.type = TokenID.TMINUS;
+		// "."
+		} else if(currentByte == 46) {
+			currentIdentifier.type = TokenID.TDOT;
 		// "/"
 		} else if(currentByte == 47) {
 				currentIdentifier.type = TokenID.TDIV;
@@ -257,6 +260,13 @@ public class Scanner {
 
 			currentByte = nextByte;
 			nextByte = nextNextByte;
+			if (currentByte != null) {
+				if ((currentByte == 10) || (currentByte == 13)){
+					currentLineNumber++;
+				}
+			}
+			
+			
 			nextNextByte = file.readByte();
 		} catch(EOFException eof) {
 			nextNextByte = null;
@@ -330,22 +340,6 @@ public class Scanner {
 		boolean errorSymbol = false;
 		boolean symbolIsIdentifier = false;
 
-		/* tests if the simpleIdentifier starts with a "."
-		 * then we need to check if the next Symbol is a letter
-		*/
-		if (currentByte == 46) {
-			symbolValue = symbolValue + (char)(int)currentByte;
-			
-			// if it's no letter, don't check for identifier but return a TDOT-Symbol
-			if (charIsLetter(nextByte) == false) {
-				endOfSymbol = true;
-				currentIdentifier.type = TokenID.TDOT;
-			} else {
-				readNextByte();
-				symbolIsIdentifier = true;
-			}
-				
-		}
 		
 		// followSymbol definies the available symbols that can follow the identifier
 		byte[] followSymbols = {61, 60, 62, 33, 32, 38, 124, 59, 40, 41, 91, 93, 44, 42, 47, 37, 43, 45, 123, 125};
@@ -365,8 +359,7 @@ public class Scanner {
 			// if nextByte is a dot (46), the symbol must be a identifier and not a reserved symbol
 			} else if (nextByte == 46) {
 				symbolIsIdentifier = true;
-				endOfSymbol = true;
-				//readNextByte();			
+				endOfSymbol = true;			
 			// if nextByte is a bracket (91), the symbol must be a identifier and not a reserved symbol
 			} else if ((nextByte == 91) && (nextNextByte == 93)){
 				symbolIsIdentifier = false;
