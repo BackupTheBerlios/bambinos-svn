@@ -62,7 +62,7 @@ import compiler.Util.IllegalTokenException;
 /**
  * Start Compiling 
  * 		-> fetch token from Scanner 
- * 		-> initiazile Code Generation
+ * 		-> initiazile Code Generation when sentence is complete. A sentence is complete when a semicolon is expected, or .... (if,while,...)
  * 
  * @author wondn ruap
  */
@@ -197,7 +197,7 @@ public class Parser {
 		tokenList.clear();
 	}
 
-	/**
+	/*
 	 * Continue parsing on Syntax Errors, but stop Code Generation !
 	 * 
 	 */
@@ -450,6 +450,13 @@ public class Parser {
 			assignmentSuffix();
 	}
 
+/**
+ * bodyBlock() does call any of a if, while, return, declarations, assignments statement
+ * 
+ * Error Handling in the body Block:
+ * On Strong Errors bodyBlock does sync to one of those tokens
+ * "while" 	"if" "return" "int"	 "boolean" "char" "String" "int[]" "boolean[]" "char[]" "String[]" simple identifier
+ */
 	private static void bodyBlock() {
 		debug("bodyBlock");
 		while (true) {
