@@ -1,16 +1,23 @@
 \documentclass[a4paper,10pt]{article}
 
 \usepackage[T1]{fontenc}
-%\usepackage{graphicx}
-% \usepackage[english,french,ngerman]{babel} 
 
+
+%\renewcommand{\rmdefault}{ppl} %Palatino
+%\renewcommand{\rmdefault}{cmfib} % computer modern fibonacci 365
+%\renewcommand{\rmdefault}{\sfdefault} default serifenlos
+\usepackage{ae}
+\renewcommand{\familydefault}{phv} % Helvetica angenehm zu lesen ! 386
+\usepackage{graphicx}
+
+% Silbentrennung
+\usepackage[english,ngerman]{babel}
 
 % PDF
 %LaTeX erzeugt mit dem hyperref-Paket interaktive PDF-Dateien mit Bookmarks
-
-
-
-% \usepackage{helvet}
+\usepackage{color}
+\usepackage[colorlinks]{hyperref}
+\usepackage{my} % modifizierte Ueberschriften
 %\usepackage{avant}
 %\usepackage{mathptmx}
 
@@ -24,6 +31,9 @@
 
 %Umlaute ermöglichen
 \usepackage[latin1]{inputenc}
+\usepackage{tabularx} % Seite 259 im Latex Buch, ist extrem cool !!
+\newcolumntype{Y}{>{\small\raggedright\arraybackslash}X}
+
 
 %Kopf- und Fußzeile
 \usepackage{fancyhdr}
@@ -45,11 +55,12 @@
 
 
 \begin{document}
+
 {\sc Die Schriftart small caps (Kapit"alchen).}
 {\sf Die Schriftart sans serif (serifenlos).}
 
-
-
+\tableofcontents
+\newpage
 
 \input{parser.tex}
 
