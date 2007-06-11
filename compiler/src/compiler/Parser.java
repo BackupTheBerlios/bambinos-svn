@@ -17,6 +17,7 @@ import static compiler.Ident.TokenID.TEOF;
 import static compiler.Ident.TokenID.TEQL;
 import static compiler.Ident.TokenID.TERROR;
 import static compiler.Ident.TokenID.TFALSE;
+import static compiler.Ident.TokenID.TGEQ;
 import static compiler.Ident.TokenID.TGTR;
 import static compiler.Ident.TokenID.TIF;
 import static compiler.Ident.TokenID.TIMPORT;
@@ -24,6 +25,7 @@ import static compiler.Ident.TokenID.TINT;
 import static compiler.Ident.TokenID.TINT_ARRAY;
 import static compiler.Ident.TokenID.TLBRACES;
 import static compiler.Ident.TokenID.TLBRACK;
+import static compiler.Ident.TokenID.TLEQ;
 import static compiler.Ident.TokenID.TLPAREN;
 import static compiler.Ident.TokenID.TLSS;
 import static compiler.Ident.TokenID.TMINUS;
@@ -49,12 +51,13 @@ import static compiler.Ident.TokenID.TSTRING_ARRAY;
 import static compiler.Ident.TokenID.TSTRING_VALUE;
 import static compiler.Ident.TokenID.TTRUE;
 import static compiler.Ident.TokenID.TVOID;
-import static compiler.Ident.TokenID.*;
+import static compiler.Ident.TokenID.TWHILE;
 import static compiler.Util.debug;
 
 import java.util.ArrayList;
 
 import compiler.Ident.TokenID;
+import compiler.Util.IllegalTokenException;
 
 /**
  * Start Compiling 
