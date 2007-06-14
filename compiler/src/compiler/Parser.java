@@ -57,7 +57,10 @@ import static compiler.Util.debug;
 import java.util.ArrayList;
 
 import compiler.Ident.TokenID;
+import compiler.SymbolTableCell.ClassType;
+import compiler.SymbolTableCell.DataType;
 import compiler.Util.IllegalTokenException;
+import compiler.playground.CodeGenerator;
 
 /**
  * Start Compiling 
@@ -73,7 +76,8 @@ public class Parser {
 	*/
 	static boolean setCodeGeneration = true;
 	private static int countTLBRACES;
-
+	private static CodeGenerator genCode;
+	
 	static Ident currentToken = new Ident();
 
 	//Liste von tokens, die bei jedem Zeilenende an den Code Generator weitergegeben werden
@@ -84,12 +88,21 @@ public class Parser {
 		Scanner scanny = new Scanner();
 		Scanner
 				.importSource("/folk/rgratz/share/docu/uni/compiler/ws/compiler/src/examples/SynErrors.java");
-		program();
+		
+
+		/* initialize Code Generator */
+		genCode = new CodeGenerator();
+		
+		
+	//	program();
 //		while (true){
 //			nextToken();
 //			if (currentToken.type == TEOF)
 //				break;
 //		}
+		
+		// test symboltable
+		
 	}
 
 	/**
@@ -132,7 +145,9 @@ public class Parser {
 						" in line " + currentToken.lineNumber);
 
 				if (expectedID == TSEMICOLON)
-					generateCode();
+					// generateCode(); nein doch nicht, mache jedes einzeln da nicht immer Code generiert werden soll
+					// sonder bei Deklarationen einfach ein Eintrag in die Symboltable erfolgt TODO 
+					;
 				else
 					tokenList.add(new Ident(expectedID)); // insert missing Identifier into code Generation List
 
@@ -197,11 +212,29 @@ public class Parser {
 		tokenList.clear();
 	}
 
-	/*
+	
+	/**
+	 * Adds a new Entry to the symbol table. This works like this:
+	 * 
+	 * Add all symbols. First class symbols will be added. When a method x declaration is added, 
+	 * then the following symbols will be add in the sublist of the method x. When the next method y is added, 
+	 * all following symbols will be added to the sublist of the method y.
+	 * 
+	 * @param name
+	 * @param classType
+	 * @param type
+	 * @param intValue
+	 * @param stringValue
+	 */
+	private static void add2SymTable(String name,ClassType classType, DataType type, int intValue, String stringValue){
+		genCode.symbolTable.addSym(name, classType, type, intValue, stringValue);
+	}
+	
+	/**
 	 * Continue parsing on Syntax Errors, but stop Code Generation !
 	 * 
 	 */
-	private static void syntaxError(String string) throws IllegalTokenException {
+	public static void syntaxError(String string) throws IllegalTokenException {
 		setCodeGeneration = false;
 		throw new IllegalTokenException(string);
 	}
@@ -259,8 +292,9 @@ public class Parser {
 
 	}
 
-	/* Error Handling in classBlock:
-	 * When something goes wrong in here, he always searches for the next "public" token !
+	/**
+	 * Error Handling in classBlock:
+	 * When something goes wrong in here, he always searches for the next "public" token there the next method starts !
 	 */
 	private static void classBlock() {
 		debug("ClassBlock");
@@ -315,12 +349,22 @@ public class Parser {
 
 	private static void objectDeclaration() throws IllegalTokenException {
 		debug("objectDeclaration");
-		debug("ObjectDeclaration");
 		object();
 		objectDeclarationSuffix();
 		expectWeek(TSEMICOLON);
 	}
 
+	
+	/**
+	 * int x;
+	 * int x = expression;
+	 * int x = 3 + 4; 
+	 * int x = a + 4;
+	 * int x;
+	 * char x = c;
+	 * 
+	 * @throws IllegalTokenException
+	 */
 	private static void simpleDeclaration() throws IllegalTokenException {
 		debug("simpleDeclaration");
 		if (currentToken.type.startSetPrimitive())
@@ -331,6 +375,8 @@ public class Parser {
 			stringDeclaration();
 		else if (currentToken.type == TSTRING_ARRAY)
 			stringArrayDeclaration();
+		// add entry to Symboltable
+		
 		expectWeek(TSEMICOLON);
 	}
 
