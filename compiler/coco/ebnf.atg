@@ -58,14 +58,14 @@ classDeclaration = "public" "class" simpleIdentifier "{" classBlock "}".
 classBlock = { objectDeclaration | simpleDeclaration } { methodDeclaration }.
 
 objectDeclaration = object objectDeclarationSuffix SEMICOLON. 
-simpleDeclaration = primitiveDeclaration | primitiveArrayDeclaration | stringDeclaration | stringArrayDeclaration SEMICOLON. 
+simpleDeclaration = primitiveDeclaration | primitiveArrayDeclaration | stringDeclaration | stringArrayDeclaration . 
 
 methodDeclaration = "public" "static" ("void"|datatype) simpleIdentifier "("[datatypeDescriptor{"," datatypeDescriptor}]")" "{" bodyBlock "}".
 
-primitiveDeclaration = primitive identifier [assignmentSuffix].
-primitiveArrayDeclaration = primitiveArray identifier equal "new" primitive "[" number "]".
-stringDeclaration = "String" identifier equal "new" "String" "(" [StringValue] ")".
-stringArrayDeclaration = "String[]" identifier equal "new" "String" "["number"]".
+primitiveDeclaration = primitive identifier [assignmentSuffix] SEMICOLON.
+primitiveArrayDeclaration = primitiveArray identifier equal "new" primitive "[" number "]" SEMICOLON.
+stringDeclaration = "String" identifier equal "new" "String" "(" [StringValue] ")" SEMICOLON.
+stringArrayDeclaration = "String[]" identifier equal "new" "String" "["number"]" SEMICOLON.
 
 objectDeclarationAssignmentMethodcall = object ( arrayDeclarationSuffix | methodCallSuffix ) SEMICOLON.
 
