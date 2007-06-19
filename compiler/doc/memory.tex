@@ -1,0 +1,47 @@
+\section{Memorymanagement in comPiler}
+ComPiler compiles code for RISC-based architectures. It has 32 registers each
+with size 32 Bit (4 Byte). Register 0 (R0) has always the value 0. Register 31
+(R31) is reserved for return addresses. In a branch instruction the PC is stored
+in R31. 
+
+The instruction register (IR) holds the current instruction being executed. \newline 
+The program counter (PC) contains the address of the instruction to be
+fetched next. \newline
+The stack pointer (SP) indicates the top element of a register-based stack. That
+means that on some occasions registers are accessed like a stack and the SP
+points out the next free register.  
+\newline
+The memory for the activation frames is organized like a stack. Each frame is an
+entry. The SP indicates the next free memory and the FP the base address of the
+current frame. 
+\subsubsection{Organization of an activation frame}
+An activation frame is a special memory context used for a procedure and its
+local variables. It's created by a branch instruction (e.g. a procedure call). The base address of the activation 
+frame is also the base address for all local variables declared here. Because this base address is highly 
+important and one needs to access it efficently it's saved in the frame pointer (FP).
+As the former PC was saved at the branch instruction, we use it as our return
+address and save it in R31.
+
+
+
+\subsection{local variables}
+ComPiler offers local hiding of variables. That means, that procedures can
+contain variables that cannot be seen outside the procedure. Even if there
+exists a variable with the same name outside the procedure, these two don't
+interfere. 
+\subsubsection*{So what happens when a branch instruction occurs?}
+When the instruction is executed, the PC is stored in R31. Then the code
+generator jumps to the next instruction-address indicated by the branch instruction.
+Now we have entered a special memory context for procedures (an activation frame). In this frame all memory is 
+managed that is needed in the procedure
+\newline
+  
+ 
+
+
+Local variables have the following properties: 
+\begin{itemize}
+  \item They have negative offsets to their baseaddresses
+\end{itemize}
+
+
