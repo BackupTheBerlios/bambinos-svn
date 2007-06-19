@@ -21,7 +21,7 @@ set of the alternatives must be disjunctive. We checked our EBNF with the Parser
 
 
 \subsection{First Symbols(first sets)}
-\label{fist_sets}
+\label{first_sets}
 \noindent
 \begin{tabularx}{\linewidth}{YY}
 program & ``\texttt{package}'' ``\texttt{import}'' ``\texttt{public}'' \\
@@ -90,7 +90,13 @@ Compiler is able to detect and correct following week errors:
 \label{label_strong_errors}
 Strong Errors can be syntax errors as well as invalid symbols or invalid words. When a strong error occurs the parser displaces a error
 message and the code generation will be stopped. The parser goes to the next strong symbol and continue parsing. In our parser
-implementation we have sync operation implemented in three methods. (TODO)
+implementation we have sync operation implemented in three methods. See Figure (\ref{parser_deb}), marked methods (TODO) serves as
+synchronisation points. Synchronization works this way:
+\begin{itemize}
+  \item one of the synchronization methods recognizes a strong error in one of its called method
+  \item the error will be printed and code generation will stop
+  \item the synchronization methods x fetches new tokens until the next ``\hyperref[first_sets]{first set}'' token of method x is fetched
+\end{itemize}
 Strong Errors can be:
 \begin{itemize}
   \item misplaced tokens. When the current token does not correspond to EBNF rules, except of week errors.
