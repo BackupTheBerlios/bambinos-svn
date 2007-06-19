@@ -2,16 +2,17 @@ package compiler;
 
 public class Util {
 
-	private static boolean debugging = true; // default
+	private static boolean debugging1 = true; // default
+	//private static boolean debugging1 = true; // default
 
-	// print debug messages
-	public static void debug(String msg) {
-		if (debugging == true)
+	// print debug messages Parser - Scanner tokens
+	public static void debug1(String msg) {
+		if (debugging1 == true)
 			System.out.println(msg);
 	}
 
 	public static void setDebugging(boolean debugging) {
-		Util.debugging = debugging;
+		Util.debugging1 = debugging;
 	}
 
 	

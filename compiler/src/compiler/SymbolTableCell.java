@@ -1,45 +1,55 @@
 package compiler;
+
 /**
  * Representing a sym
  * 
  */
-public class SymbolTableCell{
+public class SymbolTableCell {
 
 	private String name;
-	private ClassType classType; // constante, variable, type(glaube array), procedure
-	private DataType type; // object: int, bool, char, String
-	private int intValue; // wert
-	private String stringValue;
+	private ClassType classType; // constante, variable, object(array,class) , procedure
+	private TypeDesc type; // int, bool, char, String
+	private String value;
 	SymbolTableList methodSymbols;
-	
-	public SymbolTableCell(String name,ClassType classType, DataType type, int intValue, String stringValue){
-		this.name=name;
-		this.classType=classType;
-		this.type=type;
-		this.intValue=intValue;
-		this.stringValue=stringValue;
+	private int offset; //offset is negative , (wirth names it val)
+	private int size; // in 4 bytes 
+
+	public SymbolTableCell(String name, ClassType classType, TypeDesc type,
+			String value, int offset, int size) {
+		this.name = name;
+		this.classType = classType;
+		this.type = type;
+		this.value=value;
 		// create new symbol list for local variables
-		if (classType == ClassType.method){
-			methodSymbols= new SymbolTableList();
+		if (classType == ClassType.method || classType == ClassType.array) {
+			methodSymbols = new SymbolTableList();
 		}
-			
-		
+		this.offset = offset;
+		this.size = size;
+
+	}
+
+	public SymbolTableCell() {
+
 	}
 	
-	public SymbolTableCell(){
-		
+	/**
+	 * Needed for method declarations, because size has to be fixed up later
+	 * 
+	 * @param size
+	 * @param offset
+	 */
+	public void fixSizeAndOffset(int size, int offset){
+		this.size=size;
+		this.offset=offset;
 	}
-	
-	public static enum ClassType{
+
+	public static enum ClassType {
 		var, // variable
-		array, // type bei wirt wenn richtig verstanden
-		method, // gibt keine procedures
+		array, // type bei wirth wenn richtig verstanden
+		method, // gibt keine procedures, 
 	}
-	
-	public static enum DataType{
-		object, intT, boolT, charT, String;
-	}
-	
+
 	public String getName() {
 		return name;
 	}
@@ -48,19 +58,20 @@ public class SymbolTableCell{
 		return classType;
 	}
 
-
-	public  DataType getType() {
+	public TypeDesc getType() {
 		return type;
 	}
 
-
-	public int getIntValue() {
-		return intValue;
-	}
-	
-	public String getStringValue(){
-		return stringValue;
+	public int getSize() {
+		return size;
 	}
 
+	public int getOffset() {
+		return offset;
+	}
+
+	public String getValue() {
+		return value;
+	}
 
 }
