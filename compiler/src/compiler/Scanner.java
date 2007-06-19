@@ -22,7 +22,7 @@ public class Scanner {
 	// nextNextByte is the byte next to nextByte
 	private static Byte nextNextByte;
 	
-	private static int currentLineNumber = 0;
+	private static int currentLineNumber = 1;
 	
 	/**
 	 * Initialization for Scanner. It opens a filehandle 
