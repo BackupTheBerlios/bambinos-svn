@@ -11,16 +11,26 @@ public class VM {
 
 	private static JTextArea registerDisplay;
 	
-	private static int[] registers = new int[32];
-	private int stackSize = 1024;
-	private int heapSize = 4096;
+	private static Integer[] registers = new Integer[32];
+	public static Integer PC = new Integer(null);
+	public static Integer IR = new Integer(null);
+	private static Integer[] memory = new Integer[4096];
 	
+	
+	private final int ADD=1, ADDI=2, SUB=3, SUBI=4, MUL=5, MULI=6, DIV=7, DIVI=8,
+	MOD=9, MODI=10, CMP = 11, CMPI=12, CHK=13, CHKI=14, AND=15, ANDI=16, BIC=17, 
+	BICI=18, OR=19, ORI=20, XOR=21, XORI=22, LSH=23, LSHI=24, ASH=25, ASHI=26;
+	
+	private final int LDW=30, LDB=31, POP=32, STW=33, STB=34, PSH=35;
+	
+	private final int BEQ=40, BNE=41, BLT=42, BGE=43, BGT=44, BLE=45, BSR=46;
+		
 	
 	/**
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		
+	
 		// initialize register-array
 		registers[0] = 0;
 		
@@ -399,6 +409,39 @@ public class VM {
 	}
 	
 	
+	
+	private static void executeLDW(int r0, int r1, int r2) {
+		
+		registers[r0] = memory[registers[r1] + r2];
+		
+		System.out.println("LDW: " + registers[r0]);
+	}
+	
+	private static void executePOP(int r0, int r1, int r2) {
+		
+		registers[r0] = memory[registers[r1]];
+		registers[r1] = registers[r1] + r2;
+		
+		System.out.println("POP: " + registers[r0]);
+	}
+	
+	
+	private static void executeSTW(int r0, int r1, int r2) {
+		
+		memory[registers[r1] + r2] = registers[r0];
+		
+		System.out.println("STW: " + registers[r1] + r2);
+	}
+	
+	
+	private static void executePSH(int r0, int r1, int r2) {
+		
+		registers[r1] = registers[r1] - r2;
+		memory[registers[r1]] = registers[r0];
+		
+		System.out.println("PSH: " + registers[r1]);
+	}
+	
 	private static void initGUI() {
 	
 		JFrame frame = new JFrame("overview memory");
@@ -434,6 +477,7 @@ public class VM {
 			
 			registerDisplay.append("R" + registerLabel + ": " + registers[i] + "\n");
 		}
+			
 	}
 	
 }
