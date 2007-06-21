@@ -43,4 +43,27 @@ public class Util {
 		}
 
 	}
+	
+	public static class TypeErrorException extends Exception {
+
+		public TypeErrorException() {
+			// TODO Auto-generated constructor stub
+		}
+
+		public TypeErrorException(String message) {
+			super(message);
+			// TODO Auto-generated constructor stub
+		}
+
+		public TypeErrorException(Throwable cause) {
+			super(cause);
+			// TODO Auto-generated constructor stub
+		}
+
+		public TypeErrorException(String message, Throwable cause) {
+			super(message, cause);
+			// TODO Auto-generated constructor stub
+		}
+
+	}
 }

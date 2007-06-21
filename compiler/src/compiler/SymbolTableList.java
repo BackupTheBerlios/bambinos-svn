@@ -147,5 +147,9 @@ public class SymbolTableList {
 	public int getCurrentOffset(){
 		return offset;
 	}
+	
+	public void fixOffset(int fix){
+		this.offset+=fix;
+	}
 
 }

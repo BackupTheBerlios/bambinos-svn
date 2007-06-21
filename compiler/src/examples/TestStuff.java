@@ -7,17 +7,20 @@ public class TestStuff {
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		
+		int z=8;
+		//char mychar='s';
 		
-		 
-		int z;
-		char mychar='s';
-		
-		int y=7+3;
+		int y;
+		y=(7+4)*(7+z); 
 		
 		//int[] xArray = new int[4];
 		char[] myCahrArray = new char[23];
 
 		
+	}
+	
+	public static int testMethod(){
+		return 3;
 	}
 
 }
