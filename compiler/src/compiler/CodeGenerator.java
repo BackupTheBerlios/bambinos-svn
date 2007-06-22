@@ -106,6 +106,13 @@ public class CodeGenerator {
 		putOpCode(new OpCodeElement(kind, topReg - 1, topReg - 1, topReg));
 		decreaseReg();
 	}
+	
+	/**
+	 * Immediate
+	 */
+	public static void putImOp2Reg(String kind,int value){
+		putOpCode(new OpCodeElement(kind.concat("I"), topReg, topReg, value));
+	}
 
 	/**
 	 * STW 1,0,obj.val

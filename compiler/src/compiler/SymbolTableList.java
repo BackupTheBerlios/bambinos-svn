@@ -28,8 +28,7 @@ public class SymbolTableList {
 	 * 
 	 * @param String ClassType DataType int String
 	 */
-	public void addSym(String name, ClassType classType, TypeDesc type,
-			String value, int size) {
+	public void addSym(String name, ClassType classType, TypeDesc type, int size) {
 
 		boolean foundSymbol = false;
 		ListIterator<SymbolTableCell> iterator = symList.listIterator();
@@ -59,14 +58,13 @@ public class SymbolTableList {
 		/* add entry to list */
 		if (scope == 0) {
 			offset = offset - size;
-			symList.addLast(new SymbolTableCell(name, classType, type,
-					value, offset, size));
+			symList.addLast(new SymbolTableCell(name, classType, type, offset,
+					size));
 		}
 
 		/* add local vars in the sublist of the last method */
 		if (scope == 1)
-			symList.getLast().methodSymbols.addSym(name, classType, type,
-					value, size);
+			symList.getLast().methodSymbols.addSym(name, classType, type, size);
 
 		/* if scope is 1 a method declaration does already exist, but to add the next Method to the global scope (class scope) do following:
 		 * set scope to 0 and add the method to the class symbol list and set scope to 1 again*/
@@ -125,17 +123,16 @@ public class SymbolTableList {
 	public void printSymbolTable() {
 		ListIterator<SymbolTableCell> iter = symList.listIterator();
 		System.out.println("Symbol Table:");
-		int i=0;
+		int i = 0;
 		while (iter.hasNext()) {
-			SymbolTableCell currentCell=iter.next();
+			SymbolTableCell currentCell = iter.next();
 			i++;
-			System.out
-					.println(i + " Name: " + currentCell.getName() + " type: " +
-							currentCell.getType().getBase().toString() + " size:  " +
-							currentCell.getSize() + " offset: " +
-							currentCell.getOffset() + " value: "+currentCell.getValue());
+			System.out.println(i + " Name: " + currentCell.getName() +
+					" type: " + currentCell.getType().getBase().toString() +
+					" size:  " + currentCell.getSize() + " offset: " +
+					currentCell.getOffset() + " value: ");
 			;
-			if (currentCell.getClassType()==SymbolTableCell.ClassType.method){
+			if (currentCell.getClassType() == SymbolTableCell.ClassType.method) {
 				System.out.println("Symbol Table method: ");
 				currentCell.methodSymbols.printSymbolTable();
 				System.out.println(" END Symbol Table method ");
@@ -143,13 +140,13 @@ public class SymbolTableList {
 
 		}
 	}
-	
-	public int getCurrentOffset(){
+
+	public int getCurrentOffset() {
 		return offset;
 	}
-	
-	public void fixOffset(int fix){
-		this.offset+=fix;
+
+	public void fixOffset(int fix) {
+		this.offset += fix;
 	}
 
 }
