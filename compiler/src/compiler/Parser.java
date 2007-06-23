@@ -55,6 +55,7 @@ import static compiler.Ident.TokenID.TWHILE;
 import static compiler.Util.debug1;
 
 import java.util.ArrayList;
+import java.util.Vector;
 
 import compiler.Ident.TokenID;
 import compiler.SymbolTableCell.ClassType;
@@ -339,12 +340,13 @@ public class Parser {
 		expect(TPUBLIC);
 		expectWeek(TSTATIC);
 		int verifyReturnType = 0;
+		TypeDesc returnType; // TODO weiss noch nicht ob man den Rueckgabewert ueberhaupt pruefen sollen, overkill ???
 
 		if (currentToken.type == TVOID) {
 			expect(TVOID);
 			verifyReturnType++;
 		} else if (currentToken.type.startSetDataType()) {
-			dataType(); // return type
+			returnType = dataType(); // return type
 			verifyReturnType++;
 		} else
 			syntaxError("Illegal Method Declaration, Return Type not valid. Token: " +
@@ -368,25 +370,50 @@ public class Parser {
 
 		expect(TLPAREN);
 
-		if (currentToken.type.startSetSimpleDeclaration()) { // if dataTypeDescriptor (startSet is dataType )
-			dataTypeDescriptor();
-			while (currentToken.type == TCOMMA ||
-					currentToken.type.startSetSimpleDeclaration()) {
-				expectWeek(TCOMMA);
-				dataTypeDescriptor();
-			}
-		}
-		expectWeek(TRPAREN);
-		expectWeek(TLBRACES);
-
+		// Add method to symboltable
 		int offsetBefore = CodeGenerator.symbolTable.getCurrentOffset();
-		add2SymTable(name, SymbolTableCell.ClassType.method,
-				CodeGenerator.INTTYPE, 0);
+
 		// TODO
 		// 1. null = type ist nicht so einfach. Bei Objekten muss ich 
 		// irgendwie den Typ vorher deklarieren und dann schauen welcher und irgendwo suchen (siehe Type typen die allgemein definiert sind 
 		// INTYPE, BOOLTYPE
 		// 2. null ist value ; Methode hat keinen Wert !
+		add2SymTable(name, SymbolTableCell.ClassType.method,
+				CodeGenerator.INTTYPE, 0);
+
+		// Parameter:
+		Vector<String> paramVector = new Vector<String>(); // TODO vorerst, brauche dann ein Objekt statt String
+
+		if (currentToken.type.startSetSimpleDeclaration()) { // if dataTypeDescriptor (startSet is dataType )
+			dataTypeDescriptor();
+			paramVector.add(tokenList.get(tokenList.size() - 1).value);
+			while (currentToken.type == TCOMMA ||
+					currentToken.type.startSetSimpleDeclaration()) {
+				expectWeek(TCOMMA);
+				dataTypeDescriptor();
+				paramVector.add(tokenList.get(tokenList.size() - 1).value);
+			}
+		}
+		expectWeek(TRPAREN);
+		expectWeek(TLBRACES);
+
+		// add parameters with positive offsets+2 relative from the frame pointer
+		// Add parameters to symboltable call by ref noch nicht implementiert !!
+		// TODO ich adde einfach mal nur Integer types ; 
+		// muss in der Form int x, ... sein -- arrays, objekte geht noch nicht
+		CodeGenerator.symbolTable.getSymbol(name).methodSymbols
+				.fixOffset(paramVector.size() + 3);
+		int i = 0;
+		while (i < paramVector.size()) {
+			add2SymTable(paramVector.get(i), SymbolTableCell.ClassType.var,
+					CodeGenerator.INTTYPE, 1);
+			i++;
+		}
+		CodeGenerator.symbolTable.getSymbol(name).methodSymbols.fixOffset(-2);
+
+		// create method declaration Assembler Code
+		CodeGenerator.methodPrologue();
+
 		bodyBlock();
 
 		// size consist only of the method entries, as it is programmed here:
@@ -395,10 +422,14 @@ public class Parser {
 
 		// fix offset in methods Symbol table cell 
 		CodeGenerator.symbolTable.getSymbol(name).fixSizeAndOffset(size,
-				offsetBefore + size);
+				offsetBefore + size - 1); // first element starts with offset 0 in methods sublist, so increase size fixup
 		// fix global offset counter in Symbol table list
 		CodeGenerator.symbolTable.fixOffset(size);
+
 		expectWeek(TRBRACES);
+
+		// End of Method
+		CodeGenerator.methodEpilogue(size);
 	}
 
 	private static void objectDeclaration() throws IllegalTokenException {
@@ -559,14 +590,19 @@ public class Parser {
 	private static void methodCallSuffix() throws IllegalTokenException {
 		debug1("methodCallSuffix");
 		expect(TLPAREN);
-		if (currentToken.type.startSetExpression())
+		if (currentToken.type.startSetExpression()) {
 			expression();
+			CodeGenerator.pushRegister();
+		}
 		while (currentToken.type == TCOMMA ||
 				currentToken.type.startSetExpression()) {
 			expectWeek(TCOMMA);
 			expression();
+			CodeGenerator.pushRegister();
 		}
 		expect(TRPAREN);
+		// Method Call
+		CodeGenerator.methodCall();
 	}
 
 	private static void arrayDeclarationSuffix() throws IllegalTokenException {
@@ -583,7 +619,7 @@ public class Parser {
 			SymbolTableCell cell = CodeGenerator.symbolTable
 					.getSymbol(tokenList.get(0).value);
 			try {
-				CodeGenerator.storeWord(cell, item.type);
+				CodeGenerator.storeWordCell(cell, item.type);
 			} catch (TypeErrorException e) {
 				typeError();
 				e.printStackTrace();
@@ -677,7 +713,7 @@ public class Parser {
 			arraySelector();
 	}
 
-	// darf nur in Methoden erfolgen werden immer glei ausgefuehrt und in Registern eingetragen !!!! 
+	// darf nur in Methoden local erfolgen werden immer glei ausgefuehrt und in Registern eingetragen !!!! 
 	// TODO
 	private static Item expression() throws IllegalTokenException {
 		debug1("expression");
@@ -987,21 +1023,25 @@ public class Parser {
 		expect(TSIDENT);
 	}
 
-	private static void dataType() throws IllegalTokenException {
+	private static TypeDesc dataType() throws IllegalTokenException {
 		debug1("dataType");
 		if (currentToken.type.startSetPrimitive())
-			primitive();
+			return primitive();
 		else if (currentToken.type.startSetPrimitiveArray())
-			primitiveArray();
-		else if (currentToken.type == TSTRING)
+			return primitiveArray(); // TODO stimmt auch nicht so
+		else if (currentToken.type == TSTRING) {
 			expect(TSTRING);
-		else if (currentToken.type == TSTRING_ARRAY)
+			return CodeGenerator.STRINGTYPE;
+		} else if (currentToken.type == TSTRING_ARRAY) {
 			expect(TSTRING_ARRAY);
-		else if (currentToken.type == TSIDENT)
+			// TODO return 
+		} else if (currentToken.type == TSIDENT) {
 			object();
-		else
+			// TODO return
+		} else
 			syntaxError("Wrong token " + currentToken.type.toString() +
 					", datatype expected at line: " + currentToken.lineNumber);
+		return null;
 	}
 
 	static private void identifier() throws IllegalTokenException {
