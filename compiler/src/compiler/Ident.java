@@ -101,6 +101,8 @@ public class Ident {
 		
 		TSIDENT, // simple identifier
 		
+		TPRINT, // printStatement
+		
         /** bodyblock SYNC points end**/
 		
 		STRONG_SYM_CB, // syn point CB.. Class Block
