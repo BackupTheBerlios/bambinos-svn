@@ -6,12 +6,16 @@ import java.io.IOException;
 import java.io.EOFException;
 import javax.swing.JTextArea;
 import java.awt.GridLayout;
+import java.awt.GridBagLayout;
 import javax.swing.JFrame;
+import javax.swing.JScrollPane;
+import javax.swing.JButton;
 
 public class VM {
 
 	private static JTextArea registerDisplay;
 	private static JTextArea instructionDisplay;
+	private static JTextArea consoleDisplay;
 	
 	private static Integer[] registers = new Integer[32];
 	public static Integer PC = new Integer(0);
@@ -33,7 +37,7 @@ public class VM {
 	
 	// format 2 instructions
 	private static final int ADD=30,  SUB=31,  MUL=32,  DIV=33, MOD=34,  CMP = 35,  CHK=36,  
-	AND=37,  BIC=38, OR=39,  XOR=40,  LSH=41,  ASH=42, HIGHEST_FORMAT_2=49;
+	AND=37,  BIC=38, OR=39,  XOR=40,  LSH=41,  ASH=42, PRNI=43, PRNC=44, HIGHEST_FORMAT_2=49;
 	
 	
 	// format 3 instructions
@@ -260,6 +264,8 @@ public class VM {
 			case BGT: executeBGT(targetValue, firstSourceValue); break;
 			case BLE: executeBLE(targetValue, firstSourceValue); break;
 			case BSR: executeBSR(targetValue); break;
+			case PRNI: executePRNI(targetValue, firstSourceValue); break;
+			case PRNC: executePRNC(targetValue, firstSourceValue); break;
 			}
 			
 			
@@ -290,6 +296,12 @@ public class VM {
 		JFrame frame = new JFrame("overview memory");
 	    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
+	    JScrollPane scrollPane1 = new JScrollPane();
+	    JScrollPane scrollPane2 = new JScrollPane();
+	    JScrollPane scrollPane3 = new JScrollPane();
+	    
+	    JButton nextInstructionButton = new JButton();
+	    
 	    
 	    registerDisplay = new JTextArea();
 	    registerDisplay.setEditable(false);
@@ -297,14 +309,25 @@ public class VM {
 	    instructionDisplay = new JTextArea();
 	    instructionDisplay.setEditable(false);
 	    
-        GridLayout layout = new GridLayout(0,2);
+	    consoleDisplay = new JTextArea();
+	    consoleDisplay.setEditable(false);
+	    
+	    scrollPane1.setViewportView(registerDisplay);
+	    scrollPane2.setViewportView(instructionDisplay);
+	    scrollPane3.setViewportView(consoleDisplay);
+	    
+        GridLayout layout = new GridLayout(1,4);
+        GridBagLayout layout1 = new GridBagLayout();
+        
         
         frame.setLayout(layout);
         
-        frame.add(registerDisplay);
-        frame.add(instructionDisplay);
+        frame.add(scrollPane1);
+        frame.add(scrollPane2);
+        frame.add(scrollPane3);
+        //frame.add(nextInstructionButton);
         
-        frame.setSize(400, 550);
+        frame.setSize(600, 550);
         frame.setVisible(true);
         
  	}
@@ -317,12 +340,18 @@ public class VM {
 		for (int i=0; i<registers.length; i++) {
 			
 			if (i < 10) {
-				registerLabel = "0" + i;
+				registerLabel = "R0" + i;
+			} else if (i == 29) {
+				registerLabel = "FP";
+			} else if (i == 30) {
+				registerLabel = "SP";
+			} else if (i == 31) {
+				registerLabel = "LNK";
 			} else {
-				registerLabel = "" + i;
+				registerLabel = "R" + i;
 			}
 			
-			registerDisplay.append("R" + registerLabel + ": " + registers[i] + "\n");
+			registerDisplay.append(registerLabel + ": " + registers[i] + "\n");
 		}
 			
 	}
@@ -821,6 +850,38 @@ public class VM {
 			instructionDisplay.append("\n");
 		}
 	}
+	
+	private static void executePRNI(int r0, int offset) {
+		
+		if (registers[r0] != null) {
+			int memoryAddress = registers[r0] + offset;
+			int intValue = memory[memoryAddress];
+
+			System.out.println(intValue);
+			
+			if (debug) {
+				consoleDisplay.append("" + intValue);
+			}
+		}	
+		
+	}
+	
+	private static void executePRNC(int r0, int offset) {
+		
+		
+		if (registers[r0] != null) {
+			int memoryAddress = registers[r0] + offset;
+			int intValue = memory[memoryAddress];
+			char charValue = (char)intValue;
+			System.out.println(charValue);
+			
+			if (debug) {
+				consoleDisplay.append("" + charValue);
+			}
+		}	
+	}
+	
+	
 	
 	private static void executeBSR(int jumpAddress) {
 		
