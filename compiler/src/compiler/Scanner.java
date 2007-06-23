@@ -514,6 +514,8 @@ public class Scanner {
 			identifier.type = TokenID.TTRUE;
 		} else if (symbolValue.compareTo("false") == 0) {
 			identifier.type = TokenID.TFALSE;
+		} else if (symbolValue.compareTo("print") == 0) {
+			identifier.type = TokenID.TPRINT;
 		} else {
 			identifier.type = TokenID.TSIDENT;
 		}
