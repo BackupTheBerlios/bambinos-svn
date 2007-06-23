@@ -41,7 +41,7 @@ public class VM {
 	
 	
 	// format 3 instructions
-	private static final int BSR=50, HIGHEST_FORMAT_3=63;
+	private static final int BSR=50, RET=51, HIGHEST_FORMAT_3=63;
 	
 	/**
 	 * @param args
@@ -264,6 +264,7 @@ public class VM {
 			case BGT: executeBGT(targetValue, firstSourceValue); break;
 			case BLE: executeBLE(targetValue, firstSourceValue); break;
 			case BSR: executeBSR(targetValue); break;
+			case RET: executeRET(targetValue); break;
 			case PRNI: executePRNI(targetValue, firstSourceValue); break;
 			case PRNC: executePRNC(targetValue, firstSourceValue); break;
 			}
@@ -890,6 +891,16 @@ public class VM {
 		
 		if (debug) {
 			instructionDisplay.append("BSR " + jumpAddress);
+			instructionDisplay.append("\n");
+		}
+	}
+	
+	private static void executeRET(int r0) {
+		
+		PC = registers[r0];
+		
+		if (debug) {
+			instructionDisplay.append("RET " + registers[r0]);
 			instructionDisplay.append("\n");
 		}
 	}
