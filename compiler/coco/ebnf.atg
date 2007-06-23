@@ -74,15 +74,16 @@ assignmentSuffix = equal expression.
 methodCallSuffix = "("[expression {"," expression}]")".
 arrayDeclarationSuffix = [arraySelector]( objectDeclarationSuffix | assignmentSuffix).
 
-bodyBlock = { whileStatement | ifStatement | returnStatement | simpleDeclaration | objectDeclarationAssignmentMethodcall }.
+bodyBlock = { whileStatement | ifStatement | returnStatement | simpleDeclaration | objectDeclarationAssignmentMethodcall | printStatement }.
 
 whileStatement = "while" "(" condition ")" "{" bodyBlock "}".
 ifStatement = "if" "(" condition ")" "{" bodyBlock "}" [ "else" "{" bodyBlock "}" ].
 returnStatement = "return" expression SEMICOLON.
+printStatement = "print" "(" (identifier | intValue | charValue | StringValue ) ")" SEMICOLON.
 
 datatypeDescriptor = datatype identifier [arraySelector].
 
-value = identifier [arraySelector | (methodCallSuffix)] | intValue | charValue | booleanValue | StringValue | "NULL" | not value | "(" expression.
+value = identifier [arraySelector | (methodCallSuffix)] | intValue | charValue | booleanValue | StringValue | "NULL" | not value | "(" expression ")".
 factor = value {('*' | '/' | '%') value}.
 term = factor {("+" | "-") factor}.
 expression = term {(AND|OR) term}.
