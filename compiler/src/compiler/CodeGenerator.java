@@ -31,7 +31,8 @@ public class CodeGenerator {
 	static Vector<OpCodeElement> opCode = new Vector<OpCodeElement>();
 	
 	// some helper, fixup, ... fields
-	static int methodFix;
+	private static int methodFix;
+	private static int mainAddr=0;
 
 	public static class OpCodeElement {
 		String Instruction;
@@ -43,6 +44,12 @@ public class CodeGenerator {
 			f = first;
 			s = second;
 			t = third;
+		}
+		
+		public OpCodeElement(String instruction, int first, int second) {
+			this.Instruction = instruction;
+			f = first;
+			s = second;
 		}
 	}
 
@@ -191,10 +198,21 @@ public class CodeGenerator {
 		// fixup size of method prolog 
 		opCode.get(methodFix).t=size+1;
 	}
+
+	/**
+	 * Need not to validat if main is already set, because Symboltable does already verify unique Identifiers
+	 */
+	public static void setMainPC(){
+		mainAddr=PC;
+	}
 	
-	
-	
-	
+	/**
+	 * prints integer variables
+	 * @param offset
+	 */
+	public static void printIO(int offset){
+		putOpCode(new OpCodeElement("PRINT",FP,offset));
+	}
 	
 	
 	
