@@ -2,7 +2,7 @@ package compiler;
 
 public class Util {
 
-	private static boolean debugging1 = true; // default
+	private static boolean debugging1 = false; // default
 	//private static boolean debugging1 = true; // default
 
 	// print debug messages Parser - Scanner tokens

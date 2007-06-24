@@ -99,7 +99,7 @@ public class Parser {
 //				break;
 //		}
 
-		CodeGenerator.symbolTable.printSymbolTable();
+		//CodeGenerator.symbolTable.printSymbolTable();
 
 		System.out.println("ASSEMBLERCODE: ");
 
