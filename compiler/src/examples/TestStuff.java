@@ -15,10 +15,10 @@ public class TestStuff {
 	
 	public static void main(String[] args) {
 		
-		int z=0;
+		int r=0;
 		int t=1;
 
-		Fibonacci(z, t);
+		Fibonacci(r, t);
 		
 	}
 
