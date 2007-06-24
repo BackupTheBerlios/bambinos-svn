@@ -86,8 +86,8 @@ public class Parser {
 	public static void main(String[] args) {
 		@SuppressWarnings("unused")
 		Scanner scanny = new Scanner();
-		Scanner
-				.importSource("/folk/rgratz/share/docu/uni/compiler/ws/compiler/src/examples/TestStuff.java");
+
+		Scanner.importSource(args[0]);
 
 		/* initialize Code Generator */
 		genCode = new CodeGenerator();
@@ -103,7 +103,7 @@ public class Parser {
 
 		System.out.println("ASSEMBLERCODE: ");
 		CodeGenerator.printOpCode();
-		
+
 		CodeGenerator.write2File();
 
 	}
@@ -684,7 +684,8 @@ public class Parser {
 		expectWeak(TLPAREN);
 		if (currentToken.type == TSIDENT) {
 			identifier();
-			CodeGenerator.printIO(getIdentifersCell(tokenList.size()).getOffset());
+			CodeGenerator.printIO(getIdentifersCell(tokenList.size())
+					.getOffset());
 		} else if (currentToken.type == TNUMBER || currentToken.type == TMINUS)
 			intValue();
 		else if (currentToken.type == TCHAR_VALUE)
