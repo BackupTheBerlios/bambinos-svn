@@ -403,7 +403,7 @@ public class Parser {
 					currentToken.type.startSetSimpleDeclaration()) {
 				expectWeak(TCOMMA);
 				dataTypeDescriptor();
-				paramVector.add(tokenList.get(tokenList.size() - 1).value);
+				paramVector.add(tokenList.get(tokenList.size()-1).value);
 			}
 		}
 		expectWeak(TRPAREN);
@@ -414,7 +414,7 @@ public class Parser {
 		// TODO ich adde einfach mal nur Integer types ; 
 		// muss in der Form int x, ... sein -- arrays, objekte geht noch nicht
 		CodeGenerator.symbolTable.getSymbol(name).methodSymbols
-				.fixOffset(paramVector.size() + 3);
+				.fixOffset(paramVector.size() + 1);
 		int i = 0;
 		while (i < paramVector.size()) {
 			add2SymTable(paramVector.get(i), SymbolTableCell.ClassType.var,

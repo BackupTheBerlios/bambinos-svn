@@ -16,7 +16,7 @@ public class SymbolTableList {
 	private LinkedList<SymbolTableCell> symList = new LinkedList<SymbolTableCell>();
 
 	private int scope = 0; // 0 ... add global symbols 1 ... add local symbols
-	private int offset = 0; // global offset. First Symbol starts with 0 (4 bytes = 1 offset)
+	private int offset = 1; // global offset. First Symbol starts with 0 (4 bytes = 1 offset)
 
 	/**
 	 * Add new Symbol Tabel entry to the linked list

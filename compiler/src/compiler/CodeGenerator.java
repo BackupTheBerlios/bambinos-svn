@@ -89,6 +89,7 @@ public class CodeGenerator {
 		topReg = 0;
 		heap = 0;
 		putOpCode(new OpCodeElement("ADDI", ADDI, SP, 0, 4096));
+		putOpCode(new OpCodeElement("ADDI", ADDI, FP, 0, 0));
 
 	}
 
