@@ -9,7 +9,7 @@ public class TestStuff {
 		
 		print(z);
 		
-		Fibonacci(second,x);
+		Fibonacci(second,z);
 		
 	}
 	
