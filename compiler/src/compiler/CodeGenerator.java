@@ -41,6 +41,8 @@ public class CodeGenerator {
 
 	// Register Pointer
 	static int topReg;
+	
+	static int heap;
 
 	final static int LNK = 31; // define Linkregister
 	final static int SP = 30; // define Stackpointer
@@ -85,6 +87,7 @@ public class CodeGenerator {
 		/* create SymbolList */
 		CodeGenerator.symbolTable = new SymbolTableList();
 		topReg = 0;
+		heap = 0;
 		putOpCode(new OpCodeElement("ADDI", ADDI, SP, 0, 4096));
 
 	}
@@ -183,10 +186,17 @@ public class CodeGenerator {
 	 * 
 	 * @param cell
 	 */
-	public static void storeWord(SymbolTableCell cell) {
-		putOpCode(new OpCodeElement("STW", STW, getCurrentReg(), 0, cell
+	public static void storeWord(SymbolTableCell cell, boolean global) {
+		int b=heap;
+		if (!global)
+			b=FP;
+		putOpCode(new OpCodeElement("STW", STW, getCurrentReg(), b, cell
 				.getOffset()));
 		decreaseReg();
+	}
+
+	public static void storeWord(SymbolTableCell cell) {
+		storeWord(cell, false);
 	}
 
 	/**
@@ -238,10 +248,15 @@ public class CodeGenerator {
 	}
 
 	public static void methodEpilogue(int size) {
+		methodEpilogueMain(size, false);
+	}
+
+	public static void methodEpilogueMain(int size, boolean main) {
 		putOpCode(new OpCodeElement("ADD", ADD, SP, 0, FP));
 		putOpCode(new OpCodeElement("POP", POP, FP, SP, 1));
 		putOpCode(new OpCodeElement("POP", POP, LNK, SP, 1));
-		putOpCode(new OpCodeElement("RET", RET, 0, 0, LNK));
+		if (!main)
+			putOpCode(new OpCodeElement("RET", RET, 0, 0, LNK));
 		// fixup size of method prolog 
 		opCode.get(methodFix).c = size + 1;
 	}
@@ -303,6 +318,7 @@ public class CodeGenerator {
 
 				output.writeInt(number);
 				System.out.println("PC " + (i + 1) + "   " +
+						Integer.toBinaryString(number) + " " +
 						opCode.get(i).opString + " (" +
 						opCode.get(i).Instruction + ") " + opCode.get(i).a +
 						" " + opCode.get(i).b + " " + opCode.get(i).c);

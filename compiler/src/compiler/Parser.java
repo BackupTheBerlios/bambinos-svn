@@ -206,7 +206,8 @@ public class Parser {
 	private static void arrayListEmpty(String method) {
 		if (tokenList.isEmpty() == false) {
 			System.out
-					.println("INTERNAL ERROR IN Parser.java "+method+" ; The Parser Token List is not empty but it should be !! Empty the List now.");
+					.println("INTERNAL ERROR IN Parser.java " + method +
+							" ; The Parser Token List is not empty but it should be !! Empty the List now.");
 			tokenList.clear();
 		}
 	}
@@ -325,16 +326,15 @@ public class Parser {
 					simpleDeclaration();
 			}
 			// add BSR instruction, programm needs jump to main
-			int fixMainPC=CodeGenerator.methodCall(-100);
-			
+			int fixMainPC = CodeGenerator.methodCall(-100);
+
 			while (currentToken.type == TPUBLIC)
 				methodDeclaration();
 
 			// fix main jump in opcode
-			int proc=CodeGenerator.symbolTable.getSymbol("main").getProc();
+			int proc = CodeGenerator.symbolTable.getSymbol("main").getProc();
 			CodeGenerator.fixMainProc(fixMainPC, proc);
-			
-			
+
 		} catch (IllegalTokenException e) {
 			e.printStackTrace();
 			while (currentToken.type != TPUBLIC)
@@ -424,11 +424,10 @@ public class Parser {
 		CodeGenerator.symbolTable.getSymbol(name).methodSymbols.fixOffset(-2);
 
 		// create method declaration Assembler Code
-		int proc=CodeGenerator.methodPrologue();
-		
+		int proc = CodeGenerator.methodPrologue();
+
 		// fix proc start of method
 		CodeGenerator.symbolTable.getSymbol(name).setProc(proc);
-		
 
 		bodyBlock();
 
@@ -445,8 +444,11 @@ public class Parser {
 		expectWeak(TRBRACES);
 
 		// End of Method
-		CodeGenerator.methodEpilogue(size);
-		
+		if (!name.equals("main"))
+			CodeGenerator.methodEpilogue(size);
+		else
+			CodeGenerator.methodEpilogueMain(size, true);
+
 //		// When main is finished jump to End of opCode
 //		if (name.equals("main")) {
 //			
@@ -612,8 +614,8 @@ public class Parser {
 		debug1("methodCallSuffix");
 		expect(TLPAREN);
 		// check the proc, the absolute programm counter where the method starts
-		int procMethod = getIdentifersCell(tokenList.size()-2).getProc(); // TODO wenn Methode Klassen Attribut
-		
+		int procMethod = getIdentifersCell(tokenList.size() - 2).getProc(); // TODO wenn Methode Klassen Attribut
+
 		if (currentToken.type.startSetExpression()) {
 			expression();
 			// Load parameters
@@ -627,7 +629,7 @@ public class Parser {
 			CodeGenerator.pushRegister();
 		}
 		expect(TRPAREN);
-		
+
 		// Method Call
 		CodeGenerator.methodCall(procMethod);
 	}
@@ -676,15 +678,15 @@ public class Parser {
 					simpleDeclaration();
 				else if (currentToken.type == TSIDENT)
 					objectDeclarationAssignmentMethodCall();
+				else if (currentToken.type == TPRINT)
+					print();
 				else if (currentToken.type == TRBRACES) {
 					if (countTLBRACES <= 2)
 						return;
 				} else if (currentToken.type.ordinal() < STRONG_SYM_CB
 						.ordinal())
 					nextToken();
-				else if (currentToken.type == TPRINT) {
-					print();
-				} else {
+				else {
 					debug1("END BODY BLOCK");
 					break;
 				}
@@ -705,7 +707,7 @@ public class Parser {
 		expectWeak(TLPAREN);
 		if (currentToken.type == TSIDENT) {
 			identifier();
-			CodeGenerator.printIO(getIdentifersCell(tokenList.size())
+			CodeGenerator.printIO(getIdentifersCell(tokenList.size()-1)
 					.getOffset());
 		} else if (currentToken.type == TNUMBER || currentToken.type == TMINUS)
 			intValue();
@@ -1154,7 +1156,7 @@ public class Parser {
 			// search in global then in local table and return the cell with the appropriate name
 			cell = CodeGenerator.symbolTable
 					.getSymbol(tokenList.get(index).value);
-			if (index >0 && tokenList.get(index - 1).type == TDOT) {
+			if (index > 0 && tokenList.get(index - 1).type == TDOT) {
 				if (tokenList.get(index - 2).type == TSIDENT) {
 					// selector: method.x
 					//TODO improve more levels Object.method.x
