@@ -92,7 +92,6 @@ public class SymbolTableList {
 			currentCell = iter.next();
 			/* find vars in current scope */
 			if (currentCell.getName().equals(name)) {
-				System.out.println("Zelle () gefunden");
 				returnCell = currentCell;
 				/*when var is a method then only search the global list and skip last local*/
 				if (returnCell.getClassType() == SymbolTableCell.ClassType.method)

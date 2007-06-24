@@ -85,7 +85,7 @@ public class CodeGenerator {
 		/* create SymbolList */
 		CodeGenerator.symbolTable = new SymbolTableList();
 		topReg = 0;
-		putOpCode(new OpCodeElement("ADD", ADD, SP, 0, 4096));
+		putOpCode(new OpCodeElement("ADDI", ADDI, SP, 0, 4096));
 
 	}
 

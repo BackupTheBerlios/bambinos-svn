@@ -203,10 +203,10 @@ public class Parser {
 	 * 
 	 * 
 	 */
-	private static void arrayListEmpty() {
+	private static void arrayListEmpty(String method) {
 		if (tokenList.isEmpty() == false) {
 			System.out
-					.println("INTERNAL ERROR IN Parser.java ; The Parser Token List is not empty but it should be !! Empty the List now.");
+					.println("INTERNAL ERROR IN Parser.java "+method+" ; The Parser Token List is not empty but it should be !! Empty the List now.");
 			tokenList.clear();
 		}
 	}
@@ -345,7 +345,7 @@ public class Parser {
 
 	private static void methodDeclaration() throws IllegalTokenException {
 		debug1("methodDeclaration");
-		arrayListEmpty();
+		arrayListEmpty("methodDeclaration");
 		expect(TPUBLIC);
 		expectWeak(TSTATIC);
 		int verifyReturnType = 0;
@@ -470,7 +470,7 @@ public class Parser {
 	 * @throws IllegalTokenException
 	 */
 	private static void simpleDeclaration() throws IllegalTokenException {
-		arrayListEmpty();
+		arrayListEmpty("simpleDeclaration");
 		debug1("simpleDeclaration");
 		if (currentToken.type.startSetPrimitive())
 			primitiveDeclaration();
@@ -700,6 +700,7 @@ public class Parser {
 	}
 
 	private static void print() throws IllegalTokenException {
+		arrayListEmpty("print");
 		expect(TPRINT);
 		expectWeak(TLPAREN);
 		if (currentToken.type == TSIDENT) {
