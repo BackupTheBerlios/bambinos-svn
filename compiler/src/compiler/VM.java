@@ -236,12 +236,19 @@ public class VM {
 				targetValue = targetValue >> 21;
 				firstSourceValue = currentInstruction & 2031616;	
 				firstSourceValue = firstSourceValue >> 16;
+				
 				secondSourceValue = currentInstruction & 65535;
+				
+				
 				signBit = secondSourceValue >> 15;
 				System.out.println("sign: " + (int)signBit);
+				
+				secondSourceValue = currentInstruction & 32767;
+				
 				if (signBit == 1) {
-					secondSourceValue = secondSourceValue + (-1);
+					secondSourceValue = secondSourceValue * (-1);
 				}
+				
 				System.out.println("format 1");
 				
 				if (debug) {
@@ -296,6 +303,21 @@ public class VM {
 				
 			}
 			
+			if (debug) {
+				updateRegisterDisplay();
+				debugDisplay.append("PC: " + PC  + "\n");
+				
+				String binaryString = new String();
+				binaryString = Integer.toBinaryString(IR);
+				
+				while (binaryString.length() < 32) {
+					binaryString = "0" + binaryString;
+				}
+
+				
+				debugDisplay.append("IR: " + binaryString + "\n");
+			}
+			
 			switch(opCode) {
 			case ADD: executeADD(targetValue, firstSourceValue, secondSourceValue); break;
 			case ADDI: executeADDI(targetValue, firstSourceValue, secondSourceValue); break;
@@ -339,21 +361,6 @@ public class VM {
 			case PRNC: executePRNC(targetValue, firstSourceValue); break;
 			}
 			
-			
-			if (debug) {
-				updateRegisterDisplay();
-				debugDisplay.append("PC: " + PC  + "\n");
-				
-				String binaryString = new String();
-				binaryString = Integer.toBinaryString(IR);
-				
-				while (binaryString.length() < 32) {
-					binaryString = "0" + binaryString;
-				}
-
-				
-				debugDisplay.append("IR: " + binaryString + "\n");
-			}
 			
 			// the next instruction to be executes lies at instruction-memory-address PC
 			if ((PC != null) && ((instructions.length) >= PC)) {
