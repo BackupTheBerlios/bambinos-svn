@@ -617,14 +617,18 @@ public class Parser {
 		int procMethod = getIdentifersCell(tokenList.size() - 2).getProc(); // TODO wenn Methode Klassen Attribut
 
 		if (currentToken.type.startSetExpression()) {
-			expression();
+			Item returnItem = expression();
+			if (returnItem.mode == 1 || returnItem.mode == 2)
+				putValue2Reg(CodeGenerator.INTTYPE, tokenList.size() - 1);
 			// Load parameters
 			CodeGenerator.pushRegister();
 		}
 		while (currentToken.type == TCOMMA ||
 				currentToken.type.startSetExpression()) {
 			expectWeak(TCOMMA);
-			expression();
+			Item returnItem = expression();
+			if (returnItem.mode == 1 || returnItem.mode == 2)
+				putValue2Reg(CodeGenerator.INTTYPE, tokenList.size() - 1);
 			// Load parameters
 			CodeGenerator.pushRegister();
 		}
@@ -707,7 +711,7 @@ public class Parser {
 		expectWeak(TLPAREN);
 		if (currentToken.type == TSIDENT) {
 			identifier();
-			CodeGenerator.printIO(getIdentifersCell(tokenList.size()-1)
+			CodeGenerator.printIO(getIdentifersCell(tokenList.size() - 1)
 					.getOffset());
 		} else if (currentToken.type == TNUMBER || currentToken.type == TMINUS)
 			intValue();

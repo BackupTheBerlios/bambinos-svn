@@ -125,16 +125,29 @@ public class CodeGenerator {
 	 *  @return TypeDesc
 	 * @throws TypeErrorException 
 	 */
-	public static void loadWordType(SymbolTableCell cell, TypeDesc type)
+	public static void loadWordType(SymbolTableCell cell, TypeDesc type, boolean global)
 			throws TypeErrorException {
 
+		int b=FP;
+		if(global)
+			b=heap;
+		
 		// sollte immer eine Var sein, sonst stimmt der Aufruf vom Parser aus nicht. dann waere irgendwo ein logische Fehler
 		// to enable assertions compile with javac flag "-ea"
 		assert (cell.getClassType() != SymbolTableCell.ClassType.var) : "INTERNAL ERROR IN CODE GEN. in writeIdentifierToRegister() cell is not a variable. BAD CLASS TYPE !";
 
 		typeChecking(cell, type);
-		putOpCode(new OpCodeElement("LDW", LDW, nextReg(), 0, cell.getOffset()));
+		putOpCode(new OpCodeElement("LDW", LDW, nextReg(), b, cell.getOffset()));
 	}
+	
+	
+	public static void loadWordType(SymbolTableCell cell, TypeDesc type)
+	throws TypeErrorException {
+		loadWordType(cell, type,false);
+	}
+
+		
+	
 
 	/**
 	 * x+1 in this expression the methods take care about the 1
@@ -215,6 +228,7 @@ public class CodeGenerator {
 	 */
 	public static void pushRegister() {
 		putOpCode(new OpCodeElement("PSH", PSH, getCurrentReg(), SP, 1));
+		decreaseReg();
 	}
 
 	private static void typeChecking(SymbolTableCell cell, TypeDesc type)
