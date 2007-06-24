@@ -48,6 +48,8 @@ public class VM {
 	private static Integer[] registers = new Integer[32];
 	public static Integer PC = new Integer(0);
 	public static Integer IR = new Integer(0);
+	// current Instruction Position
+	public static Integer CIP = new Integer(0);
 	private static Integer[] memory = new Integer[4096];
 	private static Integer[] instructions;
 	
@@ -203,7 +205,8 @@ public class VM {
 		 * If the first address of the instructionMemory is in use, then the first instruction is copied into IR
 		 */
 		if (instructions[0] != null) {
-			IR = instructions[0];
+			CIP = 0;
+			IR = instructions[CIP];
 		}
 		
 		
@@ -228,19 +231,19 @@ public class VM {
 			opCode = -1;
 			currentInstruction = IR;
 			
-			opCode = currentInstruction >> 26;
+			opCode = currentInstruction >>> 26;
 			
 			// format 1 instructions
 			if ((opCode >= 0) && (opCode <= HIGHEST_FORMAT_1)) {
 				targetValue = currentInstruction & 65011712;
-				targetValue = targetValue >> 21;
+				targetValue = targetValue >>> 21;
 				firstSourceValue = currentInstruction & 2031616;	
-				firstSourceValue = firstSourceValue >> 16;
+				firstSourceValue = firstSourceValue >>> 16;
 				
 				secondSourceValue = currentInstruction & 65535;
 				
 				
-				signBit = secondSourceValue >> 15;
+				signBit = secondSourceValue >>> 15;
 				System.out.println("sign: " + (int)signBit);
 				
 				secondSourceValue = currentInstruction & 32767;
@@ -262,7 +265,7 @@ public class VM {
 				targetValue = currentInstruction & 65011712;
 				targetValue = targetValue >>> 21;
 				firstSourceValue = currentInstruction & 2031616;
-				firstSourceValue = firstSourceValue >> 16;
+				firstSourceValue = firstSourceValue >>> 16;
 				secondSourceValue = currentInstruction & 31;
 				System.out.println("format 2");
 				
@@ -272,8 +275,7 @@ public class VM {
 				
 			// format 3 instructions
 			} else if ((opCode > HIGHEST_FORMAT_2) && (opCode <= HIGHEST_FORMAT_3)) {
-				targetValue = currentInstruction & 65011712;
-				targetValue = targetValue >> 21;
+				targetValue = currentInstruction & 67108863; 
 				firstSourceValue = 0;
 				firstSourceValue = 0;
 				secondSourceValue = 0;
@@ -305,7 +307,6 @@ public class VM {
 			
 			if (debug) {
 				updateRegisterDisplay();
-				debugDisplay.append("PC: " + PC  + "\n");
 				
 				String binaryString = new String();
 				binaryString = Integer.toBinaryString(IR);
@@ -314,9 +315,10 @@ public class VM {
 					binaryString = "0" + binaryString;
 				}
 
-				
+				debugDisplay.append("CIP: " + CIP + "\n");
 				debugDisplay.append("IR: " + binaryString + "\n");
 			}
+			
 			
 			switch(opCode) {
 			case ADD: executeADD(targetValue, firstSourceValue, secondSourceValue); break;
@@ -361,10 +363,15 @@ public class VM {
 			case PRNC: executePRNC(targetValue, firstSourceValue); break;
 			}
 			
+			if (debug) {
+				debugDisplay.append("PC: " + PC + "\n");
+			}
+			
 			
 			// the next instruction to be executes lies at instruction-memory-address PC
 			if ((PC != null) && ((instructions.length) >= PC)) {
 				IR = instructions[PC];
+				CIP = PC;
 				
 				// increment the PC to the next instruction-memory-address
 				increasePC();
@@ -995,7 +1002,7 @@ public class VM {
 	private static void executeBSR(int jumpAddress) {
 		
 		registers[31] = PC;
-		PC = memory[jumpAddress];
+		PC = jumpAddress; 
 		
 		if (debug) {
 			instructionDisplay.append("BSR " + jumpAddress);
