@@ -205,7 +205,7 @@ public class VM {
 		} catch(IOException io) {
 			System.out.println("Error reading line from file");
 		}
-
+		
 		/**
 		 * If the first address of the instructionMemory is in use, then the first instruction is copied into IR
 		 */
@@ -238,7 +238,10 @@ public class VM {
 		
 		while (IR != null) {
 			
-			continueListener.waitForEvent();
+			if (debug) {
+				continueListener.waitForEvent();
+			}
+			
 			
 			opCode = -1;
 			currentInstruction = IR;
@@ -258,7 +261,7 @@ public class VM {
 				signBit = secondSourceValue >>> 15;
 				
 				secondSourceValue = currentInstruction & 32767;
-				
+				System.out.println(Integer.toBinaryString(IR) + ": " + Integer.toBinaryString(secondSourceValue));
 				if (signBit == 1) {
 					secondSourceValue = secondSourceValue * (-1);
 				}
@@ -275,6 +278,7 @@ public class VM {
 				targetValue = targetValue >>> 21;
 				firstSourceValue = currentInstruction & 2031616;
 				firstSourceValue = firstSourceValue >>> 16;
+				
 				secondSourceValue = currentInstruction & 31;
 				
 				if (debug) {
