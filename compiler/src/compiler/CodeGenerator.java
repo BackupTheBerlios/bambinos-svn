@@ -41,7 +41,7 @@ public class CodeGenerator {
 
 	// Register Pointer
 	static int topReg;
-	
+
 	static int heap;
 
 	final static int LNK = 31; // define Linkregister
@@ -125,13 +125,13 @@ public class CodeGenerator {
 	 *  @return TypeDesc
 	 * @throws TypeErrorException 
 	 */
-	public static void loadWordType(SymbolTableCell cell, TypeDesc type, boolean global)
-			throws TypeErrorException {
+	public static void loadWordType(SymbolTableCell cell, TypeDesc type,
+			boolean global) throws TypeErrorException {
 
-		int b=FP;
-		if(global)
-			b=heap;
-		
+		int b = FP;
+		if (global)
+			b = heap;
+
 		// sollte immer eine Var sein, sonst stimmt der Aufruf vom Parser aus nicht. dann waere irgendwo ein logische Fehler
 		// to enable assertions compile with javac flag "-ea"
 		assert (cell.getClassType() != SymbolTableCell.ClassType.var) : "INTERNAL ERROR IN CODE GEN. in writeIdentifierToRegister() cell is not a variable. BAD CLASS TYPE !";
@@ -139,15 +139,11 @@ public class CodeGenerator {
 		typeChecking(cell, type);
 		putOpCode(new OpCodeElement("LDW", LDW, nextReg(), b, cell.getOffset()));
 	}
-	
-	
-	public static void loadWordType(SymbolTableCell cell, TypeDesc type)
-	throws TypeErrorException {
-		loadWordType(cell, type,false);
-	}
 
-		
-	
+	public static void loadWordType(SymbolTableCell cell, TypeDesc type)
+			throws TypeErrorException {
+		loadWordType(cell, type, false);
+	}
 
 	/**
 	 * x+1 in this expression the methods take care about the 1
@@ -200,9 +196,9 @@ public class CodeGenerator {
 	 * @param cell
 	 */
 	public static void storeWord(SymbolTableCell cell, boolean global) {
-		int b=heap;
+		int b = heap;
 		if (!global)
-			b=FP;
+			b = FP;
 		putOpCode(new OpCodeElement("STW", STW, getCurrentReg(), b, cell
 				.getOffset()));
 		decreaseReg();
