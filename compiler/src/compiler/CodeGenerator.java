@@ -48,7 +48,7 @@ public class CodeGenerator {
 	final static int SP = 30; // define Stackpointer
 	final static int FP = 29; // define Framepointer
 
-	static int PC = 0;
+	static int PC = 1;
 
 	// Vector whith the created opCode
 	static Vector<OpCodeElement> opCode = new Vector<OpCodeElement>();
