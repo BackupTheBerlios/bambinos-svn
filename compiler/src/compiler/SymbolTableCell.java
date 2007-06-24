@@ -11,6 +11,7 @@ public class SymbolTableCell {
 	private TypeDesc type; // int, bool, char, String
 	// TODO remove private String value;
 	SymbolTableList methodSymbols;
+	private int proc; // program counter of methods
 	private int offset; //offset is negative , (wirth names it val)
 	private int size; // in 4 bytes 
 
@@ -67,5 +68,13 @@ public class SymbolTableCell {
 
 	public int getOffset() {
 		return offset;
+	}
+
+	public int getProc() {
+		return proc;
+	}
+
+	public void setProc(int proc) {
+		this.proc = proc;
 	}
 }

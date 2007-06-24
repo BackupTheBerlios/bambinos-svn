@@ -102,7 +102,6 @@ public class Parser {
 		CodeGenerator.symbolTable.printSymbolTable();
 
 		System.out.println("ASSEMBLERCODE: ");
-		CodeGenerator.printOpCode();
 
 		CodeGenerator.write2File();
 
@@ -325,9 +324,17 @@ public class Parser {
 				if (currentToken.type.startSetSimpleDeclaration())
 					simpleDeclaration();
 			}
+			// add BSR instruction, programm needs jump to main
+			int fixMainPC=CodeGenerator.methodCall(-100);
+			
 			while (currentToken.type == TPUBLIC)
 				methodDeclaration();
 
+			// fix main jump in opcode
+			int proc=CodeGenerator.symbolTable.getSymbol("main").getProc();
+			CodeGenerator.fixMainProc(fixMainPC, proc);
+			
+			
 		} catch (IllegalTokenException e) {
 			e.printStackTrace();
 			while (currentToken.type != TPUBLIC)
@@ -417,7 +424,11 @@ public class Parser {
 		CodeGenerator.symbolTable.getSymbol(name).methodSymbols.fixOffset(-2);
 
 		// create method declaration Assembler Code
-		CodeGenerator.methodPrologue();
+		int proc=CodeGenerator.methodPrologue();
+		
+		// fix proc start of method
+		CodeGenerator.symbolTable.getSymbol(name).setProc(proc);
+		
 
 		bodyBlock();
 
@@ -435,6 +446,11 @@ public class Parser {
 
 		// End of Method
 		CodeGenerator.methodEpilogue(size);
+		
+//		// When main is finished jump to End of opCode
+//		if (name.equals("main")) {
+//			
+//		}
 	}
 
 	private static void objectDeclaration() throws IllegalTokenException {
@@ -595,6 +611,9 @@ public class Parser {
 	private static void methodCallSuffix() throws IllegalTokenException {
 		debug1("methodCallSuffix");
 		expect(TLPAREN);
+		// check the proc, the absolute programm counter where the method starts
+		int procMethod = getIdentifersCell(tokenList.size()-2).getProc(); // TODO wenn Methode Klassen Attribut
+		
 		if (currentToken.type.startSetExpression()) {
 			expression();
 			// Load parameters
@@ -608,8 +627,9 @@ public class Parser {
 			CodeGenerator.pushRegister();
 		}
 		expect(TRPAREN);
+		
 		// Method Call
-		CodeGenerator.methodCall();
+		CodeGenerator.methodCall(procMethod);
 	}
 
 	private static void arrayDeclarationSuffix() throws IllegalTokenException {
@@ -1133,7 +1153,7 @@ public class Parser {
 			// search in global then in local table and return the cell with the appropriate name
 			cell = CodeGenerator.symbolTable
 					.getSymbol(tokenList.get(index).value);
-			if (tokenList.get(index - 1).type == TDOT) {
+			if (index >0 && tokenList.get(index - 1).type == TDOT) {
 				if (tokenList.get(index - 2).type == TSIDENT) {
 					// selector: method.x
 					//TODO improve more levels Object.method.x

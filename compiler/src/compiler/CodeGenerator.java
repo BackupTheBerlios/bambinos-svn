@@ -46,7 +46,7 @@ public class CodeGenerator {
 	final static int SP = 30; // define Stackpointer
 	final static int FP = 29; // define Framepointer
 
-	static int PC = 0;
+	static int PC = 1;
 
 	// Vector whith the created opCode
 	static Vector<OpCodeElement> opCode = new Vector<OpCodeElement>();
@@ -57,19 +57,24 @@ public class CodeGenerator {
 
 	public static class OpCodeElement {
 		int Instruction;
-		int a, b, c,extra;
+		String opString;
+		int a, b, c, extra;
 
 		// F1
-		public OpCodeElement(int instruction, int first, int second, int third) {
+		public OpCodeElement(String opString, int instruction, int first,
+				int second, int third) {
 			this.Instruction = instruction;
+			this.opString = opString;
 			a = first;
 			b = second;
 			c = third;
 
 		}
 
-		public OpCodeElement(int instruction, int first, int second) {
+		public OpCodeElement(String opString, int instruction, int first,
+				int second) {
 			this.Instruction = instruction;
+			this.opString = opString;
 			a = first;
 			b = second;
 		}
@@ -80,6 +85,7 @@ public class CodeGenerator {
 		/* create SymbolList */
 		CodeGenerator.symbolTable = new SymbolTableList();
 		topReg = 0;
+		putOpCode(new OpCodeElement("ADD", ADD, SP, 0, 4096));
 
 	}
 
@@ -100,19 +106,13 @@ public class CodeGenerator {
 		topReg--;
 	}
 
+	/**
+	 * Add opCode element to the vector
+	 * @param code
+	 */
 	public static void putOpCode(OpCodeElement code) {
 		opCode.add(code);
-		PC += PC;
-	}
-
-	public static void printOpCode() {
-		int i = 0;
-		while (i < opCode.size()) {
-			System.out.println("PC " + i + "   " + opCode.get(i).Instruction +
-					" " + opCode.get(i).a + "," + opCode.get(i).b + "," +
-					opCode.get(i).c);
-			i++;
-		}
+		PC += 1;
 	}
 
 	/** 
@@ -130,7 +130,7 @@ public class CodeGenerator {
 		assert (cell.getClassType() != SymbolTableCell.ClassType.var) : "INTERNAL ERROR IN CODE GEN. in writeIdentifierToRegister() cell is not a variable. BAD CLASS TYPE !";
 
 		typeChecking(cell, type);
-		putOpCode(new OpCodeElement(LDW, nextReg(), 0, cell.getOffset()));
+		putOpCode(new OpCodeElement("LDW", LDW, nextReg(), 0, cell.getOffset()));
 	}
 
 	/**
@@ -138,7 +138,7 @@ public class CodeGenerator {
 	 * ADDI nextRegister,0,1
 	 */
 	public static void addI(int val) {
-		putOpCode(new OpCodeElement(ADDI, nextReg(), 0, val));
+		putOpCode(new OpCodeElement("ADDI", ADDI, nextReg(), 0, val));
 	}
 
 	/** 
@@ -156,7 +156,7 @@ public class CodeGenerator {
 			op = MOD;
 		else if (kind.equals("DIV"))
 			op = DIV;
-		putOpCode(new OpCodeElement(op, topReg - 1, topReg - 1, topReg));
+		putOpCode(new OpCodeElement(kind, op, topReg - 1, topReg - 1, topReg));
 		decreaseReg();
 	}
 
@@ -175,7 +175,7 @@ public class CodeGenerator {
 			op = MODI;
 		else if (kind.equals("DIV"))
 			op = DIVI;
-		putOpCode(new OpCodeElement(op, topReg, topReg, value));
+		putOpCode(new OpCodeElement(kind, op, topReg, topReg, value));
 	}
 
 	/**
@@ -184,7 +184,8 @@ public class CodeGenerator {
 	 * @param cell
 	 */
 	public static void storeWord(SymbolTableCell cell) {
-		putOpCode(new OpCodeElement(STW, getCurrentReg(), 0, cell.getOffset()));
+		putOpCode(new OpCodeElement("STW", STW, getCurrentReg(), 0, cell
+				.getOffset()));
 		decreaseReg();
 	}
 
@@ -203,7 +204,7 @@ public class CodeGenerator {
 	 * push last register entrie onto stack
 	 */
 	public static void pushRegister() {
-		putOpCode(new OpCodeElement(PSH, getCurrentReg(), SP, 1));
+		putOpCode(new OpCodeElement("PSH", PSH, getCurrentReg(), SP, 1));
 	}
 
 	private static void typeChecking(SymbolTableCell cell, TypeDesc type)
@@ -216,28 +217,31 @@ public class CodeGenerator {
 		}
 	}
 
-	public static void methodCall() {
-		putOpCode(new OpCodeElement(BSR, 0, 0, PC));
+	public static int methodCall(int proc) {
+		putOpCode(new OpCodeElement("BSR", BSR, 0, 0, proc));
+		return (PC - 2); // is only used for fixing up the main method entry after global vars
 	}
 
 	/**
 	 * for method declarations
 	 */
-	public static void methodPrologue() {
-		putOpCode(new OpCodeElement(PSH, LNK, SP, 1));
-		putOpCode(new OpCodeElement(PSH, FP, SP, 1));
-		putOpCode(new OpCodeElement(ADD, FP, 0, SP));
-		putOpCode(new OpCodeElement(SUBI, SP, SP, -100));
+	public static int methodPrologue() {
+		int methodsPC = PC;
+		putOpCode(new OpCodeElement("PSH", PSH, LNK, SP, 1));
+		putOpCode(new OpCodeElement("PSH", PSH, FP, SP, 1));
+		putOpCode(new OpCodeElement("ADD", ADD, FP, 0, SP));
+		putOpCode(new OpCodeElement("SUBI", SUBI, SP, SP, -100));
 		// -100 needs to be replaced by the right size when method is finished
-		// remember opcode Element in array
+		// remember opcode Element of array in global variable
 		methodFix = opCode.size() - 1;
+		return methodsPC;
 	}
 
 	public static void methodEpilogue(int size) {
-		putOpCode(new OpCodeElement(ADD, SP, 0, FP));
-		putOpCode(new OpCodeElement(POP, FP, SP, 1));
-		putOpCode(new OpCodeElement(POP, LNK, SP, 1));
-		putOpCode(new OpCodeElement(RET, 0, 0, LNK));
+		putOpCode(new OpCodeElement("ADD", ADD, SP, 0, FP));
+		putOpCode(new OpCodeElement("POP", POP, FP, SP, 1));
+		putOpCode(new OpCodeElement("POP", POP, LNK, SP, 1));
+		putOpCode(new OpCodeElement("RET", RET, 0, 0, LNK));
 		// fixup size of method prolog 
 		opCode.get(methodFix).c = size + 1;
 	}
@@ -254,7 +258,11 @@ public class CodeGenerator {
 	 * @param offset
 	 */
 	public static void printIO(int offset) {
-		putOpCode(new OpCodeElement(PRNI, FP, offset));
+		putOpCode(new OpCodeElement("PRNI", PRNI, FP, offset));
+	}
+
+	public static void fixMainProc(int vecPos, int proc) {
+		opCode.get(vecPos).c = proc;
 	}
 
 	public static void write2File() {
@@ -264,29 +272,40 @@ public class CodeGenerator {
 					"integer_outputfile1.txt", "rw");
 
 			output.writeInt(0);
-			output.writeInt(mainAddr);
 
 			for (int i = 0; i < opCode.size(); i++) {
-				int number=0;
-				
+				int number = 0;
+
 				// F1
-				if (opCode.get(i).Instruction < HIGHEST_FORMAT_1)
+				if (opCode.get(i).Instruction < HIGHEST_FORMAT_1) {
+
+					int sign = 0;
+					if (opCode.get(i).c < 0) {
+						sign = 1;
+						opCode.get(i).c = 0 - opCode.get(i).c;
+					}
+
 					number = (opCode.get(i).Instruction << 26) +
-							(opCode.get(0).a << 21) + (opCode.get(0).b << 16) +
-							(opCode.get(0).c);
-				
+							(opCode.get(i).a << 21) + (opCode.get(i).b << 16) +
+							(sign << 15) + (opCode.get(i).c);
+
+				}
 				// F2
-				if (opCode.get(i).Instruction < HIGHEST_FORMAT_2)
+				else if (opCode.get(i).Instruction < HIGHEST_FORMAT_2)
 					number = (opCode.get(i).Instruction << 26) +
-							(opCode.get(0).a << 21) + (opCode.get(0).b << 16) + (opCode.get(0).extra << 5)+
-							(opCode.get(0).c);
-				
+							(opCode.get(i).a << 21) + (opCode.get(i).b << 16) +
+							(opCode.get(i).extra << 5) + (opCode.get(i).c);
+
 				// F3
-				if (opCode.get(i).Instruction < HIGHEST_FORMAT_3)
+				else if (opCode.get(i).Instruction < HIGHEST_FORMAT_3)
 					number = (opCode.get(i).Instruction << 26) +
-							(opCode.get(0).c);
-				
+							(opCode.get(i).c);
+
 				output.writeInt(number);
+				System.out.println("PC " + (i + 1) + "   " +
+						opCode.get(i).opString + " (" +
+						opCode.get(i).Instruction + ") " + opCode.get(i).a +
+						" " + opCode.get(i).b + " " + opCode.get(i).c);
 			}
 			output.close();
 		} catch (IOException io) {
