@@ -132,18 +132,31 @@ public class VM {
 	
 	/**
 	 * Determines the filesize and initializes a memory-array accordingly
+	 * The memory-size is filesize in bytes / 4. 
 	 * @param file
 	 */
 	private static void initCodeMemory(RandomAccessFile file) {
 		
 		try {
 			long fileSizeInBytes = file.length();
+			
+			if (debug) {
+				debugDisplay.append("Filesize in Bytes: " + fileSizeInBytes + "\n");
+			}
+			
 			int fileSizeInIntegers = (int)(fileSizeInBytes / 4);
 			if ((fileSizeInBytes % 4) != 0) {
 				fileSizeInIntegers++;
 			}
+			
+			// we increment the memory size because we store the first instruction at position 1 and not 0.
+			fileSizeInIntegers++;
+			
 			instructions =  new Integer[fileSizeInIntegers];
-			//System.out.println(fileSizeInIntegers);
+			
+			if (debug) {
+				debugDisplay.append("Memorysize in words: " + fileSizeInIntegers + "\n");
+			}
 			
 		} catch(IOException io) {
 			System.out.println("Cannot read sourcefile");
@@ -162,11 +175,7 @@ public class VM {
 		String currentInstruction = new String();
 		Integer integerCurrentInstruction = new Integer(0);
 		
-		/**
-		 * The instructionOffset determines the address (32bit-wise) of the first instruction in the sourcefile
-		 */
-		int instructionsOffset = 0;
-		int currentMemoryPosition = 0;
+		int currentMemoryPosition = 1;
 		String binaryString = new String();
 		
 		try {
@@ -197,17 +206,20 @@ public class VM {
 			System.out.println("Error reading line from file");
 		}
 
-		
-		// PC points at the next instruction after the current
-		PC = 1;
-		
 		/**
 		 * If the first address of the instructionMemory is in use, then the first instruction is copied into IR
 		 */
-		if (instructions[0] != null) {
-			CIP = 0;
+		if (instructions[1] != null) {
+			CIP = 1;
 			IR = instructions[CIP];
 		}
+		
+		/**
+		 * PC points at the next instruction after the current (which is 2)
+		 * remember: our memory starts at position 1
+		 * if the first instruction is a branch-command, the PC changes after command execution
+		 */ 
+		PC = CIP + 1;
 		
 		
 	}
@@ -244,15 +256,12 @@ public class VM {
 				
 				
 				signBit = secondSourceValue >>> 15;
-				System.out.println("sign: " + (int)signBit);
 				
 				secondSourceValue = currentInstruction & 32767;
 				
 				if (signBit == 1) {
 					secondSourceValue = secondSourceValue * (-1);
 				}
-				
-				System.out.println("format 1");
 				
 				if (debug) {
 					debugDisplay.append("sign: " + (int)signBit + "\n");
@@ -267,7 +276,6 @@ public class VM {
 				firstSourceValue = currentInstruction & 2031616;
 				firstSourceValue = firstSourceValue >>> 16;
 				secondSourceValue = currentInstruction & 31;
-				System.out.println("format 2");
 				
 				if (debug) {
 					debugDisplay.append("opCode format 2 \n");
@@ -279,7 +287,6 @@ public class VM {
 				firstSourceValue = 0;
 				firstSourceValue = 0;
 				secondSourceValue = 0;
-				System.out.println("format 3");
 				
 				if (debug) {
 					debugDisplay.append("opCode format 3 \n");
@@ -361,6 +368,7 @@ public class VM {
 			case RET: executeRET(targetValue); break;
 			case PRNI: executePRNI(targetValue, firstSourceValue); break;
 			case PRNC: executePRNC(targetValue, firstSourceValue); break;
+			default: System.out.println("invalid opCode... \n");
 			}
 			
 			if (debug) {
