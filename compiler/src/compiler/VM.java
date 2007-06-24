@@ -7,15 +7,43 @@ import java.io.EOFException;
 import javax.swing.JTextArea;
 import java.awt.GridLayout;
 import java.awt.GridBagLayout;
+import java.awt.GridBagConstraints;
 import javax.swing.JFrame;
 import javax.swing.JScrollPane;
 import javax.swing.JButton;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
+
+
+class ContinueButtonListener implements ActionListener
+{
+	private static boolean eventFired = false;
+	
+	public void waitForEvent() {
+		
+		while (eventFired == false) {
+
+		}
+		
+		eventFired = false;
+		
+	}
+	
+    public void actionPerformed( ActionEvent e )
+    {
+        eventFired = true;
+    }
+}
 
 public class VM {
 
+
 	private static JTextArea registerDisplay;
 	private static JTextArea instructionDisplay;
-	private static JTextArea consoleDisplay;
+	private static JTextArea debugDisplay;
+	
+	private static ActionEvent actionEvent;
+	private static ContinueButtonListener continueListener = new ContinueButtonListener();
 	
 	private static Integer[] registers = new Integer[32];
 	public static Integer PC = new Integer(0);
@@ -137,17 +165,28 @@ public class VM {
 		 */
 		int instructionsOffset = 0;
 		int currentMemoryPosition = 0;
+		String binaryString = new String();
 		
 		try {
-			file.skipBytes(instructionsOffset * 4);
-
-			while (currentInstruction != null) {
-				integerCurrentInstruction = file.readInt();
-				instructions[currentMemoryPosition] = integerCurrentInstruction;
-				System.out.println(Integer.toBinaryString(integerCurrentInstruction));
-				currentMemoryPosition++;
-			}
 			
+			Integer magicWord = new Integer(0);
+			magicWord = file.readInt();
+			
+			// if the binary file starts with our magic word, the file is read into memory. 
+			// otherwise the memory remains empty
+			if (magicWord == 0) {
+				
+				while (currentInstruction != null) {
+					integerCurrentInstruction = file.readInt();
+					instructions[currentMemoryPosition] = integerCurrentInstruction;
+					binaryString = Integer.toBinaryString(integerCurrentInstruction);
+					currentMemoryPosition++;
+				}
+
+			} else {
+				System.out.println("Unknown binary file format");
+			}
+						
 			
 		} catch(EOFException eof) {
 			highestInstructionAddress = currentMemoryPosition - 1;
@@ -156,6 +195,10 @@ public class VM {
 			System.out.println("Error reading line from file");
 		}
 
+		
+		// PC points at the next instruction after the current
+		PC = 1;
+		
 		/**
 		 * If the first address of the instructionMemory is in use, then the first instruction is copied into IR
 		 */
@@ -163,14 +206,6 @@ public class VM {
 			IR = instructions[0];
 		}
 		
-		/**
-		 * if the address after the first instruction address is in use, the PC points there
-		 */
-		if (instructions[1] != null) {
-			PC = 1;
-		} else {
-			PC = null;
-		}
 		
 	}
 	
@@ -184,7 +219,12 @@ public class VM {
 		int firstSourceValue;
 		int secondSourceValue; 
 				
+		int signBit; 
+		
 		while (IR != null) {
+			
+			continueListener.waitForEvent();
+			
 			opCode = -1;
 			currentInstruction = IR;
 			
@@ -194,10 +234,22 @@ public class VM {
 			if ((opCode >= 0) && (opCode <= HIGHEST_FORMAT_1)) {
 				targetValue = currentInstruction & 65011712;
 				targetValue = targetValue >> 21;
-				firstSourceValue = currentInstruction & 2031616;
+				firstSourceValue = currentInstruction & 2031616;	
 				firstSourceValue = firstSourceValue >> 16;
 				secondSourceValue = currentInstruction & 65535;
+				signBit = secondSourceValue >> 15;
+				System.out.println("sign: " + (int)signBit);
+				if (signBit == 1) {
+					secondSourceValue = secondSourceValue + (-1);
+				}
 				System.out.println("format 1");
+				
+				if (debug) {
+					debugDisplay.append("sign: " + (int)signBit + "\n");
+					debugDisplay.append("opCode format 1 \n");
+				}
+				
+				
 			// format 2 instructions
 			} else if ((opCode > HIGHEST_FORMAT_1) && (opCode <= HIGHEST_FORMAT_2)) {
 				targetValue = currentInstruction & 65011712;
@@ -206,6 +258,11 @@ public class VM {
 				firstSourceValue = firstSourceValue >> 16;
 				secondSourceValue = currentInstruction & 31;
 				System.out.println("format 2");
+				
+				if (debug) {
+					debugDisplay.append("opCode format 2 \n");
+				}
+				
 			// format 3 instructions
 			} else if ((opCode > HIGHEST_FORMAT_2) && (opCode <= HIGHEST_FORMAT_3)) {
 				targetValue = currentInstruction & 65011712;
@@ -214,17 +271,30 @@ public class VM {
 				firstSourceValue = 0;
 				secondSourceValue = 0;
 				System.out.println("format 3");
+				
+				if (debug) {
+					debugDisplay.append("opCode format 3 \n");
+				}
+				
 			} else {
 				targetValue = 0;
 				firstSourceValue = 0;
 				firstSourceValue = 0;
 				secondSourceValue = 0;
+				
+				if (debug) {
+					debugDisplay.append("unknown opCode format \n");
+				}
 			}
 			
-			System.out.println("opcode: " + opCode);
-			System.out.println("target: " + targetValue);
-			System.out.println("first : " + firstSourceValue);
-			System.out.println("second: " + secondSourceValue);
+			
+			if (debug) {
+				debugDisplay.append("opcode: " + opCode + "\n");
+				debugDisplay.append("target: " + targetValue  + "\n");
+				debugDisplay.append("first : " + firstSourceValue  + "\n");
+				debugDisplay.append("second: " + secondSourceValue  + "\n");
+				
+			}
 			
 			switch(opCode) {
 			case ADD: executeADD(targetValue, firstSourceValue, secondSourceValue); break;
@@ -272,10 +342,19 @@ public class VM {
 			
 			if (debug) {
 				updateRegisterDisplay();
+				debugDisplay.append("PC: " + PC  + "\n");
+				
+				String binaryString = new String();
+				binaryString = Integer.toBinaryString(IR);
+				
+				while (binaryString.length() < 32) {
+					binaryString = "0" + binaryString;
+				}
+
+				
+				debugDisplay.append("IR: " + binaryString + "\n");
 			}
 			
-			System.out.println("PC: " + PC);
-			System.out.println(instructions.length);
 			// the next instruction to be executes lies at instruction-memory-address PC
 			if ((PC != null) && ((instructions.length) >= PC)) {
 				IR = instructions[PC];
@@ -288,21 +367,29 @@ public class VM {
 			}
 			
 			
+			if (debug) {
+				debugDisplay.append("--------------------------- \n");
+			}
+			
 		}
 		
 	}
 	
 	private static void initGUI() {
 		
-		JFrame frame = new JFrame("overview memory");
-	    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		
+		JFrame memoryFrame = new JFrame("overview memory");
+	    memoryFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
+	    JFrame debugFrame = new JFrame("debug window");
+	    debugFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	    
 	    JScrollPane scrollPane1 = new JScrollPane();
 	    JScrollPane scrollPane2 = new JScrollPane();
 	    JScrollPane scrollPane3 = new JScrollPane();
 	    
-	    JButton nextInstructionButton = new JButton();
-	    
+	    JButton nextInstructionButton = new JButton("next Step");
+	    nextInstructionButton.addActionListener(continueListener);
 	    
 	    registerDisplay = new JTextArea();
 	    registerDisplay.setEditable(false);
@@ -310,26 +397,40 @@ public class VM {
 	    instructionDisplay = new JTextArea();
 	    instructionDisplay.setEditable(false);
 	    
-	    consoleDisplay = new JTextArea();
-	    consoleDisplay.setEditable(false);
-	    
+	    debugDisplay = new JTextArea();
+        debugDisplay.setEditable(false);
+        
+        
 	    scrollPane1.setViewportView(registerDisplay);
 	    scrollPane2.setViewportView(instructionDisplay);
-	    scrollPane3.setViewportView(consoleDisplay);
+	    scrollPane3.setViewportView(debugDisplay);
 	    
         GridLayout layout = new GridLayout(1,4);
+        GridLayout debugLayout = new GridLayout(2,1);
+        
         GridBagLayout layout1 = new GridBagLayout();
+        GridBagConstraints constraints = new GridBagConstraints();
+
+        
+        constraints.gridwidth = 3;
+        constraints.fill = constraints.BOTH;
         
         
-        frame.setLayout(layout);
         
-        frame.add(scrollPane1);
-        frame.add(scrollPane2);
-        frame.add(scrollPane3);
-        //frame.add(nextInstructionButton);
+        memoryFrame.setLayout(layout);
+        debugFrame.setLayout(debugLayout);
         
-        frame.setSize(600, 550);
-        frame.setVisible(true);
+        memoryFrame.add(scrollPane1,constraints);
+        memoryFrame.add(scrollPane2, constraints);
+        debugFrame.add(scrollPane3, constraints);
+        debugFrame.add(nextInstructionButton);
+        
+        memoryFrame.setSize(600, 550);
+        memoryFrame.setVisible(true);
+        
+        debugFrame.setBounds(650, 0, 600, 550);
+        debugFrame.setSize(600, 550);
+        debugFrame.setVisible(true);
         
  	}
 	
@@ -861,7 +962,7 @@ public class VM {
 			System.out.println(intValue);
 			
 			if (debug) {
-				consoleDisplay.append("" + intValue);
+				debugDisplay.append("" + intValue);
 			}
 		}	
 		
@@ -877,7 +978,7 @@ public class VM {
 			System.out.println(charValue);
 			
 			if (debug) {
-				consoleDisplay.append("" + charValue);
+				debugDisplay.append("" + charValue);
 			}
 		}	
 	}
