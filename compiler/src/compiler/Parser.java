@@ -103,6 +103,8 @@ public class Parser {
 
 		System.out.println("ASSEMBLERCODE: ");
 		CodeGenerator.printOpCode();
+		
+		CodeGenerator.write2File();
 
 	}
 
