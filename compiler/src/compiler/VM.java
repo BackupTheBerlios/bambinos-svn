@@ -41,6 +41,7 @@ public class VM {
 	private static JTextArea registerDisplay;
 	private static JTextArea instructionDisplay;
 	private static JTextArea debugDisplay;
+	private static JTextArea outputDisplay;
 	
 	private static ActionEvent actionEvent;
 	private static ContinueButtonListener continueListener = new ContinueButtonListener();
@@ -88,8 +89,10 @@ public class VM {
 			System.exit(1);
 		}
 		
+		initGui();
+		
 		if (debug) {
-			initGUI();
+			initDebugGUI();
 			updateRegisterDisplay();	
 		}
 		
@@ -401,7 +404,28 @@ public class VM {
 		
 	}
 	
-	private static void initGUI() {
+	private static void initGui() {
+		
+		JFrame outputFrame = new JFrame("output");
+		outputFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		
+		JScrollPane outputScrollPane = new JScrollPane();
+		
+		outputDisplay = new JTextArea();
+		outputDisplay.setEditable(false);
+		
+		outputScrollPane.setViewportView(outputDisplay);
+		
+		GridLayout outputLayout = new GridLayout(2,1);
+		
+		outputFrame.add(outputScrollPane);
+		
+		outputFrame.setBounds(450,450,400,300);
+		
+        outputFrame.setVisible(true);
+	}
+	
+	private static void initDebugGUI() {
 		
 		
 		JFrame memoryFrame = new JFrame("overview memory");
@@ -451,11 +475,10 @@ public class VM {
         debugFrame.add(scrollPane3, constraints);
         debugFrame.add(nextInstructionButton);
         
-        memoryFrame.setSize(600, 550);
+        memoryFrame.setSize(400, 550);
         memoryFrame.setVisible(true);
         
-        debugFrame.setBounds(650, 0, 600, 550);
-        debugFrame.setSize(600, 550);
+        debugFrame.setBounds(450, 0, 400, 400);
         debugFrame.setVisible(true);
         
  	}
@@ -642,21 +665,24 @@ public class VM {
 	}
 	
 	private static void executeADD(int r0, int r1, int r2) {
-		registers[r0] = registers[r1] + registers[r2];
-		
 		if (debug) {
 			instructionDisplay.append("ADD " + r0  + ", " + registers[r1] + ", " + registers[r2]);
 			instructionDisplay.append("\n");
 		}
+		
+		registers[r0] = registers[r1] + registers[r2];
+		
 	}
 	
 	private static void executeADDI(int r0, int r1, int r2) {
-		registers[r0] = registers[r1] + r2;
-		
 		if (debug) {
 			instructionDisplay.append("ADDI " + r0  + ", " + registers[r1] + ", " + r2);
 			instructionDisplay.append("\n");
 		}
+		
+		registers[r0] = registers[r1] + r2;
+		
+		
 	}
 	
 	private static void executeSUB(int r0, int r1, int r2) {
@@ -985,6 +1011,7 @@ public class VM {
 			int memoryAddress = registers[r0] + offset;
 			int intValue = memory[memoryAddress];
 
+			outputDisplay.append("" + intValue);
 			System.out.println(intValue);
 			
 			if (debug) {
@@ -1001,6 +1028,9 @@ public class VM {
 			int memoryAddress = registers[r0] + offset;
 			int intValue = memory[memoryAddress];
 			char charValue = (char)intValue;
+			
+			
+			outputDisplay.append("" + charValue);
 			System.out.println(charValue);
 			
 			if (debug) {
