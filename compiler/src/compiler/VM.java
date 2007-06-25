@@ -58,17 +58,17 @@ public class VM {
 	private static int highestInstructionAddress = 0;
 	
 	
-	private static boolean debug = true;
+	private static boolean debug = false;
 	
 	// format 1 instructions
 	private static final int ADDI=0, SUBI=1, MULI=2, DIVI=3,MODI=4, CMPI=5, 
 	CHKI=6, ANDI=7, BICI=8, ORI=9, XORI=10, LSHI=11, ASHI=12, LDW=13, 
 	LDB=14, POP=15, STW=16, STB=17, PSH=18, BEQ=19, BNE=20, BLT=21, 
-	BGE=22, BGT=23, BLE=24, HIGHEST_FORMAT_1=29;
+	BGE=22, BGT=23, BLE=24, PRNI=25, PRNC=26, HIGHEST_FORMAT_1=29;
 	
 	// format 2 instructions
 	private static final int ADD=30,  SUB=31,  MUL=32,  DIV=33, MOD=34,  CMP = 35,  CHK=36,  
-	AND=37,  BIC=38, OR=39,  XOR=40,  LSH=41,  ASH=42, PRNI=43, PRNC=44, HIGHEST_FORMAT_2=49;
+	AND=37,  BIC=38, OR=39,  XOR=40,  LSH=41,  ASH=42, HIGHEST_FORMAT_2=49;
 	
 	
 	// format 3 instructions
@@ -79,15 +79,36 @@ public class VM {
 	 */
 	public static void main(String[] args) {
 	
+			
 		//execute();
 		
 		// initialize register-array
 		registers[0] = 0;
 		
-		if (args[0] == null) {
+		String filename = new String();
+		
+		if (args.length > 0) {
+			filename = new String(args[0]);
+			
+			if (args.length > 1) {
+						
+				if (args[1].equals("--debug")) {
+					System.out.println(args[1]);
+					debug = true;
+				}
+				
+			}
+			
+		} else {
 			System.out.println("Usage: please add a filename");
 			System.exit(1);
 		}
+		
+		if (args[0] == null) {
+			
+		}
+		
+		
 		
 		initGui();
 		
@@ -96,7 +117,7 @@ public class VM {
 			updateRegisterDisplay();	
 		}
 		
-		String filename = new String(args[0]);
+		
 		
 		RandomAccessFile inputFile = openFile(filename);
 		initCodeMemory(inputFile);
@@ -204,7 +225,10 @@ public class VM {
 			
 		} catch(EOFException eof) {
 			highestInstructionAddress = currentMemoryPosition - 1;
-			System.out.println("End of file reached");
+			if (debug) {
+				System.out.println("End of file reached");
+			}
+			
 		} catch(IOException io) {
 			System.out.println("Error reading line from file");
 		}
@@ -264,7 +288,7 @@ public class VM {
 				signBit = secondSourceValue >>> 15;
 				
 				secondSourceValue = currentInstruction & 32767;
-				System.out.println(Integer.toBinaryString(IR) + ": " + Integer.toBinaryString(secondSourceValue));
+				//System.out.println(Integer.toBinaryString(IR) + ": " + Integer.toBinaryString(secondSourceValue));
 				if (signBit == 1) {
 					secondSourceValue = secondSourceValue * (-1);
 				}
@@ -373,8 +397,8 @@ public class VM {
 			case BLE: executeBLE(targetValue, firstSourceValue); break;
 			case BSR: executeBSR(targetValue); break;
 			case RET: executeRET(targetValue); break;
-			case PRNI: executePRNI(targetValue, firstSourceValue); break;
-			case PRNC: executePRNC(targetValue, firstSourceValue); break;
+			case PRNI: executePRNI(targetValue, firstSourceValue, secondSourceValue); break;
+			case PRNC: executePRNC(targetValue, firstSourceValue, secondSourceValue); break;
 			default: System.out.println("invalid opCode... \n");
 			}
 			
@@ -397,6 +421,7 @@ public class VM {
 			
 			
 			if (debug) {
+				updateRegisterDisplay();
 				debugDisplay.append("--------------------------- \n");
 			}
 			
@@ -493,11 +518,11 @@ public class VM {
 			if (i < 10) {
 				registerLabel = "R0" + i;
 			} else if (i == 29) {
-				registerLabel = "FP";
+				registerLabel = "FP (29)";
 			} else if (i == 30) {
-				registerLabel = "SP";
+				registerLabel = "SP (30)";
 			} else if (i == 31) {
-				registerLabel = "LNK";
+				registerLabel = "LNK (31)";
 			} else {
 				registerLabel = "R" + i;
 			}
@@ -686,43 +711,64 @@ public class VM {
 	}
 	
 	private static void executeSUB(int r0, int r1, int r2) {
-		registers[r0] = registers[r1] - registers[r2];
-	
+		
 		if (debug) {
 			instructionDisplay.append("SUB " + r0  + ", " + registers[r1] + ", " + registers[r2]);
 			instructionDisplay.append("\n");
 		}
+		
+		registers[r0] = registers[r1] - registers[r2];
+	
+		
 	}
 	
 	private static void executeSUBI(int r0, int r1, int r2) {
-		registers[r0] = registers[r1] - r2;
+		
 		if (debug) {
 			instructionDisplay.append("SUBI " + r0  + ", " + registers[r1] + ", " + r2);
 			instructionDisplay.append("\n");
 		}
-		}
+		
+		registers[r0] = registers[r1] - r2;
+		
+		
+		
+	}
 	
 	private static void executeMUL(int r0, int r1, int r2) {
-		registers[r0] = registers[r1] * registers[r2];
 		
 		if (debug) {
 			instructionDisplay.append("MUL " + r0  + ", " + registers[r1] + ", " + registers[r2]);
 			instructionDisplay.append("\n");
 		}
 		
+		registers[r0] = registers[r1] * registers[r2];
+		
+		
+		
 	}
 	
 	private static void executeMULI(int r0, int r1, int r2) {
-		registers[r0] = registers[r1] * r2;
-
+		
 		if (debug) {
 			instructionDisplay.append("MULI " + r0  + ", " + registers[r1] + ", " + r2);
 			instructionDisplay.append("\n");
 		}
 		
+		registers[r0] = registers[r1] * r2;
+
+		
+		
 	}
 	
 	private static void executeDIV(int r0, int r1, int r2) {
+		
+		if (debug) {
+			instructionDisplay.append("DIV " + r0  + ", " + registers[r1] + ", " + registers[r2]);
+			instructionDisplay.append("\n");
+		}
+		
+		
 		if (registers[r2] == 0) {
 			System.out.println("Division by 0");
 			return;
@@ -730,14 +776,16 @@ public class VM {
 		
 		registers[r0] = registers[r1] / registers[r2];
 		
-		if (debug) {
-			instructionDisplay.append("DIV " + r0  + ", " + registers[r1] + ", " + registers[r2]);
-			instructionDisplay.append("\n");
-		}
 		
 	}
 	
 	private static void executeDIVI(int r0, int r1, int r2) {
+		
+		if (debug) {
+			instructionDisplay.append("DIVI " + r0  + ", " + registers[r1] + ", " + r2);
+			instructionDisplay.append("\n");
+		}
+		
 		if (r2 == 0) {
 			System.out.println("Division by 0");
 			return;
@@ -745,13 +793,15 @@ public class VM {
 			
 		registers[r0] = registers[r1] / r2;
 		
-		if (debug) {
-			instructionDisplay.append("DIVI " + r0  + ", " + registers[r1] + ", " + r2);
-			instructionDisplay.append("\n");
-		}
+		
 	}
 
 	private static void executeMOD(int r0, int r1, int r2) {
+		
+		if (debug) {
+			instructionDisplay.append("MOD " + r0  + ", " + registers[r1] + ", " + registers[r2]);
+			instructionDisplay.append("\n");
+		}
 		
 		if (registers[r2] == 0) {
 			System.out.println("Division by 0");
@@ -760,13 +810,16 @@ public class VM {
 		
 		registers[r0] = registers[r1] % registers[r2];
 	
-		if (debug) {
-			instructionDisplay.append("MOD " + r0  + ", " + registers[r1] + ", " + registers[r2]);
-			instructionDisplay.append("\n");
-		}
+		
 	}
 	
 	private static void executeMODI(int r0, int r1, int r2) {
+		
+		if (debug) {
+			instructionDisplay.append("MODI " + r0  + ", " + registers[r1] + ", " + r2);
+			instructionDisplay.append("\n");
+		}
+		
 		
 		if (r2 == 0) {
 			System.out.println("Division by 0");
@@ -775,153 +828,171 @@ public class VM {
 		
 		registers[r0] = registers[r1] % r2;
 		
-		if (debug) {
-			instructionDisplay.append("MODI " + r0  + ", " + registers[r1] + ", " + r2);
-			instructionDisplay.append("\n");
-		}
 		
 	}
 	
 	private static void executeCMP(int r0, int r1, int r2) {
-		
-		registers[r0] = registers[r1] - registers[r2];
 		
 		if (debug) {
 			instructionDisplay.append("CMP " + r0  + ", " + registers[r1] + ", " + registers[r2]);
 			instructionDisplay.append("\n");
 		}
 		
+		
+		registers[r0] = registers[r1] - registers[r2];
+		
+		
 	}
 	
 	private static void executeCMPI(int r0, int r1, int r2) {
-		
-		registers[r0] = registers[r1] - r2;
 		
 		if (debug) {
 			instructionDisplay.append("CMPI " + r0  + ", " + registers[r1] + ", " + r2);
 			instructionDisplay.append("\n");
 		}
+		
+		registers[r0] = registers[r1] - r2;
+		
+		
 
 	}
 	
 	private static void executeCHK(int r0, int r1) {
+
+
+		if (debug) {
+			instructionDisplay.append("CHK " + r0  + ", " + registers[r1]);
+			instructionDisplay.append("\n");
+		}
 		
 		if ((registers[r0] < 0) || (registers[r0] > registers[r1])) {
 			System.out.println("ERROR: CHK: out of range");
 		}
 		
 
-		if (debug) {
-			instructionDisplay.append("CHK " + r0  + ", " + registers[r1]);
-			instructionDisplay.append("\n");
-		}
 	}
 	
 	private static void executeCHKI(int r0, int r1) {
-		
-		if ((registers[r0] < 0) || (registers[r0] > r1)) {
-			System.out.println("ERROR: CHKI: out of range");
-		}
 		
 		if (debug) {
 			instructionDisplay.append("CHKI " + r0  + ", " + registers[r1]);
 			instructionDisplay.append("\n");
 		}
+		
+		if ((registers[r0] < 0) || (registers[r0] > r1)) {
+			System.out.println("ERROR: CHKI: out of range");
+		}
+		
 	}
 	
 	private static void executeAND(int r0, int r1, int r2) {
-		
-		registers[r0] = registers[r1] & registers[r2];
 		
 		if (debug) {
 			instructionDisplay.append("AND " + r0  + ", " + registers[r1] + ", " + registers[r2]);
 			instructionDisplay.append("\n");
 		}
+		
+		registers[r0] = registers[r1] & registers[r2];
+		
+		
 	}
 	
 	private static void executeANDI(int r0, int r1, int r2) {
-		
-		registers[r0] = registers[r1] & r2;
 		
 		if (debug) {
 			instructionDisplay.append("ANDI " + r0  + ", " + registers[r1] + ", " + registers[r2]);
 			instructionDisplay.append("\n");
 		}
 		
-	}
-	private static void executeOR(int r0, int r1, int r2) {
 		
-		registers[r0] = registers[r1] | registers[r2];
+		registers[r0] = registers[r1] & r2;
+		
+	}
+
+	private static void executeOR(int r0, int r1, int r2) {
 		
 		if (debug) {
 			instructionDisplay.append("OR " + r0  + ", " + registers[r1] + ", " + registers[r2]);
 			instructionDisplay.append("\n");
 		}
+		
+		registers[r0] = registers[r1] | registers[r2];
+		
 	}
 	
 	private static void executeORI(int r0, int r1, int r2) {
-		
-		registers[r0] = registers[r1] | r2;
-		
+
 		if (debug) {
 			instructionDisplay.append("ORI " + r0  + ", " + registers[r1] + ", " + r2);
 			instructionDisplay.append("\n");
 		}
+		registers[r0] = registers[r1] | r2;
+		
 	}
 	
 	private static void executeXOR(int r0, int r1, int r2) {
-		
-		registers[r0] = registers[r1] ^ registers[r2];
 		
 		if (debug) {
 			instructionDisplay.append("XOR " + r0  + ", " + registers[r1] + ", " + registers[r2]);
 			instructionDisplay.append("\n");
 		}
+		
+		registers[r0] = registers[r1] ^ registers[r2];
+		
 	}
 	
 	private static void executeXORI(int r0, int r1, int r2) {
-		
-		registers[r0] = registers[r1] ^ r2;
 		
 		if (debug) {
 			instructionDisplay.append("XORI " + r0  + ", " + registers[r1] + ", " + r2);
 			instructionDisplay.append("\n");
 		}
+		
+		registers[r0] = registers[r1] ^ r2;
+		
 	}
 	private static void executeBIC(int r0, int r1, int r2) {
-		
-		registers[r0] = registers[r1] & (~registers[r2]);
 		
 		if (debug) {
 			instructionDisplay.append("BIC " + r0 + ", " + registers[r1] + ", " + registers[r2]);
 			instructionDisplay.append("\n");
 		}
+		
+		registers[r0] = registers[r1] & (~registers[r2]);
+		
 	}
 	
 	private static void executeBICI(int r0, int r1, int r2) {
-		
-		registers[r0] = registers[r1] & (~r2);
 		
 		if (debug) {
 			instructionDisplay.append("BICI " + r0  + ", " + registers[r1] + ", " + r2);
 			instructionDisplay.append("\n");
 		}
+		
+		registers[r0] = registers[r1] & (~r2);
+		
 	}	
 	private static void executeLSH(int r0, int r1, int r2) {
 
+		if (debug) {
+			instructionDisplay.append("LSH " + r0  + ", " + registers[r1] + ", " + registers[r2]);
+			instructionDisplay.append("\n");
+		}
+		
 		if (r2 > 0) {
 			registers[r0] = registers[r1] >>> (registers[r2]);	
 		} else {
 			registers[r0] = registers[r1] >> (registers[r2]);
 		}
 		
-		if (debug) {
-			instructionDisplay.append("LSH " + r0  + ", " + registers[r1] + ", " + registers[r2]);
-			instructionDisplay.append("\n");
-		}
 	}
 	
 	private static void executeLSHI(int r0, int r1, int r2) {
+		
+		if (debug) {
+			instructionDisplay.append("LSHI " + r0  + ", " + registers[r1] + ", " + r2);
+			instructionDisplay.append("\n");
+		}
 		
 		if (r2 > 0) {
 			registers[r0] = registers[r1] >>> (r2);	
@@ -929,109 +1000,124 @@ public class VM {
 			registers[r0] = registers[r1] >> (r2);
 		}
 		
-		if (debug) {
-			instructionDisplay.append("LSHI " + r0  + ", " + registers[r1] + ", " + r2);
-			instructionDisplay.append("\n");
-		}
 	}	
 	
 	private static void executeASH(int r0, int r1, int r2) {
 
-		if (r2 > 0) {
-			registers[r0] = registers[r1] >> (registers[r2]);	
-		}
-		
 		if (debug) {
 			instructionDisplay.append("ASH " + r0  + ", " + registers[r1] + ", " + registers[r2]);
 			instructionDisplay.append("\n");
 		}
+		
+		if (r2 > 0) {
+			registers[r0] = registers[r1] >> (registers[r2]);	
+		}
+		
 	}
 	
 	private static void executeASHI(int r0, int r1, int r2) {
-		
-		if (r2 > 0) {
-			registers[r0] = registers[r1] >> (r2);	
-		}
 		
 		if (debug) {
 			instructionDisplay.append("ASHI " + r0  + ", " + registers[r1] + ", " + r2);
 			instructionDisplay.append("\n");
 		}
+		
+		if (r2 > 0) {
+			registers[r0] = registers[r1] >> (r2);	
+		}
+		
 	}
 	
 	
 	
 	private static void executeLDW(int r0, int r1, int r2) {
 		
-		registers[r0] = memory[registers[r1] + r2];
-		
 		if (debug) {
 			instructionDisplay.append("LDW " + r0  + ", " + registers[r1] + ", " + r2);
 			instructionDisplay.append("\n");
 		}
+		
+		registers[r0] = memory[registers[r1] + r2];
+		
 	}
 	
 	private static void executePOP(int r0, int r1, int r2) {
-		
-		registers[r0] = memory[registers[r1]];
-		registers[r1] = registers[r1] + r2;
 		
 		if (debug) {
 			instructionDisplay.append("POP " + r0  + ", " + registers[r1] + ", " + r2);
 			instructionDisplay.append("\n");
 		}
+		
+		registers[r0] = memory[registers[r1]];
+		registers[r1] = registers[r1] + r2;
+		
+		//registers[30] = registers[30] - r2;
+		
 	}
 	
 	
 	private static void executeSTW(int r0, int r1, int r2) {
 		
-		memory[registers[r1] + r2] = registers[r0];
-		
 		if (debug) {
 			instructionDisplay.append("STW " + r0  + ", " + registers[r1] + ", " + r2);
 			instructionDisplay.append("\n");
 		}
+		
+		memory[registers[r1] + r2] = registers[r0];
+		
 	}
 	
 	
 	private static void executePSH(int r0, int r1, int r2) {
 		
-		registers[r1] = registers[r1] - r2;
-		memory[registers[r1]] = registers[r0];
-		
 		if (debug) {
 			instructionDisplay.append("PSH " + r0  + ", " + registers[r1] + ", " + r2);
 			instructionDisplay.append("\n");
 		}
+		
+		registers[r1] = registers[r1] - r2;
+		memory[registers[r1]] = registers[r0];
+		
+		// increment SP
+		//registers[30] = registers[30] + r2;
+		
+		
 	}
 	
-	private static void executePRNI(int r0, int offset) {
+	private static void executePRNI(int r0, int r1, int offset) {
 		
-		if (registers[r0] != null) {
-			int memoryAddress = registers[r0] + offset;
+		if (debug) {
+			instructionDisplay.append("PRNI " + registers[r0] + ", " + registers[r1] + ", " +  offset);
+		}
+		
+		if (registers[r1] != null) {
+			
+			int memoryAddress = registers[r1] + offset;
 			int intValue = memory[memoryAddress];
 
-			outputDisplay.append("" + intValue);
+			outputDisplay.append(intValue + " ");
 			System.out.println(intValue);
 			
-			if (debug) {
-				debugDisplay.append("" + intValue);
-			}
 		}	
 		
 	}
 	
-	private static void executePRNC(int r0, int offset) {
+	private static void executePRNC(int r0, int r1,  int offset) {
+
+		if (debug) {
+			instructionDisplay.append("PRNC " + registers[r0] + ", " + registers[r1] + ", " +  offset);
+		}
 		
 		
-		if (registers[r0] != null) {
-			int memoryAddress = registers[r0] + offset;
+		if (registers[r1] != null) {
+			int memoryAddress = registers[r1] + offset;
 			int intValue = memory[memoryAddress];
 			char charValue = (char)intValue;
 			
 			
-			outputDisplay.append("" + charValue);
+			outputDisplay.append(charValue + " ");
 			System.out.println(charValue);
+
 			
 			if (debug) {
 				debugDisplay.append("" + charValue);
@@ -1043,104 +1129,119 @@ public class VM {
 	
 	private static void executeBSR(int jumpAddress) {
 		
-		registers[31] = PC;
-		PC = jumpAddress; 
-		
 		if (debug) {
 			instructionDisplay.append("BSR " + jumpAddress);
 			instructionDisplay.append("\n");
 		}
+		
+		registers[31] = PC;
+		PC = jumpAddress; 
+		
+		
 	}
 	
 	private static void executeRET(int r0) {
-		
-		PC = registers[r0];
 		
 		if (debug) {
 			instructionDisplay.append("RET " + registers[r0]);
 			instructionDisplay.append("\n");
 		}
+		
+		PC = registers[r0];
+		
+		
 	}
 	
 	
 	private static void executeBEQ(int r0, int jumpAddress) {
-		
-		if (registers[r0] == 0) {
-			System.out.println("BEQ: value of register " + r0 + " is 0");
-			executeBSR(jumpAddress);
-		}
 		
 		if (debug) {
 			instructionDisplay.append("BEQ " + registers[r0] + ", " + jumpAddress);
 			instructionDisplay.append("\n");
 		}
 		
+		if (registers[r0] == 0) {
+			System.out.println("BEQ: value of register " + r0 + " is 0");
+			executeBSR(jumpAddress);
+		}
+		
+		
+		
 	}
 	
 	
 	private static void executeBNE(int r0, int jumpAddress) {
+		
+		if (debug) {
+			instructionDisplay.append("BNE " + registers[r0] + ", " + jumpAddress);
+			instructionDisplay.append("\n");
+		}
 		
 		if (registers[r0] != 0) {
 			System.out.println("BNE: value of register " + r0 + " is not 0");
 			executeBSR(jumpAddress);
 		}		
 		
-		if (debug) {
-			instructionDisplay.append("BNE " + registers[r0] + ", " + jumpAddress);
-			instructionDisplay.append("\n");
-		}
+		
 	}
 	
 	private static void executeBLT(int r0, int jumpAddress) {
+		
+		if (debug) {
+			instructionDisplay.append("BLT " + registers[r0] + ", " + jumpAddress);
+			instructionDisplay.append("\n");
+		}
 		
 		if (registers[r0] < 0) {
 			System.out.println("BTL: value of register " + r0 + " is < 0");
 			executeBSR(jumpAddress);
 		}		
 		
-		if (debug) {
-			instructionDisplay.append("BLT " + registers[r0] + ", " + jumpAddress);
-			instructionDisplay.append("\n");
-		}
+		
 	}
 	
 	private static void executeBGE(int r0, int jumpAddress) {
+		
+		if (debug) {
+			instructionDisplay.append("BGE " + registers[r0] + ", " + jumpAddress);
+			instructionDisplay.append("\n");
+		}
 		
 		if (registers[r0] >= 0) {
 			System.out.println("BGE: value of register " + r0 + " is >= 0");
 			executeBSR(jumpAddress);
 		}		
 		
-		if (debug) {
-			instructionDisplay.append("BGE " + registers[r0] + ", " + jumpAddress);
-			instructionDisplay.append("\n");
-		}
+		
 	}
 	
 	private static void executeBGT(int r0, int jumpAddress) {
+		
+		if (debug) {
+			instructionDisplay.append("BGT " + registers[r0] + ", " + jumpAddress);
+			instructionDisplay.append("\n");
+		}
 		
 		if (registers[r0] > 0) {
 			System.out.println("BGT: value of register " + r0 + " is > 0");
 			executeBSR(jumpAddress);
 		}		
 		
-		if (debug) {
-			instructionDisplay.append("BGT " + registers[r0] + ", " + jumpAddress);
-			instructionDisplay.append("\n");
-		}
 	}
 	
 	private static void executeBLE(int r0, int jumpAddress) {
+		
+		if (debug) {
+			instructionDisplay.append("BLE " + registers[r0] + ", " + jumpAddress);
+			instructionDisplay.append("\n");
+		}
 		
 		if (registers[r0] <= 0) {
 			System.out.println("BLE: value of register " + r0 + " is <= 0");
 			executeBSR(jumpAddress);
 		}		
 		
-		if (debug) {
-			instructionDisplay.append("BLE " + registers[r0] + ", " + jumpAddress);
-			instructionDisplay.append("\n");
-		}
+		
 	}
 	
 	

@@ -16,12 +16,12 @@ public class CodeGenerator {
 			CMPI = 5, CHKI = 6, ANDI = 7, BICI = 8, ORI = 9, XORI = 10,
 			LSHI = 11, ASHI = 12, LDW = 13, LDB = 14, POP = 15, STW = 16,
 			STB = 17, PSH = 18, BEQ = 19, BNE = 20, BLT = 21, BGE = 22,
-			BGT = 23, BLE = 24, HIGHEST_FORMAT_1 = 29;
+			BGT = 23, BLE = 24, PRNI = 25, PRNC = 26, HIGHEST_FORMAT_1 = 29;
 
 	// format 2 instructions
 	private static final int ADD = 30, SUB = 31, MUL = 32, DIV = 33, MOD = 34,
 			CMP = 35, CHK = 36, AND = 37, BIC = 38, OR = 39, XOR = 40,
-			LSH = 41, ASH = 42, PRNI = 43, PRNC = 44, HIGHEST_FORMAT_2 = 49;
+			LSH = 41, ASH = 42, HIGHEST_FORMAT_2 = 49;
 
 	// format 3 instructions
 	private static final int BSR = 50, RET = 51, HIGHEST_FORMAT_3 = 63;
@@ -89,7 +89,7 @@ public class CodeGenerator {
 		topReg = 0;
 		heap = 0;
 		putOpCode(new OpCodeElement("ADDI", ADDI, SP, 0, 4096));
-		putOpCode(new OpCodeElement("ADDI", ADDI, FP, 0, 0));
+		putOpCode(new OpCodeElement("ADDI", ADDI, FP, 0, 4096));
 
 	}
 
@@ -254,7 +254,7 @@ public class CodeGenerator {
 		putOpCode(new OpCodeElement("SUBI", SUBI, SP, SP, -100));
 		// -100 needs to be replaced by the right size when method is finished
 		// remember opcode Element of array in global variable
-		methodFix = opCode.size() - 1;
+		methodFix = opCode.size()-1;
 		return methodsPC;
 	}
 
@@ -269,7 +269,7 @@ public class CodeGenerator {
 		if (!main)
 			putOpCode(new OpCodeElement("RET", RET, 0, 0, LNK));
 		// fixup size of method prolog 
-		opCode.get(methodFix).c = size + 1;
+		opCode.get(methodFix).c = size;
 	}
 
 	/**
@@ -284,18 +284,18 @@ public class CodeGenerator {
 	 * @param offset
 	 */
 	public static void printIO(int offset) {
-		putOpCode(new OpCodeElement("PRNI", PRNI, FP, offset));
+		putOpCode(new OpCodeElement("PRNI", PRNI, 0, FP, offset));
 	}
 
 	public static void fixMainProc(int vecPos, int proc) {
 		opCode.get(vecPos).c = proc;
 	}
 
-	public static void write2File() {
+	public static void write2File(String name) {
 
 		try {
 			RandomAccessFile output = new RandomAccessFile(
-					"integer_outputfile1.txt", "rw");
+					name.concat(".bin"), "rw");
 
 			output.writeInt(0);
 
@@ -328,13 +328,15 @@ public class CodeGenerator {
 							(opCode.get(i).c);
 
 				output.writeInt(number);
-				System.out.println("PC " + (i + 1) + "   " +
+				Util.debug2("PC " + (i + 1) + "   " +
 						Integer.toBinaryString(number) + " " +
 						opCode.get(i).opString + " (" +
 						opCode.get(i).Instruction + ") " + opCode.get(i).a +
 						" " + opCode.get(i).b + " " + opCode.get(i).c);
 			}
 			output.close();
+			System.out.println("Outputfile: "+name.concat(".bin"));
+			System.out.println("");
 		} catch (IOException io) {
 
 		}
