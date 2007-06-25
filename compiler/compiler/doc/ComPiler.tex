@@ -1,0 +1,76 @@
+\documentclass[a4paper,10pt]{article}
+
+\usepackage[T1]{fontenc}
+
+
+%\renewcommand{\rmdefault}{ppl} %Palatino
+%\renewcommand{\rmdefault}{cmfib} % computer modern fibonacci 365
+%\renewcommand{\rmdefault}{\sfdefault} default serifenlos
+\usepackage{ae}
+\renewcommand{\familydefault}{phv} % Helvetica angenehm zu lesen ! 386
+\usepackage{graphicx}
+
+% Silbentrennung
+\usepackage[english,ngerman]{babel}
+
+% PDF
+%LaTeX erzeugt mit dem hyperref-Paket interaktive PDF-Dateien mit Bookmarks
+\usepackage{color}
+\usepackage[colorlinks]{hyperref}
+\usepackage{my} % modifizierte Ueberschriften
+%\usepackage{avant}
+%\usepackage{mathptmx}
+
+%empfohlen aber gehen leider nicht:
+%\usepackage{microtype} Optischer Randausgleich besserer Rand
+%\usepackage{mparhack}
+
+
+%Einstellungen der Seitenränder
+% \usepackage[left=3cm,right=3cm,top=3cm,bottom=3cm,includeheadfoot]{geometry}
+
+%Umlaute ermöglichen
+\usepackage[latin1]{inputenc}
+\usepackage{tabularx} % Seite 259 im Latex Buch, ist extrem cool !!
+\newcolumntype{Y}{>{\small\raggedright\arraybackslash}X}
+
+
+%Kopf- und Fußzeile
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+
+%Kopfzeile mittig
+\fancyhead[C]{\nouppercase{\leftmark}}
+%Linie oben
+\renewcommand{\headrulewidth}{0.5pt}
+
+%Fußzeile mittig
+\fancyfoot[C]{\thepage}
+%Linie unten
+\renewcommand{\footrulewidth}{0.5pt}
+
+
+
+
+
+\begin{document}
+
+{\sc Die Schriftart small caps (Kapit"alchen).}
+{\sf Die Schriftart sans serif (serifenlos).}
+
+\tableofcontents
+\newpage
+
+TODO:
+
+Welchen typen unterstuetzen wir
+Alle Ausdruecke werden bei uns in der Klasse Symboltable ueberprueft auf Korrektheit. 
+
+
+\input{parser.tex}
+
+
+
+
+\end{document}
