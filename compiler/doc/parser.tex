@@ -118,3 +118,43 @@ the parser reports
 TODO Message
 \end{verbatim}
 \end{quote}
+
+
+\section{Symboltable}
+
+The Parser produces for every field (global variables, methods) and local variables an entry in the Symboltable.
+The Symboltable is implemented as a Java Linked List. We distinguish between different scopes. The global scope and local scopes. Every
+method declaration has an entry in the gobal scope. The method's variables (local vars)  are not in the same list (global scope), they are in
+a separate linked list which is an attribute of the methode. TODO FIGURE
+
+The Symboltable is representet by the symboltable list (SymbolTableList.java) which consists of cells (SymbolTableCell.java).
+A cell consists of:
+\newline
+\newline
+\begin{tabular}{lp{6cm}}
+\texttt{String name} & Name of the entry (Variable name, Method name,\ldots) \\
+\texttt{ClassType classType} & kind of the entry: variable, array, procedure \\
+\texttt{TypeDesc type} & data type: int, bool, char, String \\
+\texttt{String value} & the value of the variable, when available \\
+\texttt{SymbolTableList methodSymbols} & only methods and arrays have a sub list with symbol table cells \\
+\texttt{int offset} & offset is negative \\
+\texttt{int size} & in 4 bytes (word) \\
+\end{tabular}
+
+
+\section {Type Savety}
+
+\subsection{Naming convention}
+We ensure that variable names in a separate scope are unique. Local variables can have the same name as global variables. 
+
+\subsection{Operator on incompatible Types}
+\begin{itemize}
+  \item will be ensured by EBNF
+  \item 
+\end{itemize}
+
+\subsection{Typechecking}
+
+
+
+
