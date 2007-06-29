@@ -26,9 +26,10 @@ public class SymbolTableList {
 	 * will be added in the sub linked list of the method x. When the next method y is added, 
 	 * all variables will be added in the method y and so on. 
 	 * 
-	 * @param String ClassType DataType int String
+	 * @param String ClassType DataType int String boolean (set boolean always to true !)
 	 */
-	public void addSym(String name, ClassType classType, TypeDesc type, int size) {
+	public void addSym(String name, ClassType classType, TypeDesc type, int size,
+			boolean globalScope) {
 
 		boolean foundSymbol = false;
 		ListIterator<SymbolTableCell> iterator = symList.listIterator();
@@ -41,8 +42,7 @@ public class SymbolTableList {
 		if (scope == 0 && iterator.hasNext() && getSymbol(name) != null)
 			foundSymbol = true;
 		/* check the global scope if global scope is selected */
-		else if (scope == 1 &&
-				symList.getLast().methodSymbols.getSymbol(name) != null)
+		else if (scope == 1 && symList.getLast().methodSymbols.getSymbol(name) != null)
 			foundSymbol = true;
 
 		if (foundSymbol) {
@@ -58,13 +58,13 @@ public class SymbolTableList {
 		/* add entry to list */
 		if (scope == 0) {
 			offset = offset - size;
-			symList.addLast(new SymbolTableCell(name, classType, type, offset,
-					size));
+			symList.addLast(new SymbolTableCell(name, classType, type, offset, size, globalScope));
 		}
 
 		/* add local vars in the sublist of the last method */
-		if (scope == 1)
-			symList.getLast().methodSymbols.addSym(name, classType, type, size);
+		if (scope == 1) {
+			symList.getLast().methodSymbols.addSym(name, classType, type, size, false);
+		}
 
 		/* if scope is 1 a method declaration does already exist, but to add the next Method to the global scope (class scope) do following:
 		 * set scope to 0 and add the method to the class symbol list and set scope to 1 again*/
@@ -99,9 +99,10 @@ public class SymbolTableList {
 			}
 
 			/*search local vars*/
-			if (currentCell.getClassType() == SymbolTableCell.ClassType.method &&
-					!iter.hasNext()) {
-				returnCell = currentCell.methodSymbols.getSymbol(name);
+			if (currentCell.getClassType() == SymbolTableCell.ClassType.method && !iter.hasNext()) {
+				SymbolTableCell tmp = currentCell.methodSymbols.getSymbol(name);
+				if (tmp!=null)
+					returnCell = tmp;
 			}
 		}
 
@@ -126,10 +127,10 @@ public class SymbolTableList {
 		while (iter.hasNext()) {
 			SymbolTableCell currentCell = iter.next();
 			i++;
-			System.out.println(i + " Name: " + currentCell.getName() +
-					" type: " + currentCell.getType().getBase().toString() +
-					" size:  " + currentCell.getSize() + " offset: " +
-					currentCell.getOffset() + " value: ");
+			System.out.println(i + " Name: " + currentCell.getName() + " type: " +
+					currentCell.getType().getBase().toString() + " size:  " +
+					currentCell.getSize() + " offset: " + currentCell.getOffset() +
+					" globalScope: " + currentCell.isGlobalScope());
 			;
 			if (currentCell.getClassType() == SymbolTableCell.ClassType.method) {
 				System.out.println("Symbol Table method: ");

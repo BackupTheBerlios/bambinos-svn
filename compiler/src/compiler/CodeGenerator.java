@@ -1,5 +1,6 @@
 package compiler;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.BitSet;
@@ -35,6 +36,13 @@ public class CodeGenerator {
 	final static TypeDesc BOOLTYPE = new TypeDesc(2, TypeDesc.DataType.boolT, 1);
 	final static TypeDesc CHARTYPE = new TypeDesc(2, TypeDesc.DataType.charT, 1);
 
+	
+	/* Generate array with compile-time TypeDesc for arrays,objects,... 
+	 * 
+	 */
+	static Vector<TypeDesc> typeDescArray = new Vector<TypeDesc>();
+	
+	
 	// TODO passt noch nicht hab ihn nur mal angelegt um weitermachen zu koennen
 	final static TypeDesc STRINGTYPE = new TypeDesc(2, TypeDesc.DataType.charT,
 			1);
@@ -130,15 +138,18 @@ public class CodeGenerator {
 			boolean global) throws TypeErrorException {
 
 		int b = FP;
-		if (global)
+		int offset=cell.getOffset();
+		if (cell.isGlobalScope()){
 			b = heap;
+			offset=0-offset; // heap must have positive offsets
+		}
 
 		// sollte immer eine Var sein, sonst stimmt der Aufruf vom Parser aus nicht. dann waere irgendwo ein logische Fehler
 		// to enable assertions compile with javac flag "-ea"
 		assert (cell.getClassType() != SymbolTableCell.ClassType.var) : "INTERNAL ERROR IN CODE GEN. in writeIdentifierToRegister() cell is not a variable. BAD CLASS TYPE !";
 
 		typeChecking(cell, type);
-		putOpCode(new OpCodeElement("LDW", LDW, nextReg(), b, cell.getOffset()));
+		putOpCode(new OpCodeElement("LDW", LDW, nextReg(), b, offset));
 	}
 
 	public static void loadWordType(SymbolTableCell cell, TypeDesc type)
@@ -152,6 +163,12 @@ public class CodeGenerator {
 	 */
 	public static void addI(int val) {
 		putOpCode(new OpCodeElement("ADDI", ADDI, nextReg(), 0, val));
+	}
+
+	public static void invertValofLastReg() {
+		putOpCode(new OpCodeElement("SUB", SUB, getCurrentReg(), 0,
+				getCurrentReg()));
+
 	}
 
 	/** 
@@ -175,6 +192,8 @@ public class CodeGenerator {
 
 	/**
 	 * Immediate
+	 * 
+	 * @param String e.g ADD, SUB
 	 */
 	public static void putImOp2Reg(String kind, int value) {
 		int op = 0;
@@ -188,25 +207,53 @@ public class CodeGenerator {
 			op = MODI;
 		else if (kind.equals("DIV"))
 			op = DIVI;
-		putOpCode(new OpCodeElement(kind, op, topReg, topReg, value));
+		putOpCode(new OpCodeElement(kind.concat("I"), op, topReg, topReg, value));
 	}
 
 	/**
+	 * Stores last Value of last Register into the give cell.
+	 *  
 	 * STW 1,0,obj.val
 	 * 
 	 * @param cell
 	 */
-	public static void storeWord(SymbolTableCell cell, boolean global) {
-		int b = heap;
-		if (!global)
-			b = FP;
-		putOpCode(new OpCodeElement("STW", STW, getCurrentReg(), b, cell
-				.getOffset()));
+	public static void storeWord(SymbolTableCell cell) {
+		
+		int b = FP;
+		int offset=cell.getOffset();
+		if (cell.isGlobalScope()){
+			b = heap;
+			offset=0-offset; // heap must have positive offsets
+		}
+		putOpCode(new OpCodeElement("STW", STW, getCurrentReg(), b, offset));
 		decreaseReg();
 	}
 
-	public static void storeWord(SymbolTableCell cell) {
-		storeWord(cell, false);
+	/**
+	 * Adds frame pointer to last register and stores indexed array element
+	 * 
+	 * @param int scope 1 ... local scope
+	 * 					2 ... global scope
+	 */
+	public static void storeWordArray(int scope) {
+
+		if (scope == 1)
+			putOpCode(new OpCodeElement("ADD", ADD, getCurrentReg() - 1, FP,
+					getCurrentReg() - 1));
+
+		putOpCode(new OpCodeElement("STW", STW, getCurrentReg(),
+				getCurrentReg() - 1, 0));
+		decreaseReg();
+		decreaseReg();
+	}
+
+	public static void loadWordArray(int scope) {
+		if (scope == 1)
+			putOpCode(new OpCodeElement("ADD", ADD, getCurrentReg(), FP,
+					getCurrentReg()));
+
+		putOpCode(new OpCodeElement("LDW", LDW, getCurrentReg(),
+				getCurrentReg(), 0));
 	}
 
 	/**
@@ -254,7 +301,7 @@ public class CodeGenerator {
 		putOpCode(new OpCodeElement("SUBI", SUBI, SP, SP, -100));
 		// -100 needs to be replaced by the right size when method is finished
 		// remember opcode Element of array in global variable
-		methodFix = opCode.size()-1;
+		methodFix = opCode.size() - 1;
 		return methodsPC;
 	}
 
@@ -293,10 +340,13 @@ public class CodeGenerator {
 
 	public static void write2File(String name) {
 
+		File test = new File(name.concat(".bin"));
+		test.delete();
+		
 		try {
-			RandomAccessFile output = new RandomAccessFile(
-					name.concat(".bin"), "rw");
-
+			RandomAccessFile output = new RandomAccessFile(name.concat(".bin"),
+					"rw");
+			
 			output.writeInt(0);
 
 			for (int i = 0; i < opCode.size(); i++) {
@@ -335,7 +385,7 @@ public class CodeGenerator {
 						" " + opCode.get(i).b + " " + opCode.get(i).c);
 			}
 			output.close();
-			System.out.println("Outputfile: "+name.concat(".bin"));
+			System.out.println("Outputfile: " + name.concat(".bin"));
 			System.out.println("");
 		} catch (IOException io) {
 

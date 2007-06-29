@@ -102,11 +102,10 @@ public class Parser {
 		// break;
 		// }
 
-		// CodeGenerator.symbolTable.printSymbolTable();
+		CodeGenerator.symbolTable.printSymbolTable();
 
-		
 		System.out.println("");
-		System.out.println("Compiling "+args[1]+".");
+		System.out.println("Compiling " + args[1] + ".");
 
 		String[] name = new String[1];
 		if (args[1].endsWith("com"))
@@ -116,7 +115,7 @@ public class Parser {
 			name = args[1].split(".java");
 
 		CodeGenerator.write2File(name[0]);
-		
+
 		System.out.println("Thanks for using ComPiler.");
 		System.out.println("");
 
@@ -129,8 +128,7 @@ public class Parser {
 	 */
 	private static void nextToken() {
 		currentToken = Scanner.getSym();
-		debug1("Current Token: " + currentToken.type + " line: "
-				+ currentToken.lineNumber);
+		debug1("Current Token: " + currentToken.type + " line: " + currentToken.lineNumber);
 
 	}
 
@@ -146,8 +144,7 @@ public class Parser {
 	 * @param expectedID
 	 * @throws IllegalTokenException
 	 */
-	private static void expect(ErrorLevel l, TokenID expectedID)
-			throws IllegalTokenException {
+	private static void expect(ErrorLevel l, TokenID expectedID) throws IllegalTokenException {
 		boolean nextToken = true;
 		if (currentToken.type != expectedID) {
 
@@ -156,8 +153,8 @@ public class Parser {
 			 * missing token will be inserted
 			 */
 			if (l == ErrorLevel.WEEK) {
-				System.out.println("Warning: missing symbol: " + expectedID
-						+ " in line " + currentToken.lineNumber);
+				System.out.println("Warning: missing symbol: " + expectedID + " in line " +
+						currentToken.lineNumber);
 
 				if (expectedID == TSEMICOLON)
 					// generateCode(); nein doch nicht, mache jedes einzeln da
@@ -167,24 +164,23 @@ public class Parser {
 					;
 				else
 					tokenList.add(new Ident(expectedID)); // insert missing
-															// Identifier into
-															// code Generation
-															// List
+				// Identifier into
+				// code Generation
+				// List
 
 				nextToken = false; // dont fetch next token on Week Error !
 			}
 			// Strong Error Level
 			else {
-				syntaxError("Error: mismatch token: "
-						+ currentToken.type.toString() + " expected: "
-						+ expectedID.toString() + " at line: "
-						+ currentToken.lineNumber);
+				syntaxError("Error: mismatch token: " + currentToken.type.toString() +
+						" expected: " + expectedID.toString() + " at line: " +
+						currentToken.lineNumber);
 			}
 		}
 
 		if (currentToken.type == TSEMICOLON)
 			generateCode(); // This can work here, because when semicolon is
-							// missing, it will be inserted !
+		// missing, it will be inserted !
 		else {
 			if (nextToken)
 				tokenList.add(currentToken); // dont add Semicolon
@@ -225,9 +221,8 @@ public class Parser {
 	private static void arrayListEmpty(String method) {
 		if (tokenList.isEmpty() == false) {
 			Util
-					.debug3("INTERNAL ERROR IN Parser.java "
-							+ method
-							+ " ; The Parser Token List is not empty but it should be !! Empty the List now.");
+					.debug3("INTERNAL ERROR IN Parser.java " + method +
+							" ; The Parser Token List is not empty but it should be !! Empty the List now.");
 			tokenList.clear();
 		}
 	}
@@ -242,8 +237,7 @@ public class Parser {
 		int i = 0;
 		String print = "     SENTENCE: ";
 		while (i < tokenList.size()) {
-			print = print.concat((new Ident(tokenList.get(i).type).type
-					.toString() + " "));
+			print = print.concat((new Ident(tokenList.get(i).type).type.toString() + " "));
 			i++;
 		}
 		debug1(print);
@@ -266,10 +260,9 @@ public class Parser {
 	 * @param arrayElements
 	 *            (when no array set to 1)
 	 */
-	private static void add2SymTable(String name, ClassType classType,
-			TypeDesc type, int arraySize) {
+	private static void add2SymTable(String name, ClassType classType, TypeDesc type, int arraySize) {
 		int size = type.getSize() * arraySize;
-		CodeGenerator.symbolTable.addSym(name, classType, type, size);
+		CodeGenerator.symbolTable.addSym(name, classType, type, size, true);
 	}
 
 	/**
@@ -341,8 +334,7 @@ public class Parser {
 	private static void classBlock() {
 		debug1("ClassBlock");
 		try {
-			while (currentToken.type == TSIDENT
-					|| currentToken.type.startSetSimpleDeclaration()) {
+			while (currentToken.type == TSIDENT || currentToken.type.startSetSimpleDeclaration()) {
 				if (currentToken.type == TSIDENT)
 					objectDeclaration();
 				if (currentToken.type.startSetSimpleDeclaration())
@@ -373,8 +365,8 @@ public class Parser {
 		expectWeak(TSTATIC);
 		int verifyReturnType = 0;
 		TypeDesc returnType; // TODO weiss noch nicht ob man den
-								// Rueckgabewert ueberhaupt pruefen sollen,
-								// overkill ???
+		// Rueckgabewert ueberhaupt pruefen sollen,
+		// overkill ???
 
 		if (currentToken.type == TVOID) {
 			expect(TVOID);
@@ -383,10 +375,8 @@ public class Parser {
 			returnType = dataType(); // return type
 			verifyReturnType++;
 		} else
-			syntaxError("Illegal Method Declaration, Return Type not valid. Token: "
-					+ currentToken.type.toString()
-					+ "not valid. in line:"
-					+ currentToken.lineNumber);
+			syntaxError("Illegal Method Declaration, Return Type not valid. Token: " +
+					currentToken.type.toString() + "not valid. in line:" + currentToken.lineNumber);
 
 		// method Name
 		String name = currentToken.value;
@@ -401,10 +391,8 @@ public class Parser {
 		// Frage was vergisst man mehr Return Type oder Klammer ?? ich denke
 		// return type !
 		if (verifyReturnType < 2)
-			syntaxError("Illegal Method Declaration, no return type specified. Token: "
-					+ currentToken.type.toString()
-					+ "not valid. in line:"
-					+ currentToken.lineNumber);
+			syntaxError("Illegal Method Declaration, no return type specified. Token: " +
+					currentToken.type.toString() + "not valid. in line:" + currentToken.lineNumber);
 
 		expect(TLPAREN);
 
@@ -417,23 +405,21 @@ public class Parser {
 		// irgendwo suchen (siehe Type typen die allgemein definiert sind
 		// INTYPE, BOOLTYPE
 		// 2. null ist value ; Methode hat keinen Wert !
-		add2SymTable(name, SymbolTableCell.ClassType.method,
-				CodeGenerator.INTTYPE, 0);
+		add2SymTable(name, SymbolTableCell.ClassType.method, CodeGenerator.INTTYPE, 0);
 
 		// Parameter:
 		Vector<String> paramVector = new Vector<String>(); // TODO vorerst,
-															// brauche dann ein
-															// Objekt statt
-															// String
+		// brauche dann ein
+		// Objekt statt
+		// String
 
 		if (currentToken.type.startSetSimpleDeclaration()) { // if
-																// dataTypeDescriptor
-																// (startSet is
-																// dataType )
+			// dataTypeDescriptor
+			// (startSet is
+			// dataType )
 			dataTypeDescriptor();
 			paramVector.add(tokenList.get(tokenList.size() - 1).value);
-			while (currentToken.type == TCOMMA
-					|| currentToken.type.startSetSimpleDeclaration()) {
+			while (currentToken.type == TCOMMA || currentToken.type.startSetSimpleDeclaration()) {
 				expectWeak(TCOMMA);
 				dataTypeDescriptor();
 				paramVector.add(tokenList.get(tokenList.size() - 1).value);
@@ -447,12 +433,11 @@ public class Parser {
 		// Add parameters to symboltable call by ref noch nicht implementiert !!
 		// TODO ich adde einfach mal nur Integer types ;
 		// muss in der Form int x, ... sein -- arrays, objekte geht noch nicht
-		CodeGenerator.symbolTable.getSymbol(name).methodSymbols
-				.fixOffset(paramVector.size() + 2);
+		CodeGenerator.symbolTable.getSymbol(name).methodSymbols.fixOffset(paramVector.size() + 2);
 		int i = 0;
 		while (i < paramVector.size()) {
-			add2SymTable(paramVector.get(i), SymbolTableCell.ClassType.var,
-					CodeGenerator.INTTYPE, 1);
+			add2SymTable(paramVector.get(i), SymbolTableCell.ClassType.var, CodeGenerator.INTTYPE,
+					1);
 			i++;
 		}
 		CodeGenerator.symbolTable.getSymbol(name).methodSymbols.fixOffset(-2);
@@ -466,17 +451,15 @@ public class Parser {
 		bodyBlock();
 
 		// size consist only of the method entries, as it is programmed here:
-		int size = CodeGenerator.symbolTable.getSymbol(name).methodSymbols
-				.getCurrentOffset(); // last offset of method's sublist
+		int size = CodeGenerator.symbolTable.getSymbol(name).methodSymbols.getCurrentOffset(); // last offset of method's sublist
 
 		if (size < 0)
 			size = 0 - size;
 
 		// fix offset in methods Symbol table cell
-		CodeGenerator.symbolTable.getSymbol(name).fixSizeAndOffset(size,
-				offsetBefore + size - 1); // first element starts with offset
-											// 0 in methods sublist, so increase
-											// size fixup
+		CodeGenerator.symbolTable.getSymbol(name).fixSizeAndOffset(size, offsetBefore + size - 1); // first element starts with offset
+		// 0 in methods sublist, so increase
+		// size fixup
 		// fix global offset counter in Symbol table list
 		CodeGenerator.symbolTable.fixOffset(size);
 
@@ -542,19 +525,16 @@ public class Parser {
 		} else if (type.equals(CodeGenerator.INTTYPE)) {
 			CodeGenerator.addI(0);
 		}
-		add2SymTable(tokenList.get(1).getIdentValue(),
-				SymbolTableCell.ClassType.var, type, 1);
+		add2SymTable(tokenList.get(1).getIdentValue(), SymbolTableCell.ClassType.var, type, 1);
 		// Store Word
-		CodeGenerator.storeWord(CodeGenerator.symbolTable.getSymbol(tokenList
-				.get(1).value));
+		CodeGenerator.storeWord(CodeGenerator.symbolTable.getSymbol(tokenList.get(1).value));
 	}
 
 	/**
 	 * int[] x = new int[4];
 	 * 
 	 */
-	private static void primitiveArrayDeclaration()
-			throws IllegalTokenException {
+	private static void primitiveArrayDeclaration() throws IllegalTokenException {
 		debug1("primitiveArrayDeclaration");
 		TypeDesc type = primitiveArray();
 		identifier(); // nur simple supported at the moment
@@ -566,8 +546,8 @@ public class Parser {
 		int arraySize = Integer.parseInt(currentToken.value);
 		expect(TNUMBER);
 		expectWeak(TRBRACK);
-		add2SymTable(tokenList.get(1).getIdentValue(),
-				SymbolTableCell.ClassType.array, type, arraySize);
+		add2SymTable(tokenList.get(1).getIdentValue(), SymbolTableCell.ClassType.array, type,
+				arraySize);
 	}
 
 	private static void stringDeclaration() throws IllegalTokenException {
@@ -595,12 +575,12 @@ public class Parser {
 		expectWeak(TRBRACK);
 	}
 
-	private static void objectDeclarationAssignmentMethodCall()
-			throws IllegalTokenException {
+	private static void objectDeclarationAssignmentMethodCall() throws IllegalTokenException {
+		arrayListEmpty("objectDeclarationAssignmentMethodCall");
 		debug1("objectDeclarationAssignmentMethodCall");
 		object();
-		if (currentToken.type == TEQL || currentToken.type == TSIDENT
-				|| currentToken.type == TLBRACK)
+		if (currentToken.type == TEQL || currentToken.type == TSIDENT ||
+				currentToken.type == TLBRACK)
 			arrayDeclarationSuffix();
 		else if (currentToken.type == TLPAREN)
 			methodCallSuffix();
@@ -631,8 +611,8 @@ public class Parser {
 			expectWeak(TNUMBER);
 			expectWeak(TRBRACK);
 		} else {
-			syntaxError("Illelag token: " + currentToken.type.toString()
-					+ " in objectDeclaration" + currentToken.lineNumber);
+			syntaxError("Illelag token: " + currentToken.type.toString() + " in objectDeclaration" +
+					currentToken.lineNumber);
 		}
 	}
 
@@ -651,10 +631,10 @@ public class Parser {
 		expect(TLPAREN);
 		// check the proc, the absolute programm counter where the method starts
 		int procMethod = getIdentifersCell(tokenList.size() - 2).getProc(); // TODO
-																			// wenn
-																			// Methode
-																			// Klassen
-																			// Attribut
+		// wenn
+		// Methode
+		// Klassen
+		// Attribut
 
 		if (currentToken.type.startSetExpression()) {
 			Item returnItem = expression();
@@ -663,8 +643,7 @@ public class Parser {
 			// Load parameters
 			CodeGenerator.pushRegister();
 		}
-		while (currentToken.type == TCOMMA
-				|| currentToken.type.startSetExpression()) {
+		while (currentToken.type == TCOMMA || currentToken.type.startSetExpression()) {
 			expectWeak(TCOMMA);
 			Item returnItem = expression();
 			if (returnItem.mode == 1 || returnItem.mode == 2)
@@ -680,23 +659,40 @@ public class Parser {
 
 	private static void arrayDeclarationSuffix() throws IllegalTokenException {
 		debug1("arrayDeclarationSuffix");
-		if (currentToken.type == TLBRACK)
-			arraySelector();
-		else if (currentToken.type == TSIDENT)
+		int type = 0; // 1 ... array
+		Item item, itemArray = null;
+		if (currentToken.type == TLBRACK) {
+			itemArray = arraySelector();
+			// x[8]=
+			type = 1;
+		}
+		if (currentToken.type == TSIDENT)
 			objectDeclarationSuffix();
 		else if (currentToken.type == TEQL) {
-			Item item = assignmentSuffix();
+			item = assignmentSuffix();
+
+			if (item.mode == 1)
+				item.type = CodeGenerator.symbolTable.getSymbol(
+						tokenList.get(tokenList.size() - 1).value).getType();
+
 			// y = 4+u; // type Safe expression returns type and y will only be
 			// put on the register when it
 			// is from the same type ! else a Error will be printed
-
-			SymbolTableCell cell = CodeGenerator.symbolTable
-					.getSymbol(tokenList.get(0).value);
-			try {
-				CodeGenerator.storeWordCell(cell, item.type);
-			} catch (TypeErrorException e) {
-				typeError();
-				e.printStackTrace();
+			if (type == 0) {
+				SymbolTableCell cell = CodeGenerator.symbolTable.getSymbol(tokenList.get(0).value);
+				try {
+					CodeGenerator.storeWordCell(cell, item.type);
+				} catch (TypeErrorException e) {
+					typeError();
+					e.printStackTrace();
+				}
+			} else if (type == 1) {
+				// Type Safety
+				
+				if (compareItemType(itemArray, item))
+					CodeGenerator.storeWordArray(1); // TODO scope 1.. local 2 ... global
+				else
+					syntaxError("Not Type Safe, in array, at line: " + currentToken.lineNumber);
 			}
 
 		}
@@ -729,8 +725,7 @@ public class Parser {
 				else if (currentToken.type == TRBRACES) {
 					if (countTLBRACES <= 2)
 						return;
-				} else if (currentToken.type.ordinal() < STRONG_SYM_CB
-						.ordinal())
+				} else if (currentToken.type.ordinal() < STRONG_SYM_CB.ordinal())
 					nextToken();
 				else {
 					debug1("END BODY BLOCK");
@@ -753,8 +748,7 @@ public class Parser {
 		expectWeak(TLPAREN);
 		if (currentToken.type == TSIDENT) {
 			identifier();
-			CodeGenerator.printIO(getIdentifersCell(tokenList.size() - 1)
-					.getOffset());
+			CodeGenerator.printIO(getIdentifersCell(tokenList.size() - 1).getOffset());
 		} else if (currentToken.type == TNUMBER || currentToken.type == TMINUS)
 			intValue();
 		else if (currentToken.type == TCHAR_VALUE)
@@ -762,8 +756,7 @@ public class Parser {
 		else if (currentToken.type == TSTRING_VALUE)
 			expect(TSTRING_VALUE);
 		else
-			System.out.println("Nothing to print in line"
-					+ currentToken.lineNumber);
+			System.out.println("Nothing to print in line" + currentToken.lineNumber);
 
 		expectWeak(TRPAREN);
 		expectWeak(TSEMICOLON);
@@ -839,24 +832,16 @@ public class Parser {
 		Item item1 = factor();
 		Item item2 = null, returnItem = null;
 
-		while (currentToken.type == TPLUS || currentToken.type == TMINUS) {
+		if (currentToken.type == TPLUS || currentToken.type == TMINUS) {
 
 			int indexFirst = tokenList.size() - 1; // y=(z)+4 geht so nicht ist
-													// aber auch fis
-
-			String termKind = null;
-			if (currentToken.type == TPLUS) {
-				expect(TPLUS);
-				termKind = "ADD";
-			} else if (currentToken.type == TMINUS) {
-				expect(TMINUS);
-				termKind = "SUB";
-			}
-
+			// aber auch fis
+			String termKind = getOperation();
 			item2 = factor();
-
 			returnItem = delayedCodeGen(termKind, indexFirst, item1, item2);
-
+			if (currentToken.type == TPLUS || currentToken.type == TMINUS) {
+				returnItem = delayedCodeGen(getOperation(), indexFirst, returnItem, expression());
+			}
 		}
 		if (item2 != null)
 			return returnItem;
@@ -875,32 +860,42 @@ public class Parser {
 		Item item1 = value();
 		Item returnItem = null, item2 = null;
 
-		while (currentToken.type == TMULT || currentToken.type == TDIV
-				|| currentToken.type == TMOD) {
+		if (currentToken.type == TMULT || currentToken.type == TDIV || currentToken.type == TMOD) {
 
-			int indexFirst = tokenList.size() - 1; // y=(z)*4 geht so nicht ist
-													// aber auch fis
-
-			String factorKind = null;
-			if (currentToken.type == TMULT) {
-				expect(TMULT);
-				factorKind = "MUL";
-			} else if (currentToken.type == TDIV) {
-				expect(TDIV);
-				factorKind = "DIV";
-			} else if (currentToken.type == TMOD) {
-				expect(TMOD); // TODO implement
-				factorKind = "MOD";
+			int indexFirst = tokenList.size() - 1; // y=(z)*4 geht so nicht ist aber auch fis
+			String factorKind = getOperation();
+			item2 = value();
+			returnItem = delayedCodeGen(factorKind, indexFirst, item1, item2);
+			if (currentToken.type == TMULT || currentToken.type == TDIV ||
+					currentToken.type == TMOD) {
+				returnItem = delayedCodeGen(getOperation(), indexFirst, returnItem, expression());
 			}
 
-			item2 = value();
-
-			returnItem = delayedCodeGen(factorKind, indexFirst, item1, item2);
 		}
 		if (item2 != null)
 			return returnItem;
 
 		return item1;
+	}
+
+	private static String getOperation() throws IllegalTokenException {
+		if (currentToken.type == TMULT) {
+			expect(TMULT);
+			return "MUL";
+		} else if (currentToken.type == TDIV) {
+			expect(TDIV);
+			return "DIV";
+		} else if (currentToken.type == TMOD) {
+			expect(TMOD);
+			return "MOD";
+		} else if (currentToken.type == TPLUS) {
+			expect(TPLUS);
+			return "ADD";
+		} else if (currentToken.type == TMINUS) {
+			expect(TMINUS);
+			return "SUB";
+		}
+		return null;
 	}
 
 	/**
@@ -915,8 +910,8 @@ public class Parser {
 	 * @return
 	 * @throws IllegalTokenException
 	 */
-	private static Item delayedCodeGen(String factorKind, int indexFirst,
-			Item item1, Item item2) throws IllegalTokenException {
+	private static Item delayedCodeGen(String factorKind, int indexFirst, Item item1, Item item2)
+			throws IllegalTokenException {
 		Item returnItem = null;
 		if (item2 == null)
 			syntaxError("Invalid type, in line: " + currentToken.lineNumber);
@@ -949,11 +944,13 @@ public class Parser {
 			if (factorKind.equals("MOD"))
 				val2 = val1 % val2;
 
+			tokenList.get(tokenList.size() - 1).value = String.valueOf(val2);
+
 			// return immediate type
 			return new Item(2, CodeGenerator.INTTYPE, val2);
 
 		} else if (item1.mode == 1 && item2.mode == 1) { // two variables in
-															// memory
+			// memory
 			putIdentifiers2Reg(CodeGenerator.INTTYPE, indexFirst);
 			putIdentifiers2Reg(CodeGenerator.INTTYPE, tokenList.size() - 1);
 			CodeGenerator.putOperation2Reg(factorKind);
@@ -966,9 +963,9 @@ public class Parser {
 
 		} else if ((item1.mode == 3 && item2.mode == 1)) {
 			putIdentifiers2Reg(CodeGenerator.INTTYPE, tokenList.size() - 1); // 1
-																				// reg
-																				// 2.
-																				// var
+			// reg
+			// 2.
+			// var
 			CodeGenerator.putOperation2Reg(factorKind);
 			return new Item(3, CodeGenerator.INTTYPE);
 
@@ -1000,7 +997,7 @@ public class Parser {
 	 */
 	private static class Item {
 		int mode; // 1 .. var (y) --- 2 ... Immediate (19) ---- 3 ... Register
-					// (last Register)
+		// (last Register)
 		TypeDesc type;
 		int val;
 
@@ -1018,20 +1015,35 @@ public class Parser {
 		}
 	}
 
+	private static boolean compareItemType(Item item1, Item item2) {
+		if (item1.type == item2.type)
+			return true;
+		return false;
+	}
+
+	/**
+	 * 
+	 * @return Item 1.. var 2.. const 3.. reg
+	 * @throws IllegalTokenException
+	 */
 	private static Item value() throws IllegalTokenException {
 		debug1("value");
 		Item returnItem = null;
 		if (currentToken.type == TSIDENT) {
 			identifier();
 			returnItem = new Item(1, null);
-			if (currentToken.type == TLBRACK)
-				arraySelector();
+			if (currentToken.type == TLBRACK) {
+				returnItem = arraySelector();
+				// load indexed array to register
+				CodeGenerator.loadWordArray(1); // TODO scope 
+				//returnItem = new Item(3, null);
+			}
 			if (currentToken.type == TLPAREN) {
 				methodCallSuffix();
 			}
 		} else if (currentToken.type == TMINUS || currentToken.type == TNUMBER) {
 			returnItem = new Item(2, CodeGenerator.INTTYPE, intValue()); // return
-																			// Immediate
+			// Immediate
 		} else if (currentToken.type == TCHAR_VALUE)
 			expect(TCHAR_VALUE);
 		else if (currentToken.type == TTRUE || currentToken.type == TFALSE)
@@ -1081,13 +1093,11 @@ public class Parser {
 		}
 		expect(TNUMBER);
 		if (neg)
-			return 0 - Integer.parseInt(tokenList.get(tokenList.size() - 1)
-					.getIdentValue()); // returns last entrie from the token
-										// list
+			return 0 - Integer.parseInt(tokenList.get(tokenList.size() - 1).getIdentValue()); // returns last entrie from the token
+		// list
 		else
-			return Integer.parseInt(tokenList.get(tokenList.size() - 1)
-					.getIdentValue()); // returns last entrie from the token
-										// list
+			return Integer.parseInt(tokenList.get(tokenList.size() - 1).getIdentValue()); // returns last entrie from the token
+		// list
 	}
 
 	private static void booleanValue() throws IllegalTokenException {
@@ -1097,9 +1107,8 @@ public class Parser {
 		else if (currentToken.type == TFALSE)
 			expect(TFALSE);
 		else
-			syntaxError("Wrong token " + currentToken.type.toString()
-					+ ", boolean Value expected, at line: "
-					+ currentToken.lineNumber);
+			syntaxError("Wrong token " + currentToken.type.toString() +
+					", boolean Value expected, at line: " + currentToken.lineNumber);
 	}
 
 	private static TypeDesc primitive() throws IllegalTokenException {
@@ -1114,9 +1123,8 @@ public class Parser {
 			expect(TCHAR);
 			return CodeGenerator.CHARTYPE;
 		} else {
-			syntaxError("Wrong token " + currentToken.type.toString()
-					+ ", primitive datatype expected, at line: "
-					+ currentToken.lineNumber);
+			syntaxError("Wrong token " + currentToken.type.toString() +
+					", primitive datatype expected, at line: " + currentToken.lineNumber);
 			return null;
 		}
 	}
@@ -1133,9 +1141,8 @@ public class Parser {
 			expect(TCHAR_ARRAY);
 			return CodeGenerator.CHARTYPE;
 		} else
-			syntaxError("Wrong token " + currentToken.type.toString()
-					+ ", primitive Array datatype expected, at line: "
-					+ currentToken.lineNumber);
+			syntaxError("Wrong token " + currentToken.type.toString() +
+					", primitive Array datatype expected, at line: " + currentToken.lineNumber);
 		return null;
 	}
 
@@ -1160,8 +1167,8 @@ public class Parser {
 			object();
 			// TODO return
 		} else
-			syntaxError("Wrong token " + currentToken.type.toString()
-					+ ", datatype expected at line: " + currentToken.lineNumber);
+			syntaxError("Wrong token " + currentToken.type.toString() +
+					", datatype expected at line: " + currentToken.lineNumber);
 		return null;
 	}
 
@@ -1224,17 +1231,14 @@ public class Parser {
 		if (tokenList.get(index).type == TSIDENT) {
 			// search in global then in local table and return the cell with the
 			// appropriate name
-			cell = CodeGenerator.symbolTable
-					.getSymbol(tokenList.get(index).value);
+			cell = CodeGenerator.symbolTable.getSymbol(tokenList.get(index).value);
 			if (index > 0 && tokenList.get(index - 1).type == TDOT) {
 				if (tokenList.get(index - 2).type == TSIDENT) {
 					// selector: method.x
 					// TODO improve more levels Object.method.x
 					// fetch value of the cell of another method
-					cell = CodeGenerator.symbolTable.getSymbol(tokenList
-							.get(index - 2).value);
-					cell = cell.methodSymbols
-							.getSymbol(tokenList.get(index).value);
+					cell = CodeGenerator.symbolTable.getSymbol(tokenList.get(index - 2).value);
+					cell = cell.methodSymbols.getSymbol(tokenList.get(index).value);
 				}
 			}
 		}
@@ -1242,17 +1246,41 @@ public class Parser {
 	}
 
 	private static void typeError() {
-		System.out.println("ERROR invalid type in line: "
-				+ currentToken.lineNumber);
+		System.out.println("ERROR invalid type in line: " + currentToken.lineNumber);
 		// TODO stop Code Generation
 	}
 
-	private static void arraySelector() throws IllegalTokenException {
+	/**
+	 * puts the offset of the indexed element to the last Register
+	 * 
+	 * @return
+	 * @throws IllegalTokenException
+	 */
+	private static Item arraySelector() throws IllegalTokenException {
 		debug1("arraySelector");
+		// remember position of simple Identifier in tokenList
+		int sIdentPos = tokenList.size() - 1;
 		expect(TLBRACK);
-		if (currentToken.type.startSetExpression())
-			expression();
-		expectWeak(TRBRACK);
+		Item item = null;
+		if (currentToken.type.startSetExpression()) {
+			item = expression();
 
+			if (item.mode == 1 || item.mode == 2)
+				putValue2Reg(CodeGenerator.INTTYPE, tokenList.size() - 1); // index musst always be a integer type !
+
+			// calc offset of array element which must be added to array index
+			SymbolTableCell cell = CodeGenerator.symbolTable
+					.getSymbol(tokenList.get(sIdentPos).value);
+			int calc = cell.getOffset() + cell.getSize();
+
+			item = new Item(3, cell.getType());
+
+			if (calc < 0)
+				CodeGenerator.putImOp2Reg("ADD", 0 - calc);
+
+			CodeGenerator.invertValofLastReg();
+		}
+		expectWeak(TRBRACK);
+		return item;
 	}
 }

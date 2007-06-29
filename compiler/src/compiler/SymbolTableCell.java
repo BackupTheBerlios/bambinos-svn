@@ -11,12 +11,13 @@ public class SymbolTableCell {
 	private TypeDesc type; // int, bool, char, String
 	// TODO remove private String value;
 	SymbolTableList methodSymbols;
-	private int proc; // program counter of methods
+	private int proc; // program counter of methods (needed in opcode)
 	private int offset; //offset is negative , (wirth names it val)
-	private int size; // in 4 bytes 
+	private int size; // in 4 bytes
+	private boolean globalScope;
 
 	public SymbolTableCell(String name, ClassType classType, TypeDesc type,
-			int offset, int size) {
+			int offset, int size, boolean globalScope) {
 		this.name = name;
 		this.classType = classType;
 		this.type = type;
@@ -26,6 +27,7 @@ public class SymbolTableCell {
 		}
 		this.offset = offset;
 		this.size = size;
+		this.globalScope=globalScope;
 
 	}
 
@@ -76,5 +78,12 @@ public class SymbolTableCell {
 
 	public void setProc(int proc) {
 		this.proc = proc;
+	}
+	public boolean isGlobalScope() {
+		return globalScope;
+	}
+
+	public void setGlobalScope(boolean globalScope) {
+		this.globalScope = globalScope;
 	}
 }
