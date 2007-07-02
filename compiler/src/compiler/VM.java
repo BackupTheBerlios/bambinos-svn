@@ -1161,7 +1161,7 @@ public class VM {
 		}
 		
 		if (registers[r0] == 0) {
-			System.out.println("BEQ: value of register " + r0 + " is 0");
+			//System.out.println("BEQ: value of register " + r0 + " is 0");
 			executeBSR(jumpAddress);
 		}
 		
@@ -1178,7 +1178,7 @@ public class VM {
 		}
 		
 		if (registers[r0] != 0) {
-			System.out.println("BNE: value of register " + r0 + " is not 0");
+			//System.out.println("BNE: value of register " + r0 + " is not 0");
 			executeBSR(jumpAddress);
 		}		
 		
@@ -1193,7 +1193,7 @@ public class VM {
 		}
 		
 		if (registers[r0] < 0) {
-			System.out.println("BLT: value of register " + r0 + " is < 0");
+			//System.out.println("BLT: value of register " + r0 + " is < 0");
 			executeBSR(jumpAddress);
 		}		
 		
@@ -1208,7 +1208,7 @@ public class VM {
 		}
 		
 		if (registers[r0] >= 0) {
-			System.out.println("BGE: value of register " + r0 + " is >= 0");
+			//System.out.println("BGE: value of register " + r0 + " is >= 0");
 			executeBSR(jumpAddress);
 		}		
 		
@@ -1223,7 +1223,7 @@ public class VM {
 		}
 		
 		if (registers[r0] > 0) {
-			System.out.println("BGT: value of register " + r0 + " is > 0");
+			//System.out.println("BGT: value of register " + r0 + " is > 0");
 			executeBSR(jumpAddress);
 		}		
 		
@@ -1237,7 +1237,7 @@ public class VM {
 		}
 		
 		if (registers[r0] <= 0) {
-			System.out.println("BLE: value of register " + r0 + " is <= 0");
+			//System.out.println("BLE: value of register " + r0 + " is <= 0");
 			executeBSR(jumpAddress);
 		}		
 		

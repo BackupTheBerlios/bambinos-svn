@@ -329,7 +329,7 @@ public class Parser {
 
 	/**
 	 * Error Handling in classBlock: When something goes wrong in here, he
-	 * always searches for the next "public" token there the next method starts !
+	 * always searches for the next "public" token !
 	 */
 	private static void classBlock() {
 		debug1("ClassBlock");
@@ -688,9 +688,9 @@ public class Parser {
 				}
 			} else if (type == 1) {
 				// Type Safety
-				
+
 				if (compareItemType(itemArray, item))
-					CodeGenerator.storeWordArray(1); // TODO scope 1.. local 2 ... global
+					CodeGenerator.storeWordArray(itemArray.globalScope); // TODO scope 1.. local 2 ... global
 				else
 					syntaxError("Not Type Safe, in array, at line: " + currentToken.lineNumber);
 			}
@@ -766,27 +766,38 @@ public class Parser {
 		debug1("whileStatement");
 		expect(TWHILE);
 		expectWeak(TLPAREN);
-		condition();
+		int whileLoopStart=CodeGenerator.PC;
+		int fixupPos=condition(); // jump to cmp again
 		expectWeak(TRPAREN);
 		expectWeak(TLBRACES);
 		bodyBlock();
 		expectWeak(TRBRACES);
+		// fixup 
+		CodeGenerator.elseAndLoopJump(whileLoopStart);
+		CodeGenerator.fixConditionJump(fixupPos,CodeGenerator.PC);
 	}
 
 	private static void ifStatement() throws IllegalTokenException {
 		debug1("ifStatement");
 		expect(TIF);
 		expectWeak(TLPAREN);
-		condition();
+		int fixupPos=condition();
 		expectWeak(TRPAREN);
 		expectWeak(TLBRACES);
 		bodyBlock();
 		expectWeak(TRBRACES);
 		if (currentToken.type == TELSE) {
+			int elsePC=CodeGenerator.elseAndLoopJump(-100);
+			// fixup condition jump
+			CodeGenerator.fixConditionJump(fixupPos, elsePC+2);
 			expect(TELSE);
 			expectWeak(TLBRACES);
 			bodyBlock();
 			expectWeak(TRBRACES);
+			// fix else jump
+			CodeGenerator.fixConditionJump(elsePC, CodeGenerator.PC);
+		} else{
+			CodeGenerator.fixConditionJump(fixupPos, CodeGenerator.PC);
 		}
 	}
 
@@ -805,9 +816,7 @@ public class Parser {
 			arraySelector();
 	}
 
-	// darf nur in Methoden local erfolgen werden immer glei ausgefuehrt und in
-	// Registern eingetragen !!!!
-	// TODO
+	// werden nicht in Registern eingetragen !! aufrufer muss selbst dafuer sorgen, falls er das braucht
 	private static Item expression() throws IllegalTokenException {
 		debug1("expression");
 		Item returnItem = null;
@@ -1000,6 +1009,7 @@ public class Parser {
 		// (last Register)
 		TypeDesc type;
 		int val;
+		boolean globalScope;
 
 		// TODO wirth hat noch a,r LONGINT ??
 
@@ -1013,6 +1023,13 @@ public class Parser {
 			this.mode = mode;
 			this.type = type;
 		}
+
+		public Item(int mode, TypeDesc type, boolean globalScope) {
+			this.mode = mode;
+			this.type = type;
+			this.globalScope = globalScope;
+		}
+
 	}
 
 	private static boolean compareItemType(Item item1, Item item2) {
@@ -1035,7 +1052,7 @@ public class Parser {
 			if (currentToken.type == TLBRACK) {
 				returnItem = arraySelector();
 				// load indexed array to register
-				CodeGenerator.loadWordArray(1); // TODO scope 
+				CodeGenerator.loadWordArray(returnItem.globalScope); // TODO scope 
 				//returnItem = new Item(3, null);
 			}
 			if (currentToken.type == TLPAREN) {
@@ -1063,25 +1080,46 @@ public class Parser {
 		return returnItem;
 	}
 
-	private static void condition() throws IllegalTokenException {
+	/**
+	 * @return int value, serves as position for fixup Control instructions
+	 * @throws IllegalTokenException
+	 */
+	private static int condition() throws IllegalTokenException {
 		debug1("condition");
-		expression();
+
+		Item item = expression();
+		int op=0;
+		if (item.mode == 1 || item.mode == 2)
+			putValue2Reg(CodeGenerator.INTTYPE, tokenList.size() - 1); 
+
 		if (currentToken.type == TEQL) {
 			expect(TEQL);
 			expect(TEQL);
+			op=CodeGenerator.BNE;
 		} else if (currentToken.type == TNOT) {
 			expect(TNOT);
 			expect(TEQL);
+			op=CodeGenerator.BEQ;
 		} else if (currentToken.type == TGTR) {
-			expect(TGTR);
+			expect(TGTR); //i>j
+			op=CodeGenerator.BLE;
 		} else if (currentToken.type == TLEQ) {
-			expect(TLEQ);
+			expect(TLEQ); // i<= j
+			op=CodeGenerator.BGT;
 		} else if (currentToken.type == TLSS) {
-			expect(TLSS);
+			expect(TLSS); // i<j BGE
+			op=CodeGenerator.BGE;
 		} else if (currentToken.type == TGEQ) {
-			expect(TGEQ);
+			expect(TGEQ); // i >= j
+			op=CodeGenerator.BLT;
 		}
-		expression();
+
+		item = expression();
+		if (item.mode == 1 || item.mode == 2)
+			putValue2Reg(CodeGenerator.INTTYPE, tokenList.size() - 1); 
+
+		return CodeGenerator.relation(op);
+		
 	}
 
 	private static int intValue() throws IllegalTokenException {
@@ -1266,19 +1304,20 @@ public class Parser {
 			item = expression();
 
 			if (item.mode == 1 || item.mode == 2)
-				putValue2Reg(CodeGenerator.INTTYPE, tokenList.size() - 1); // index musst always be a integer type !
+				putValue2Reg(CodeGenerator.INTTYPE, tokenList.size() - 1); // index musst always be of integer type !
 
 			// calc offset of array element which must be added to array index
 			SymbolTableCell cell = CodeGenerator.symbolTable
 					.getSymbol(tokenList.get(sIdentPos).value);
 			int calc = cell.getOffset() + cell.getSize();
 
-			item = new Item(3, cell.getType());
+			item = new Item(3, cell.getType(), cell.isGlobalScope());
 
 			if (calc < 0)
 				CodeGenerator.putImOp2Reg("ADD", 0 - calc);
 
-			CodeGenerator.invertValofLastReg();
+			if (!cell.isGlobalScope())
+				CodeGenerator.invertValofLastReg();
 		}
 		expectWeak(TRBRACK);
 		return item;
