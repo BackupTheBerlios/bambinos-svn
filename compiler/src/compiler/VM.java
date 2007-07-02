@@ -389,12 +389,12 @@ public class VM {
 			case POP: executePOP(targetValue, firstSourceValue, secondSourceValue); break;
 			case STW: executeSTW(targetValue, firstSourceValue, secondSourceValue); break;
 			case PSH: executePSH(targetValue, firstSourceValue, secondSourceValue); break;
-			case BEQ: executeBEQ(targetValue, firstSourceValue); break;
-			case BNE: executeBNE(targetValue, firstSourceValue); break;
-			case BLT: executeBLT(targetValue, firstSourceValue); break;
-			case BGE: executeBGE(targetValue, firstSourceValue); break;
-			case BGT: executeBGT(targetValue, firstSourceValue); break;
-			case BLE: executeBLE(targetValue, firstSourceValue); break;
+			case BEQ: executeBEQ(targetValue, secondSourceValue); break;
+			case BNE: executeBNE(targetValue, secondSourceValue); break;
+			case BLT: executeBLT(targetValue, secondSourceValue); break;
+			case BGE: executeBGE(targetValue, secondSourceValue); break;
+			case BGT: executeBGT(targetValue, secondSourceValue); break;
+			case BLE: executeBLE(targetValue, secondSourceValue); break;
 			case BSR: executeBSR(targetValue); break;
 			case RET: executeRET(targetValue); break;
 			case PRNI: executePRNI(targetValue, firstSourceValue, secondSourceValue); break;
@@ -1193,7 +1193,7 @@ public class VM {
 		}
 		
 		if (registers[r0] < 0) {
-			System.out.println("BTL: value of register " + r0 + " is < 0");
+			System.out.println("BLT: value of register " + r0 + " is < 0");
 			executeBSR(jumpAddress);
 		}		
 		
