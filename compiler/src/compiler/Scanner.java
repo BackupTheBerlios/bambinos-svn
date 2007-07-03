@@ -334,6 +334,7 @@ public class Scanner {
 	public static Ident readTextSymbol() {
 		
 		Ident currentIdentifier = new Ident();
+		Ident tmpIdentifier = new Ident();
 		
 		String symbolValue = new String();
 		boolean endOfSymbol = false;
@@ -362,12 +363,22 @@ public class Scanner {
 				endOfSymbol = true;			
 			// if nextByte is a bracket (91), the symbol must be a identifier and not a reserved symbol
 			} else if ((nextByte == 91) && (nextNextByte == 93)){
-				symbolIsIdentifier = false;
-				endOfSymbol = true;
-				readNextByte();		
-				symbolValue = symbolValue + (char)(int)currentByte;
-				readNextByte();
-				symbolValue = symbolValue + (char)(int)currentByte;
+				
+				tmpIdentifier = getIdentifier(symbolValue);
+				
+				if (tmpIdentifier.type != TokenID.TSIDENT) {		
+					symbolIsIdentifier = false;
+					endOfSymbol = true;
+					readNextByte();		
+					symbolValue = symbolValue + (char)(int)currentByte;
+					readNextByte();
+					symbolValue = symbolValue + (char)(int)currentByte;
+				} else {
+					symbolIsIdentifier = true;
+					endOfSymbol = true;
+				}
+				
+				
 			// if the nextByte is not one of the above, then the symbol ends
 			} else {
 				
@@ -393,7 +404,7 @@ public class Scanner {
 			currentIdentifier.type = TokenID.TERROR;
 		} else {
 			
-			if (symbolIsIdentifier = false) {
+			if (symbolIsIdentifier == true) {
 				currentIdentifier.type = TokenID.TSIDENT;
 			} else {
 				currentIdentifier = getIdentifier(symbolValue);	
@@ -447,9 +458,9 @@ public class Scanner {
 		if (currentByte == 39) {
 			currentIdentifier.type = TokenID.TCHAR_VALUE;
 			currentIdentifier.setIdentValue("");
-		} else if (nextByte == 39) {
+		} else if ((currentByte != 39) && (nextByte == 39)) {
 			currentIdentifier.type = TokenID.TCHAR_VALUE;
-			currentIdentifier.setIdentValue("" + (char)(int)currentByte);
+			currentIdentifier.setIdentValue("" + (int)currentByte);
 			readNextByte();
 		} else {
 			currentIdentifier.type = TokenID.TERROR;
@@ -500,7 +511,7 @@ public class Scanner {
 			identifier.type = TokenID.TINT_ARRAY;
 		} else if (symbolValue.compareTo("boolean") == 0) {
 			identifier.type = TokenID.TBOOL;
-		} else if (symbolValue.compareTo("bool[]") == 0) {
+		} else if (symbolValue.compareTo("boolean[]") == 0) {
 			identifier.type = TokenID.TBOOL_ARRAY;
 		} else if (symbolValue.compareTo("char") == 0) {
 			identifier.type = TokenID.TCHAR;
