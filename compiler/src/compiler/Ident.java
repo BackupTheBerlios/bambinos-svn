@@ -79,16 +79,15 @@ public class Ident {
 		TNEW, // "new"
 
 		// strong symbols
-		
+
 		TPACKAGE, // "package"
 		STRONG_SYM_BB, // Symbols serving as Synchronisation points: BB...Body Block
-		
 
 		/** bodyblock SYNC points **/
 		TWHILE, // "while"
 		TIF, // "if"
 		TRETURN, // return
-		
+
 		TINT, // "int"
 		TBOOL, // "boolean"
 		TCHAR, // "char"
@@ -98,17 +97,31 @@ public class Ident {
 		TBOOL_ARRAY, // "boolean[]"
 		TCHAR_ARRAY, // "char[]"
 		TSTRING_ARRAY, // "String[]"
-		
+
 		TSIDENT, // simple identifier
-		
+
 		TPRINT, // printStatement
-		
-        /** bodyblock SYNC points end**/
-		
+
+		/** bodyblock SYNC points end**/
+
 		STRONG_SYM_CB, // syn point CB.. Class Block
 		TIMPORT, TPUBLIC,
-		
+
 		TEOF; // end of file
+
+		public boolean startSetRelation() {
+			switch (this) {
+			case TEQL:
+			case TNOT:
+			case TGTR:
+			case TLEQ:
+			case TLSS:
+			case TGEQ:
+				return true;
+			default:
+				return false;
+			}
+		}
 
 		// some startsets implemented as enum methods
 		public boolean startSetDataType() {
