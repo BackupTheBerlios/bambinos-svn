@@ -1,13 +1,24 @@
 package compiler;
 
+import static compiler.Ident.TokenID.TEQL;
+import static compiler.Ident.TokenID.TGEQ;
+import static compiler.Ident.TokenID.TGTR;
+import static compiler.Ident.TokenID.TLEQ;
+import static compiler.Ident.TokenID.TLSS;
+import static compiler.Ident.TokenID.TNOT;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.BitSet;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.ListIterator;
 import java.util.Vector;
 
 import sun.security.util.BitArray;
 
+import compiler.Parser.fixUps;
 import compiler.Util.TypeErrorException;
 
 public class CodeGenerator {
@@ -127,8 +138,7 @@ public class CodeGenerator {
 	 *  @return TypeDesc
 	 * @throws TypeErrorException 
 	 */
-	public static void loadWordType(SymbolTableCell cell, TypeDesc type, boolean global)
-			throws TypeErrorException {
+	public static void loadWordType(SymbolTableCell cell, boolean global) throws TypeErrorException {
 
 		int b = FP;
 		int offset = cell.getOffset();
@@ -141,12 +151,13 @@ public class CodeGenerator {
 		// to enable assertions compile with javac flag "-ea"
 		assert (cell.getClassType() != SymbolTableCell.ClassType.var) : "INTERNAL ERROR IN CODE GEN. in writeIdentifierToRegister() cell is not a variable. BAD CLASS TYPE !";
 
-		typeChecking(cell, type);
+		//typeChecking(cell, type); TODO improved type checking -- obsolete !
+
 		putOpCode(new OpCodeElement("LDW", LDW, nextReg(), b, offset));
 	}
 
-	public static void loadWordType(SymbolTableCell cell, TypeDesc type) throws TypeErrorException {
-		loadWordType(cell, type, false);
+	public static void loadWordType(SymbolTableCell cell) throws TypeErrorException {
+		loadWordType(cell, false);
 	}
 
 	/**
@@ -190,9 +201,9 @@ public class CodeGenerator {
 		int op = 0;
 		if (kind.equals("ADD"))
 			op = ADDI;
-		else if (kind.equals("SUB"))
+		else if (kind.equals("SUB")) {
 			op = SUBI;
-		else if (kind.equals("MUL"))
+		} else if (kind.equals("MUL"))
 			op = MULI;
 		else if (kind.equals("MOD"))
 			op = MODI;
@@ -229,7 +240,7 @@ public class CodeGenerator {
 	public static void storeWordArray(boolean globalScope) {
 
 		if (globalScope)
-			putOpCode(new OpCodeElement("ADD", ADD, getCurrentReg() - 1, heap,getCurrentReg() - 1));
+			putOpCode(new OpCodeElement("ADD", ADD, getCurrentReg() - 1, heap, getCurrentReg() - 1));
 		else
 			putOpCode(new OpCodeElement("ADD", ADD, getCurrentReg() - 1, FP, getCurrentReg() - 1));
 
@@ -253,7 +264,7 @@ public class CodeGenerator {
 	 * @throws TypeErrorException 
 	 */
 	public static void storeWordCell(SymbolTableCell cell, TypeDesc type) throws TypeErrorException {
-		typeChecking(cell, type);
+		//typeChecking(cell);
 		storeWord(cell);
 	}
 
@@ -265,14 +276,14 @@ public class CodeGenerator {
 		decreaseReg();
 	}
 
-	private static void typeChecking(SymbolTableCell cell, TypeDesc type) throws TypeErrorException {
-		if (cell.getType().equals(type)) {
-			;
-		} else {
-			throw new TypeErrorException("Illegal type Error, expected: " +
-					type.getBase().toString());
-		}
-	}
+//	private static void typeChecking(SymbolTableCell cell, TypeDesc type) throws TypeErrorException {
+//		if (cell.getType().equals(type)) {
+//			;
+//		} else {
+//			throw new TypeErrorException("Illegal type Error, expected: " +
+//					type.getBase().toString());
+//		}
+//	}
 
 	public static int methodCall(int proc) {
 		putOpCode(new OpCodeElement("BSR", BSR, 0, 0, proc));
@@ -319,33 +330,56 @@ public class CodeGenerator {
 	 * prints integer variables
 	 * @param offset
 	 */
-	public static void printIO(int offset) {
-		putOpCode(new OpCodeElement("PRNI", PRNI, 0, FP, offset));
+	public static void printIO(TypeDesc type, int offset) {
+		if (type == INTTYPE)
+			putOpCode(new OpCodeElement("PRNI", PRNI, 0, FP, offset));
+
+		if (type == CHARTYPE)
+			putOpCode(new OpCodeElement("PRNC", PRNC, 0, FP, offset));
 	}
 
 	public static void fixMainProc(int vecPos, int proc) {
 		opCode.get(vecPos).c = proc;
 	}
-	
+
 	/*
 	 * Conditions and repeats
 	 */
-	public static int relation(int op){
-		putOpCode(new OpCodeElement("CMP",CMP,getCurrentReg()-1,getCurrentReg()-1,getCurrentReg()));
+	public static int relation(int op) {
+		putOpCode(new OpCodeElement("CMP", CMP, getCurrentReg() - 1, getCurrentReg() - 1,
+				getCurrentReg()));
 		decreaseReg();
-		putOpCode(new OpCodeElement("OP",op,getCurrentReg(),-100));
-		return PC-2;
+		putOpCode(new OpCodeElement("OP", op, getCurrentReg(), -100));
+		decreaseReg();
+		return PC - 2;
 	}
-	
-	public static int elseAndLoopJump(int pos){
-		putOpCode(new OpCodeElement("BEQ",BEQ,0,pos));
-		return PC-2;
+
+	public static int elseAndLoopJump(int pos) {
+		putOpCode(new OpCodeElement("BEQ", BEQ, 0, pos));
+		return PC - 2;
 	}
-	
-	public static void fixConditionJump(int fixPC,int value){
-		opCode.get(fixPC).c=value;
+
+	public static void fixConditionJump(Vector<Integer> fixPC, int falseJump, int trueJump) {
+		ListIterator<Integer> iter = fixPC.listIterator();
+		while (iter.hasNext()) {
+			OpCodeElement opElem = opCode.get(iter.next());
+			if (opElem.c == -100) // False Jump
+				opElem.c = falseJump;
+			else if (opElem.c == -1000) // True Jump
+				opElem.c = trueJump;
+			else
+				; // Jump is already fixed !
+		}
 	}
-	
+
+	public static void fixConditionJump(int fixPC, int falseJump, int trueJump) {
+		OpCodeElement opElem = opCode.get(fixPC);
+		if (opElem.c == -100) // False Jump
+			opElem.c = falseJump;
+		else if (opElem.c == -1000) // True Jump
+			opElem.c = trueJump;
+
+	}
 
 	public static void write2File(String name) {
 
@@ -395,5 +429,39 @@ public class CodeGenerator {
 
 		}
 
+	}
+
+	// make true jumps
+	public static void fixOrJumps(int pos, boolean falseJumps, boolean and) {
+		if (falseJumps) {
+			int op = opCode.get(pos).Instruction;
+			opCode.get(pos).Instruction = invertRelation(op);
+			opCode.get(pos).c = -1000;
+		} else {
+			int op = opCode.get(pos).Instruction;
+			if (and) {
+				if (opCode.get(pos).c != -100)
+					opCode.get(pos).c = PC;
+			}
+		}
+	}
+
+	public static int invertRelation(int op) {
+		if (op == BNE)
+			return BEQ;
+		else if (op == BEQ)
+			return BNE;
+		else if (op == BLE)
+			return BGT;
+		else if (op == BGT)
+			return BLE;
+		else if (op == BGE)
+			return BLT;
+		else if (op == BLT)
+			return BGE;
+		else
+			System.out.println("ERROR in Codegeneration by inverting a Relation");
+
+		return 0;
 	}
 }
