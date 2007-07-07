@@ -47,6 +47,6 @@ public class TypeDesc {
 	public DataType getBase() {
 		return base;
 	}
-	
+
 	
 }
