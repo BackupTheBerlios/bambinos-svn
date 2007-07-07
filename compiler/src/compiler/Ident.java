@@ -16,6 +16,13 @@ public class Ident {
 
 	int lineNumber;
 
+	public Ident(TokenID type, String value, int lineNumber) {
+		super();
+		this.type = type;
+		this.value = value;
+		this.lineNumber = lineNumber;
+	}
+
 	public Ident() {
 		setIdentValue("");
 	}
