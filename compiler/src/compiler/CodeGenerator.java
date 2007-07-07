@@ -101,7 +101,7 @@ public class CodeGenerator {
 		topReg = 0;
 		heap = 0;
 		putOpCode(new OpCodeElement("ADDI", ADDI, SP, 0, 4096));
-		putOpCode(new OpCodeElement("ADDI", ADDI, FP, 0, 4096));
+		//putOpCode(new OpCodeElement("ADDI", ADDI, FP, 0, 4096));
 
 	}
 
@@ -440,7 +440,10 @@ public class CodeGenerator {
 		} else {
 			int op = opCode.get(pos).Instruction;
 			if (and) {
-				if (opCode.get(pos).c != -100)
+				if (opCode.get(pos).c == -1000)
+					opCode.get(pos).c = PC;
+			} else {
+				if (opCode.get(pos).c == -100)
 					opCode.get(pos).c = PC;
 			}
 		}

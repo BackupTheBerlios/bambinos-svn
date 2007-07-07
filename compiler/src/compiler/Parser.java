@@ -89,7 +89,10 @@ public class Parser {
 	// Liste von tokens, die bei jedem Zeilenende an den Code Generator
 	// weitergegeben werden
 	static ArrayList<Ident> tokenList = new ArrayList<Ident>();
-	private static Vector<Integer> fRelationFixup = new Vector<Integer>();
+	
+	private static Vector<Integer> condFixup = null;
+	private static Stack<Vector<Integer>> condFixStack = new Stack<Vector<Integer>>();
+	
 	private static int booleanLevel;
 
 	public static void main(String[] args) {
@@ -779,6 +782,8 @@ public class Parser {
 
 	private static void whileStatement() throws IllegalTokenException {
 		debug1("whileStatement");
+		condFixStack.push(condFixup);
+		condFixup=new Vector<Integer>();
 		expect(TWHILE);
 		expectWeak(TLPAREN);
 		int whileLoopStart = CodeGenerator.PC;
@@ -790,11 +795,14 @@ public class Parser {
 		expectWeak(TRBRACES);
 		// fixup 
 		CodeGenerator.elseAndLoopJump(whileLoopStart);
-		CodeGenerator.fixConditionJump(fRelationFixup.get(0), CodeGenerator.PC, trueJump);
+		CodeGenerator.fixConditionJump(condFixup, CodeGenerator.PC, trueJump);
+		condFixup=condFixStack.pop();
 	}
 
 	private static void ifStatement() throws IllegalTokenException {
 		debug1("ifStatement");
+		condFixStack.push(condFixup);
+		condFixup=new Vector<Integer>();
 		expect(TIF);
 		expectWeak(TLPAREN);
 		expression();
@@ -806,7 +814,7 @@ public class Parser {
 		if (currentToken.type == TELSE) {
 			int elsePC = CodeGenerator.elseAndLoopJump(-100);
 			// fixup condition jump false
-			CodeGenerator.fixConditionJump(fRelationFixup, elsePC + 2, trueJump);
+			CodeGenerator.fixConditionJump(condFixup, elsePC + 2, trueJump);
 			expect(TELSE);
 			expectWeak(TLBRACES);
 			bodyBlock();
@@ -814,8 +822,9 @@ public class Parser {
 			// fix else jump
 			CodeGenerator.fixConditionJump(elsePC, CodeGenerator.PC, trueJump);
 		} else {
-			CodeGenerator.fixConditionJump(fRelationFixup, CodeGenerator.PC, trueJump);
+			CodeGenerator.fixConditionJump(condFixup, CodeGenerator.PC, trueJump);
 		}
+		condFixup=condFixStack.pop();
 	}
 
 	private static void returnStatement() throws IllegalTokenException {
@@ -1206,7 +1215,7 @@ public class Parser {
 
 			int pcPos = CodeGenerator.relation(op);
 			fixupMap.add(new fixUps(pcPos, booleanLevel));
-			fRelationFixup.add(pcPos);
+			condFixup.add(pcPos);
 
 		}
 		return item;
