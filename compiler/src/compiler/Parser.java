@@ -124,7 +124,19 @@ public class Parser {
 			name = args[1].split(".java");
 
 		CodeGenerator.write2File(name[0]);
-
+				
+		
+		SymbolFile symbolFile = new SymbolFile(name[0]);
+		
+		symbolFile.writeHeader();
+		
+		CodeGenerator.symbolTable.exportModuleAnchors(symbolFile);
+		CodeGenerator.symbolTable.exportSymbols(symbolFile);
+		
+		symbolFile.writeFooter();
+		
+		CodeGenerator.symbolTable.importModuleAnchors(symbolFile);
+		
 		System.out.println("Thanks for using ComPiler.");
 		System.out.println("");
 
@@ -318,6 +330,24 @@ public class Parser {
 	static private void packageImport() throws IllegalTokenException {
 		expect(TIMPORT);
 		identifier();
+		
+		
+		String moduleName = new String();
+		
+		for (int i = 0; i < tokenList.size(); i++) {
+			if (tokenList.get(i).type == TokenID.TSIDENT) {
+				
+				if (moduleName.equals("") == false) {
+					moduleName = moduleName + "/" + tokenList.get(i).value;
+				} else {
+					moduleName = tokenList.get(i).value;
+				}
+				
+			}
+		}
+
+		CodeGenerator.symbolTable.addModule(moduleName);
+		
 		expectWeak(TSEMICOLON);
 	}
 
