@@ -2,6 +2,23 @@ package compiler;
 
 import java.util.LinkedList;
 import java.util.ListIterator;
+import java.util.Vector;
+
+import java.io.File;
+import java.io.RandomAccessFile;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+
+import javax.xml.parsers.*;
+
+
+import org.xml.sax.InputSource;
+import org.xml.sax.helpers.XMLReaderFactory;
+import org.xml.sax.SAXException;
+
+import com.sun.org.apache.xerces.internal.parsers.DOMParser;
+import com.sun.xml.internal.ws.streaming.XMLReader;
+import org.w3c.dom.Document;
 
 import compiler.SymbolTableCell.ClassType;
 import compiler.Util.IllegalTokenException;
@@ -15,6 +32,9 @@ public class SymbolTableList {
 
 	private LinkedList<SymbolTableCell> symList = new LinkedList<SymbolTableCell>();
 
+	private Vector<String> moduleList = new Vector<String>();
+	
+	
 	private int scope = 0; // 0 ... add global symbols 1 ... add local symbols
 	private int offset = 0; // global offset. First Symbol starts with 0 (4 bytes = 1 offset)
 
@@ -74,6 +94,97 @@ public class SymbolTableList {
 
 	}
 
+	/**
+	 * Adds a moduleName to the moduleList. A moduleName is read from the import statement
+	 * @param moduleName
+	 * @author Lacki
+	 */
+	public void addModule(String moduleName) {
+		if (moduleName.equals("") == false) {
+			moduleList.addElement(moduleName);
+		}
+	}
+	
+		
+	/**
+	 * Writes the content of the moduleList in a XML-File (the symbolfile)
+	 * @author lacki
+	 * @param symbolFile
+	 */
+	public void exportModuleAnchors(SymbolFile symbolFile) {
+		
+		symbolFile.appendModuleAnchors(moduleList);		
+	}
+	
+	
+	/**
+	 * Writes the content of the symbolTable in a XML-File (the symbolfile)
+	 * @author lacki
+	 * @param symbolFile
+	 */
+	public void exportSymbols(SymbolFile symbolFile) {
+		
+		symbolFile.appendLine("<symbols>");
+		
+		ListIterator<SymbolTableCell> iter = symList.listIterator();
+		
+		int i = 0;
+		while (iter.hasNext()) {
+			SymbolTableCell currentCell = iter.next();
+			i++;
+
+			if ((currentCell.isGlobalScope()) || (currentCell.getOffset() > 0)) {
+				
+				if (currentCell.getClassType() == SymbolTableCell.ClassType.var) {
+					
+					symbolFile.appendLine("<variable>");
+					
+					symbolFile.appendLine("<type>" + currentCell.getType().base + "</type>");
+					symbolFile.appendLine("<name>" + currentCell.getName() + "</name>");
+					
+					symbolFile.appendLine("</variable>");
+				
+				} else if (currentCell.getClassType() == SymbolTableCell.ClassType.array) {
+					
+					symbolFile.appendLine("<array>");
+					symbolFile.appendLine("<type>" + currentCell.getType().base + "</type>");
+					symbolFile.appendLine("<name>" + currentCell.getName() + "</name>");
+					symbolFile.appendLine("<size>" + currentCell.getSize() + "</size>");
+					symbolFile.appendLine("</array>");					
+					
+				} else if (currentCell.getClassType() == SymbolTableCell.ClassType.method) {
+					
+					symbolFile.appendLine("<method>");
+					symbolFile.appendLine("<type>" + currentCell.getType().base + "</type>");
+					symbolFile.appendLine("<name>" + currentCell.getName() + "</name>");
+					symbolFile.appendLine("<size>" + currentCell.getType().getSize() + "</size>");
+							
+					currentCell.methodSymbols.exportSymbols(symbolFile);
+					
+					symbolFile.appendLine("</method>");
+					
+				}	
+			}
+			
+		}
+		
+		symbolFile.appendLine("</symbols>");	
+		
+	}
+	
+	
+	public void importModuleAnchors(SymbolFile symbolFile) {
+		
+		Vector<String> modules = new Vector<String>();
+		
+		modules = symbolFile.readModuleAnchors();
+		
+		for (int i = 0; i < modules.size(); i++) {
+			System.out.println("module: " + modules.elementAt(i));
+		}
+	}
+		
+	
 	/**
 	 * Identifier for searching is the name of the variable or method ....
 	 * First the global scope will be search, next the last local scope. This means the scope of the last added method.
@@ -140,6 +251,8 @@ public class SymbolTableList {
 
 		}
 	}
+
+	
 
 	public int getCurrentOffset() {
 		return offset;
