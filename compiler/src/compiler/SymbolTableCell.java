@@ -15,6 +15,8 @@ public class SymbolTableCell {
 	private int offset; //offset is negative , (wirth names it val)
 	private int size; // in 4 bytes
 	private boolean globalScope;
+	private int objectDesc; // a unique number that describes the type of the table-entry. 
+	
 
 	public SymbolTableCell(String name, ClassType classType, TypeDesc type,
 			int offset, int size, boolean globalScope) {
@@ -28,6 +30,7 @@ public class SymbolTableCell {
 		this.offset = offset;
 		this.size = size;
 		this.globalScope=globalScope;
+		this.objectDesc = 0;
 
 	}
 
