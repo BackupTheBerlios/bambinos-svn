@@ -37,6 +37,7 @@ public class CodeGenerator {
 	public static final int BSR = 50, RET = 51, HIGHEST_FORMAT_3 = 63;
 
 	public static SymbolTableList symbolTable;
+	
 
 	/* Generate primitive Data Types according to the Class Type Descriptor we defined
 	 * This data types are needed for the Symbol table entries
@@ -122,6 +123,7 @@ public class CodeGenerator {
 		topReg--;
 	}
 
+	
 	/**
 	 * Add opCode element to the vector
 	 * @param code
