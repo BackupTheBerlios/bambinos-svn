@@ -68,10 +68,12 @@ public class Scanner {
 			} else if((currentByte > 47) && (currentByte < 58)) {
 				identifier = readNumberSymbol();
 				symbolFound = true;
+			/*
 			// negative numbers
 			} else if((currentByte == 45) && (nextByte > 47) && (nextByte < 58)) {
 				identifier = readNumberSymbol();
 				symbolFound = true;
+			*/
 			// text	(capital letter)
 			} else if((currentByte > 64) && (currentByte < 91)) {
 				identifier = readTextSymbol();
