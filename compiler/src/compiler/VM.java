@@ -64,11 +64,11 @@ public class VM {
 	private static final int ADDI=0, SUBI=1, MULI=2, DIVI=3,MODI=4, CMPI=5, 
 	CHKI=6, ANDI=7, BICI=8, ORI=9, XORI=10, LSHI=11, ASHI=12, LDW=13, 
 	LDB=14, POP=15, STW=16, STB=17, PSH=18, BEQ=19, BNE=20, BLT=21, 
-	BGE=22, BGT=23, BLE=24, PRNI=25, PRNC=26, HIGHEST_FORMAT_1=29;
+	BGE=22, BGT=23, BLE=24, HIGHEST_FORMAT_1=29;
 	
 	// format 2 instructions
 	private static final int ADD=30,  SUB=31,  MUL=32,  DIV=33, MOD=34,  CMP = 35,  CHK=36,  
-	AND=37,  BIC=38, OR=39,  XOR=40,  LSH=41,  ASH=42, HIGHEST_FORMAT_2=49;
+	AND=37,  BIC=38, OR=39,  XOR=40,  LSH=41,  ASH=42, PRNI=43, PRNC=44, PRNB=45, HIGHEST_FORMAT_2=49;
 	
 	
 	// format 3 instructions
@@ -399,6 +399,7 @@ public class VM {
 			case RET: executeRET(targetValue); break;
 			case PRNI: executePRNI(targetValue, firstSourceValue, secondSourceValue); break;
 			case PRNC: executePRNC(targetValue, firstSourceValue, secondSourceValue); break;
+			case PRNB: executePRNB(targetValue, firstSourceValue, secondSourceValue); break;
 			default: System.out.println("invalid opCode... \n");
 			}
 			
@@ -1084,47 +1085,62 @@ public class VM {
 		
 	}
 	
-	private static void executePRNI(int r0, int r1, int offset) {
+	private static void executePRNI(int r0, int r1, int r2) {
 		
 		if (debug) {
-			instructionDisplay.append("PRNI " + registers[r0] + ", " + registers[r1] + ", " +  offset);
+			instructionDisplay.append("PRNI " + registers[r0] + ", " + registers[r1] + ", " +  registers[r2]);
 		}
 		
-		if (registers[r1] != null) {
+		if (registers[r2] != null) {
+			int intValue = registers[r2];
 			
-			int memoryAddress = registers[r1] + offset;
-			int intValue = memory[memoryAddress];
-
 			outputDisplay.append(intValue + " ");
 			System.out.println(intValue);
-			
 		}	
 		
 	}
 	
-	private static void executePRNC(int r0, int r1,  int offset) {
+	private static void executePRNC(int r0, int r1,  int r2) {
 
 		if (debug) {
-			instructionDisplay.append("PRNC " + registers[r0] + ", " + registers[r1] + ", " +  offset);
+			instructionDisplay.append("PRNC " + registers[r0] + ", " + registers[r1] + ", " +  registers[r2]);
 		}
 		
-		
-		if (registers[r1] != null) {
-			int memoryAddress = registers[r1] + offset;
-			int intValue = memory[memoryAddress];
+		if (registers[r2] != null) {
+			int intValue = registers[r2];
 			char charValue = (char)intValue;
-			
 			
 			outputDisplay.append(charValue + " ");
 			System.out.println(charValue);
-
-			
-			if (debug) {
-				debugDisplay.append("" + charValue);
-			}
+					
 		}	
 	}
 	
+	
+	private static void executePRNB(int r0, int r1,  int r2) {
+
+		if (debug) {
+			instructionDisplay.append("PRNB " + registers[r0] + ", " + registers[r1] + ", " +  registers[r2]);
+		}
+		
+		String booleanValueRepresentation = new String();
+		
+		if (registers[r2] != null) {
+			int intValue = registers[r2];
+			
+			if (intValue == 0) {
+				booleanValueRepresentation = "false";
+			} else if (intValue == 1) {
+				booleanValueRepresentation = "true";
+			}
+			
+			if (booleanValueRepresentation.equals("") == false) {
+				outputDisplay.append(booleanValueRepresentation);
+				System.out.println(booleanValueRepresentation);
+			}
+			
+		}	
+	}
 	
 	
 	private static void executeBSR(int jumpAddress) {
