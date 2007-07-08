@@ -462,7 +462,7 @@ public class Parser {
 				expectWeak(TCOMMA);
 				typeVector.add(dataTypeDescriptor());
 				paramVector.add(tokenList.get(tokenList.size() - 1).value);
-				
+
 			}
 		}
 		expectWeak(TRPAREN);
@@ -476,8 +476,7 @@ public class Parser {
 		CodeGenerator.symbolTable.getSymbol(name).methodSymbols.fixOffset(paramVector.size() + 2);
 		int i = 0;
 		while (i < paramVector.size()) {
-			add2SymTable(paramVector.get(i), SymbolTableCell.ClassType.var, typeVector.get(i),
-					1);
+			add2SymTable(paramVector.get(i), SymbolTableCell.ClassType.var, typeVector.get(i), 1);
 			i++;
 		}
 		CodeGenerator.symbolTable.getSymbol(name).methodSymbols.fixOffset(-2);
@@ -821,7 +820,7 @@ public class Parser {
 		} else if (currentToken.type == TSTRING_VALUE)
 			expect(TSTRING_VALUE);
 		else
-			System.out.println("Nothing to print in line" + currentToken.lineNumber);
+			System.out.println("Nothing to print in line " + currentToken.lineNumber);
 
 		expectWeak(TRPAREN);
 		expectWeak(TSEMICOLON);
@@ -887,7 +886,7 @@ public class Parser {
 
 	private static TypeDesc dataTypeDescriptor() throws IllegalTokenException {
 		debug1("dataTypeDescriptor");
-		TypeDesc type=dataType();
+		TypeDesc type = dataType();
 		identifier();
 		if (currentToken.type == TLBRACK)
 			arraySelector();
@@ -983,10 +982,13 @@ public class Parser {
 		Item item2 = null, returnItem = null;
 
 		if (currentToken.type == TPLUS || currentToken.type == TMINUS) {
-			int indexFirst = tokenList.size() - 1; // y=(z)+4 geht so nicht ist
-			// aber auch fis
+			if (item1.type != CodeGenerator.INTTYPE)
+				syntaxError("Invalid type for +/- operation in line " + currentToken.lineNumber);
+			int indexFirst = tokenList.size() - 1; // y=(z)+4 geht so nicht ist aber auch fis
 			String termKind = getOperation();
 			item2 = factor(vec);
+			if (item2.type != CodeGenerator.INTTYPE)
+				syntaxError("Invalid type for +/- operation in line " + currentToken.lineNumber);
 			returnItem = delayedCodeGen(termKind, indexFirst, item1, item2);
 			if (currentToken.type == TPLUS || currentToken.type == TMINUS) {
 				returnItem = delayedCodeGen(getOperation(), indexFirst, returnItem, expression());
@@ -1010,10 +1012,13 @@ public class Parser {
 		Item returnItem = null, item2 = null;
 
 		if (currentToken.type == TMULT || currentToken.type == TDIV || currentToken.type == TMOD) {
-
+			if (item1.type != CodeGenerator.INTTYPE)
+				syntaxError("Invalid type for *,/ operation in line " + currentToken.lineNumber);
 			int indexFirst = tokenList.size() - 1; // y=(z)*4 geht so nicht ist aber auch fis
 			String factorKind = getOperation();
 			item2 = value(vec);
+			if (item1.type!=CodeGenerator.INTTYPE)
+				syntaxError("Invalid type for *,/ operation in line "+currentToken.lineNumber);
 			returnItem = delayedCodeGen(factorKind, indexFirst, item1, item2);
 			if (currentToken.type == TMULT || currentToken.type == TDIV ||
 					currentToken.type == TMOD) {
@@ -1071,7 +1076,7 @@ public class Parser {
 		} else if (item1.mode == 2 && item2.mode == 2) { // Immediate 2 times
 
 			if (item2.type != CodeGenerator.INTTYPE) // type checking
-				syntaxError("Invalid type, in line" + currentToken.lineNumber);
+				syntaxError("Invalid type, in line " + currentToken.lineNumber);
 
 			// operator on immediate at compiling
 			int val1 = item1.val;
