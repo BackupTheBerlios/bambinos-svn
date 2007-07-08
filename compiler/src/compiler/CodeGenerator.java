@@ -318,7 +318,7 @@ public class CodeGenerator {
 	 * prints integer variables
 	 * @param offset
 	 */
-	public static void printIO(TypeDesc type, int offset) {
+	public static void printIO(TypeDesc type) {
 		if (type == INTTYPE)
 			putOpCode(new OpCodeElement("PRNI", PRNI, 0, 0, getCurrentReg()));
 
