@@ -379,7 +379,7 @@ public class Parser {
 					simpleDeclaration();
 			}
 			// add BSR instruction, programm needs jump to main
-			int fixMainPC = CodeGenerator.methodCall(-100);
+			int fixMainPC = CodeGenerator.methodCall(-5);
 
 			while (currentToken.type == TPUBLIC)
 				methodDeclaration();
@@ -1261,7 +1261,9 @@ public class Parser {
 			}
 
 			item2 = term(fixupMap);
-			if (item2.mode == 1 || item2.mode == 2)
+			if (item2.mode == 1)
+				item2.type = putValue2Reg(tokenList.size() - 1);
+			else if (item2.mode == 2)
 				putValue2Reg(tokenList.size() - 1);
 
 			// type Checking
