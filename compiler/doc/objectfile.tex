@@ -1,0 +1,9 @@
+\section{The objectfile}
+The objectfile is a intermediate file created by the compiler, that already
+contains generated code and a lot of meta-information. The linker reads this
+objectfile and creates a binaryfile. \\
+The reason for that intermediate step is, that the compiler cannot read sourcecode
+from imported modules at compiletime. So it just writes a reference of that modulecode
+in the objectfile. The linker however can read modules compiled separately (in
+objectfile format) and link that reference together with the sourcecode and
+export it to a binaryfile.
