@@ -11,35 +11,40 @@ import compiler.Util.TypeErrorException;
 public class CodeGenerator {
 
 	// format 1 instructions
-	public static final int ADDI=0, SUBI=1, MULI=2, DIVI=3,MODI=4, CMPI=5, 
-	CHKI=6, ANDI=7, BICI=8, ORI=9, XORI=10, LSHI=11, ASHI=12, LDW=13, 
-	LDB=14, POP=15, STW=16, STB=17, PSH=18, BEQ=19, BNE=20, BLT=21, 
-	BGE=22, BGT=23, BLE=24, HIGHEST_FORMAT_1=29;
-	
+	public static final int ADDI = 0, SUBI = 1, MULI = 2, DIVI = 3, MODI = 4,
+			CMPI = 5, CHKI = 6, ANDI = 7, BICI = 8, ORI = 9, XORI = 10,
+			LSHI = 11, ASHI = 12, LDW = 13, LDB = 14, POP = 15, STW = 16,
+			STB = 17, PSH = 18, BEQ = 19, BNE = 20, BLT = 21, BGE = 22,
+			BGT = 23, BLE = 24, HIGHEST_FORMAT_1 = 29;
+
 	// format 2 instructions
-	public static final int ADD=30,  SUB=31,  MUL=32,  DIV=33, MOD=34,  CMP = 35,  CHK=36,  
-	AND=37,  BIC=38, OR=39,  XOR=40,  LSH=41,  ASH=42, PRNI=43, PRNC=44, PRNB=45, HIGHEST_FORMAT_2=49;
-	
-	
+	public static final int ADD = 30, SUB = 31, MUL = 32, DIV = 33, MOD = 34,
+			CMP = 35, CHK = 36, AND = 37, BIC = 38, OR = 39, XOR = 40,
+			LSH = 41, ASH = 42, PRNI = 43, PRNC = 44, PRNB = 45,
+			HIGHEST_FORMAT_2 = 49;
+
 	// format 3 instructions
-	public static final int BSR=50, RET=51, HIGHEST_FORMAT_3=63;
+	public static final int BSR = 50, RET = 51, HIGHEST_FORMAT_3 = 63;
 
 	public static SymbolTableList symbolTable;
 
-	/* Generate primitive Data Types according to the Class Type Descriptor we defined
-	 * This data types are needed for the Symbol table entries
+	/*
+	 * Generate primitive Data Types according to the Class Type Descriptor we
+	 * defined This data types are needed for the Symbol table entries
 	 */
 	final static TypeDesc INTTYPE = new TypeDesc(2, TypeDesc.DataType.intT, 1);
 	final static TypeDesc BOOLTYPE = new TypeDesc(2, TypeDesc.DataType.boolT, 1);
 	final static TypeDesc CHARTYPE = new TypeDesc(2, TypeDesc.DataType.charT, 1);
 
-	/* Generate array with compile-time TypeDesc for arrays,objects,... 
+	/*
+	 * Generate array with compile-time TypeDesc for arrays,objects,...
 	 * 
 	 */
 	static Vector<TypeDesc> typeDescArray = new Vector<TypeDesc>();
 
 	// TODO passt noch nicht hab ihn nur mal angelegt um weitermachen zu koennen
-	final static TypeDesc STRINGTYPE = new TypeDesc(2, TypeDesc.DataType.charT, 1);
+	final static TypeDesc STRINGTYPE = new TypeDesc(2, TypeDesc.DataType.charT,
+			1);
 
 	// Register Pointer
 	static int topReg;
@@ -65,7 +70,8 @@ public class CodeGenerator {
 		int a, b, c, extra;
 
 		// F1
-		public OpCodeElement(String opString, int instruction, int first, int second, int third) {
+		public OpCodeElement(String opString, int instruction, int first,
+				int second, int third) {
 			this.Instruction = instruction;
 			this.opString = opString;
 			a = first;
@@ -74,7 +80,8 @@ public class CodeGenerator {
 
 		}
 
-		public OpCodeElement(String opString, int instruction, int first, int second) {
+		public OpCodeElement(String opString, int instruction, int first,
+				int second) {
 			this.Instruction = instruction;
 			this.opString = opString;
 			a = first;
@@ -89,7 +96,7 @@ public class CodeGenerator {
 		topReg = 0;
 		heap = 0;
 		putOpCode(new OpCodeElement("ADDI", ADDI, SP, 0, 4096));
-		//putOpCode(new OpCodeElement("ADDI", ADDI, FP, 0, 4096));
+		// putOpCode(new OpCodeElement("ADDI", ADDI, FP, 0, 4096));
 
 	}
 
@@ -112,6 +119,7 @@ public class CodeGenerator {
 
 	/**
 	 * Add opCode element to the vector
+	 * 
 	 * @param code
 	 */
 	public static void putOpCode(OpCodeElement code) {
@@ -119,49 +127,45 @@ public class CodeGenerator {
 		PC += 1;
 	}
 
-	/** 
-	 * Parser calls this method and writes the value of an Identifier into the next free Register, if the type is the same as passed.
+	/**
+	 * Parser calls this method and writes the value of an Identifier into the
+	 * next free Register
 	 * 
-	 *  @param SymbolTableCell TypeDes
-	 *  @return TypeDesc
-	 * @throws TypeErrorException 
+	 * @param SymbolTableCell
+	 *            TypeDes
+	 * @return TypeDesc
+	 * @throws TypeErrorException
 	 */
-	public static void loadWordType(SymbolTableCell cell, boolean global) throws TypeErrorException {
-
+	public static void loadWordType(SymbolTableCell cell, boolean global) {
 		int b = FP;
 		int offset = cell.getOffset();
 		if (cell.isGlobalScope()) {
 			b = heap;
 			offset = 0 - offset; // heap must have positive offsets
 		}
-
-		// sollte immer eine Var sein, sonst stimmt der Aufruf vom Parser aus nicht. dann waere irgendwo ein logische Fehler
-		// to enable assertions compile with javac flag "-ea"
 		assert (cell.getClassType() != SymbolTableCell.ClassType.var) : "INTERNAL ERROR IN CODE GEN. in writeIdentifierToRegister() cell is not a variable. BAD CLASS TYPE !";
-
-		//typeChecking(cell, type); TODO improved type checking -- obsolete !
-
 		putOpCode(new OpCodeElement("LDW", LDW, nextReg(), b, offset));
 	}
 
-	public static void loadWordType(SymbolTableCell cell) throws TypeErrorException {
+	public static void loadWordType(SymbolTableCell cell) {
 		loadWordType(cell, false);
 	}
 
 	/**
-	 * x+1 in this expression the methods take care about the 1
-	 * ADDI nextRegister,0,1
+	 * x+1 in this expression the methods take care about the 1 ADDI
+	 * nextRegister,0,1
 	 */
 	public static void addI(int val) {
 		putOpCode(new OpCodeElement("ADDI", ADDI, nextReg(), 0, val));
 	}
 
 	public static void invertValofLastReg() {
-		putOpCode(new OpCodeElement("SUB", SUB, getCurrentReg(), 0, getCurrentReg()));
+		putOpCode(new OpCodeElement("SUB", SUB, getCurrentReg(), 0,
+				getCurrentReg()));
 
 	}
 
-	/** 
+	/**
 	 * MUL 2,2,3 wirth neues Buch Seite 62
 	 */
 	public static void putOperation2Reg(String kind) {
@@ -183,7 +187,8 @@ public class CodeGenerator {
 	/**
 	 * Immediate
 	 * 
-	 * @param String e.g ADD, SUB
+	 * @param String
+	 *            e.g ADD, SUB
 	 */
 	public static void putImOp2Reg(String kind, int value) {
 		int op = 0;
@@ -202,7 +207,7 @@ public class CodeGenerator {
 
 	/**
 	 * Stores last Value of last Register into the give cell.
-	 *  
+	 * 
 	 * STW 1,0,obj.val
 	 * 
 	 * @param cell
@@ -222,37 +227,45 @@ public class CodeGenerator {
 	/**
 	 * Adds frame pointer to last register and stores indexed array element
 	 * 
-	 * @param int scope 1 ... local scope
-	 * 					2 ... global scope
+	 * @param int
+	 *            scope 1 ... local scope 2 ... global scope
 	 */
 	public static void storeWordArray(boolean globalScope) {
 
 		if (globalScope)
-			putOpCode(new OpCodeElement("ADD", ADD, getCurrentReg() - 1, heap, getCurrentReg() - 1));
+			putOpCode(new OpCodeElement("ADD", ADD, getCurrentReg() - 1, heap,
+					getCurrentReg() - 1));
 		else
-			putOpCode(new OpCodeElement("ADD", ADD, getCurrentReg() - 1, FP, getCurrentReg() - 1));
+			putOpCode(new OpCodeElement("ADD", ADD, getCurrentReg() - 1, FP,
+					getCurrentReg() - 1));
 
-		putOpCode(new OpCodeElement("STW", STW, getCurrentReg(), getCurrentReg() - 1, 0));
+		putOpCode(new OpCodeElement("STW", STW, getCurrentReg(),
+				getCurrentReg() - 1, 0));
 		decreaseReg();
 		decreaseReg();
 	}
 
 	public static void loadWordArray(boolean globalScope) {
 		if (globalScope)
-			putOpCode(new OpCodeElement("ADD", ADD, getCurrentReg(), heap, getCurrentReg()));
+			putOpCode(new OpCodeElement("ADD", ADD, getCurrentReg(), heap,
+					getCurrentReg()));
 		else
-			putOpCode(new OpCodeElement("ADD", ADD, getCurrentReg(), FP, getCurrentReg()));
+			putOpCode(new OpCodeElement("ADD", ADD, getCurrentReg(), FP,
+					getCurrentReg()));
 
-		putOpCode(new OpCodeElement("LDW", LDW, getCurrentReg(), getCurrentReg(), 0));
+		putOpCode(new OpCodeElement("LDW", LDW, getCurrentReg(),
+				getCurrentReg(), 0));
 	}
 
 	/**
 	 * Type Safe
+	 * 
 	 * @param cell
-	 * @throws TypeErrorException 
+	 * @throws TypeErrorException
 	 */
-	public static void storeWordCell(SymbolTableCell cell, TypeDesc type) throws TypeErrorException {
-		//typeChecking(cell);
+	public static void storeWordCell(SymbolTableCell cell, TypeDesc type)
+			throws TypeErrorException {
+		// typeChecking(cell);
 		storeWord(cell);
 	}
 
@@ -264,18 +277,20 @@ public class CodeGenerator {
 		decreaseReg();
 	}
 
-//	private static void typeChecking(SymbolTableCell cell, TypeDesc type) throws TypeErrorException {
-//		if (cell.getType().equals(type)) {
-//			;
-//		} else {
-//			throw new TypeErrorException("Illegal type Error, expected: " +
-//					type.getBase().toString());
-//		}
-//	}
+	// private static void typeChecking(SymbolTableCell cell, TypeDesc type)
+	// throws TypeErrorException {
+	// if (cell.getType().equals(type)) {
+	// ;
+	// } else {
+	// throw new TypeErrorException("Illegal type Error, expected: " +
+	// type.getBase().toString());
+	// }
+	// }
 
 	public static int methodCall(int proc) {
 		putOpCode(new OpCodeElement("BSR", BSR, 0, 0, proc));
-		return (PC - 2); // is only used for fixing up the main method entry after global vars
+		return (PC - 2); // is only used for fixing up the main method entry
+		// after global vars
 	}
 
 	/**
@@ -303,12 +318,13 @@ public class CodeGenerator {
 		putOpCode(new OpCodeElement("POP", POP, LNK, SP, 1));
 		if (!main)
 			putOpCode(new OpCodeElement("RET", RET, 0, 0, LNK));
-		// fixup size of method prolog 
+		// fixup size of method prolog
 		opCode.get(methodFix).c = size;
 	}
 
 	/**
-	 * Need not to validat if main is already set, because Symboltable does already verify unique Identifiers
+	 * Need not to validat if main is already set, because Symboltable does
+	 * already verify unique Identifiers
 	 */
 	public static void setMainPC() {
 		mainAddr = PC;
@@ -316,6 +332,7 @@ public class CodeGenerator {
 
 	/**
 	 * prints integer variables
+	 * 
 	 * @param offset
 	 */
 	public static void printIO(TypeDesc type) {
@@ -337,8 +354,8 @@ public class CodeGenerator {
 	 * Conditions and repeats
 	 */
 	public static int relation(int op) {
-		putOpCode(new OpCodeElement("CMP", CMP, getCurrentReg() - 1, getCurrentReg() - 1,
-				getCurrentReg()));
+		putOpCode(new OpCodeElement("CMP", CMP, getCurrentReg() - 1,
+				getCurrentReg() - 1, getCurrentReg()));
 		decreaseReg();
 		putOpCode(new OpCodeElement("OP", op, getCurrentReg(), -100));
 		decreaseReg();
@@ -350,7 +367,8 @@ public class CodeGenerator {
 		return PC - 2;
 	}
 
-	public static void fixConditionJump(Vector<Integer> fixPC, int falseJump, int trueJump) {
+	public static void fixConditionJump(Vector<Integer> fixPC, int falseJump,
+			int trueJump) {
 		ListIterator<Integer> iter = fixPC.listIterator();
 		while (iter.hasNext()) {
 			OpCodeElement opElem = opCode.get(iter.next());
@@ -378,7 +396,8 @@ public class CodeGenerator {
 		test.delete();
 
 		try {
-			RandomAccessFile output = new RandomAccessFile(name.concat(".bin"), "rw");
+			RandomAccessFile output = new RandomAccessFile(name.concat(".bin"),
+					"rw");
 
 			output.writeInt(0);
 
@@ -394,24 +413,28 @@ public class CodeGenerator {
 						opCode.get(i).c = 0 - opCode.get(i).c;
 					}
 
-					number = (opCode.get(i).Instruction << 26) + (opCode.get(i).a << 21) +
-							(opCode.get(i).b << 16) + (sign << 15) + (opCode.get(i).c);
+					number = (opCode.get(i).Instruction << 26)
+							+ (opCode.get(i).a << 21) + (opCode.get(i).b << 16)
+							+ (sign << 15) + (opCode.get(i).c);
 
 				}
 				// F2
 				else if (opCode.get(i).Instruction < HIGHEST_FORMAT_2)
-					number = (opCode.get(i).Instruction << 26) + (opCode.get(i).a << 21) +
-							(opCode.get(i).b << 16) + (opCode.get(i).extra << 5) +
-							(opCode.get(i).c);
+					number = (opCode.get(i).Instruction << 26)
+							+ (opCode.get(i).a << 21) + (opCode.get(i).b << 16)
+							+ (opCode.get(i).extra << 5) + (opCode.get(i).c);
 
 				// F3
 				else if (opCode.get(i).Instruction < HIGHEST_FORMAT_3)
-					number = (opCode.get(i).Instruction << 26) + (opCode.get(i).c);
+					number = (opCode.get(i).Instruction << 26)
+							+ (opCode.get(i).c);
 
 				output.writeInt(number);
-				Util.debug2("PC " + (i + 1) + "   " + Integer.toBinaryString(number) + " " +
-						opCode.get(i).opString + " (" + opCode.get(i).Instruction + ") " +
-						opCode.get(i).a + " " + opCode.get(i).b + " " + opCode.get(i).c);
+				Util.debug2("PC " + (i + 1) + "   "
+						+ Integer.toBinaryString(number) + " "
+						+ opCode.get(i).opString + " ("
+						+ opCode.get(i).Instruction + ") " + opCode.get(i).a
+						+ " " + opCode.get(i).b + " " + opCode.get(i).c);
 			}
 			output.close();
 			System.out.println("Outputfile: " + name.concat(".bin"));
@@ -454,7 +477,8 @@ public class CodeGenerator {
 		else if (op == BLT)
 			return BGE;
 		else
-			System.out.println("ERROR in Codegeneration by inverting a Relation");
+			System.out
+					.println("ERROR in Codegeneration by inverting a Relation");
 
 		return 0;
 	}
