@@ -1,0 +1,41 @@
+\section{The symbolfile}
+The symbolfile (file-extension is .sym)is a sequential representation of the
+symboltable. All entries
+are representations of the symbols found in the sourcecode. \\
+Because the symbolfile is just read one time during compilation, it cannot be
+seen as a performance factor. So we decided to write the symbolfile in
+xml-format as it is a good representation of objects. 
+\subsection{Structure}
+The symbolfile starts with a list of the so-called \emph{module anchors}. Every
+module anchor represents a module that's imported. In xml-syntax this lookes
+like that: \\
+After that the actual symboltable representation starts. There are 3 different
+elementtypes that can be described here:
+\begin{itemize}
+  \item variables
+  \item arrays
+  \item methods 
+\end{itemize}
+\subsubsection{variables}
+A variable has 2 properties: 
+\begin{itemize}
+  \item one of the primitive datatypes like \emph{boolean}, \emph{int} or \emph{char}
+  \item the name of the variable in the sourcecode
+\end{itemize}
+\subsubsection{arrays}
+An array has 3 properties
+\begin{itemize}
+  \item one of the primitive datatypes like \emph{boolean}, \emph{int} or \emph{char}
+  \item the name of the variable in the sourcecode
+  \item the number of elements in the array
+\end{itemize}
+\subsubsection{methods}
+An array has 3 properties and contains another symboltable with the parameters
+of the method. 
+\begin{itemize}
+  \item the return value of the method as one of the primitive datatypes
+  like \emph{boolean}, \emph{int} or \emph{char}
+  \item the name of the method in the sourcecode
+  \item the number of elements in the array
+\end{itemize}
+So the description of a method is a recursive search through the symboltable.
