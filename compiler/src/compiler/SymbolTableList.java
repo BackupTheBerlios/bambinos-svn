@@ -141,7 +141,7 @@ public class SymbolTableList {
 					symbolFile.appendLine("<method>");
 					symbolFile.appendLine("<type>" + currentCell.getType().base + "</type>");
 					symbolFile.appendLine("<name>" + currentCell.getName() + "</name>");
-					symbolFile.appendLine("<size>" + currentCell.getType().getSize() + "</size>");
+					symbolFile.appendLine("<size>" + currentCell.getSize() + "</size>");
 							
 					currentCell.methodSymbols.exportSymbols(symbolFile);
 					
