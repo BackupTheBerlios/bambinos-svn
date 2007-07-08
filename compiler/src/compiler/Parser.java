@@ -127,14 +127,14 @@ public class Parser {
 
 		SymbolFile symbolFile = new SymbolFile(name[0]);
 
-//		symbolFile.writeHeader();
-//
-//		CodeGenerator.symbolTable.exportModuleAnchors(symbolFile);
-//		CodeGenerator.symbolTable.exportSymbols(symbolFile);
-//
-//		symbolFile.writeFooter();
-//
-//		CodeGenerator.symbolTable.importModuleAnchors(symbolFile);
+		symbolFile.writeHeader();
+
+		CodeGenerator.symbolTable.exportModuleAnchors(symbolFile);
+		CodeGenerator.symbolTable.exportSymbols(symbolFile);
+
+		symbolFile.writeFooter();
+
+		CodeGenerator.symbolTable.importModuleAnchors(symbolFile);
 
 		System.out.println("Thanks for using ComPiler.");
 		System.out.println("");
