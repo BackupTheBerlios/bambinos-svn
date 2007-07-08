@@ -1,24 +1,11 @@
 package compiler;
 
-import static compiler.Ident.TokenID.TEQL;
-import static compiler.Ident.TokenID.TGEQ;
-import static compiler.Ident.TokenID.TGTR;
-import static compiler.Ident.TokenID.TLEQ;
-import static compiler.Ident.TokenID.TLSS;
-import static compiler.Ident.TokenID.TNOT;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.util.BitSet;
-import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.ListIterator;
 import java.util.Vector;
 
-import sun.security.util.BitArray;
-
-import compiler.Parser.fixUps;
 import compiler.Util.TypeErrorException;
 
 public class CodeGenerator {
@@ -37,7 +24,6 @@ public class CodeGenerator {
 	public static final int BSR = 50, RET = 51, HIGHEST_FORMAT_3 = 63;
 
 	public static SymbolTableList symbolTable;
-	
 
 	/* Generate primitive Data Types according to the Class Type Descriptor we defined
 	 * This data types are needed for the Symbol table entries
@@ -123,7 +109,6 @@ public class CodeGenerator {
 		topReg--;
 	}
 
-	
 	/**
 	 * Add opCode element to the vector
 	 * @param code
@@ -338,6 +323,9 @@ public class CodeGenerator {
 
 		if (type == CHARTYPE)
 			putOpCode(new OpCodeElement("PRNC", PRNC, 0, FP, offset));
+
+		if (type == BOOLTYPE)
+			putOpCode(new OpCodeElement("PRNI", PRNI, 0, FP, offset));
 	}
 
 	public static void fixMainProc(int vecPos, int proc) {
@@ -468,5 +456,13 @@ public class CodeGenerator {
 			System.out.println("ERROR in Codegeneration by inverting a Relation");
 
 		return 0;
+	}
+
+	public static int boolAss(boolean Imm, int value) {
+		if (Imm)
+			putOpCode(new OpCodeElement("ADDI", ADDI, nextReg(), 0, value));
+		putOpCode(new OpCodeElement("BNE", BEQ, getCurrentReg(), -100));
+		decreaseReg();
+		return PC - 2;
 	}
 }

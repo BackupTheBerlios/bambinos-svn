@@ -1,6 +1,5 @@
 package compiler;
 
-import java.util.*;
 import static compiler.Ident.TokenID.STRONG_SYM_BB;
 import static compiler.Ident.TokenID.STRONG_SYM_CB;
 import static compiler.Ident.TokenID.TAND;
@@ -56,11 +55,11 @@ import static compiler.Ident.TokenID.TVOID;
 import static compiler.Ident.TokenID.TWHILE;
 import static compiler.Util.debug1;
 
-import java.awt.List;
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.Stack;
 import java.util.Vector;
-
-import javax.swing.text.StyledEditorKit.BoldAction;
 
 import compiler.Ident.TokenID;
 import compiler.SymbolTableCell.ClassType;
@@ -89,11 +88,12 @@ public class Parser {
 	// Liste von tokens, die bei jedem Zeilenende an den Code Generator
 	// weitergegeben werden
 	static ArrayList<Ident> tokenList = new ArrayList<Ident>();
-	
+
 	private static Vector<Integer> condFixup = null;
 	private static Stack<Vector<Integer>> condFixStack = new Stack<Vector<Integer>>();
-	
+
 	private static int booleanLevel;
+	private static boolean condMode;
 
 	public static void main(String[] args) {
 		@SuppressWarnings("unused")
@@ -111,7 +111,7 @@ public class Parser {
 		// break;
 		// }
 
-		CodeGenerator.symbolTable.printSymbolTable();
+		//CodeGenerator.symbolTable.printSymbolTable();
 
 		System.out.println("");
 		System.out.println("Compiling " + args[1] + ".");
@@ -124,19 +124,18 @@ public class Parser {
 			name = args[1].split(".java");
 
 		CodeGenerator.write2File(name[0]);
-				
-		
+
 		SymbolFile symbolFile = new SymbolFile(name[0]);
-		
-		symbolFile.writeHeader();
-		
-		CodeGenerator.symbolTable.exportModuleAnchors(symbolFile);
-		CodeGenerator.symbolTable.exportSymbols(symbolFile);
-		
-		symbolFile.writeFooter();
-		
-		CodeGenerator.symbolTable.importModuleAnchors(symbolFile);
-		
+
+//		symbolFile.writeHeader();
+//
+//		CodeGenerator.symbolTable.exportModuleAnchors(symbolFile);
+//		CodeGenerator.symbolTable.exportSymbols(symbolFile);
+//
+//		symbolFile.writeFooter();
+//
+//		CodeGenerator.symbolTable.importModuleAnchors(symbolFile);
+
 		System.out.println("Thanks for using ComPiler.");
 		System.out.println("");
 
@@ -330,24 +329,23 @@ public class Parser {
 	static private void packageImport() throws IllegalTokenException {
 		expect(TIMPORT);
 		identifier();
-		
-		
+
 		String moduleName = new String();
-		
+
 		for (int i = 0; i < tokenList.size(); i++) {
 			if (tokenList.get(i).type == TokenID.TSIDENT) {
-				
+
 				if (moduleName.equals("") == false) {
 					moduleName = moduleName + "/" + tokenList.get(i).value;
 				} else {
 					moduleName = tokenList.get(i).value;
 				}
-				
+
 			}
 		}
 
 		CodeGenerator.symbolTable.addModule(moduleName);
-		
+
 		expectWeak(TSEMICOLON);
 	}
 
@@ -667,7 +665,14 @@ public class Parser {
 		expect(TEQL);
 		returnItem = expression();
 		if (returnItem.mode == 1 || returnItem.mode == 2) {
-			putValue2Reg(tokenList.size() - 1);
+			int i = 1;
+			while (tokenList.get(tokenList.size() - i).type == TRPAREN) {
+				i++;
+				if (tokenList.get(tokenList.size() - i).type != TNUMBER) {
+					System.out.println("INTERNAL ERROR IN PARSER. CODE 998"); // this should never happen, of course
+				}
+			}
+			putValue2Reg(tokenList.size() - i);
 		}
 		return returnItem;
 	}
@@ -727,7 +732,8 @@ public class Parser {
 			if (type == 0) {
 				SymbolTableCell cell = CodeGenerator.symbolTable.getSymbol(tokenList.get(0).value);
 				try {
-					compareItemType(new Item(0, cell.getType(), 0), item); // type checking y=4;
+					if (!compareItemType(new Item(0, cell.getType(), 0), item))
+						syntaxError("Invalid type assignment in line: " + currentToken.lineNumber);
 					CodeGenerator.storeWordCell(cell, item.type);
 				} catch (TypeErrorException e) {
 					typeError();
@@ -780,7 +786,7 @@ public class Parser {
 				}
 			} catch (IllegalTokenException e) {
 				e.printStackTrace();
-				System.out.println("ERROR SYNC IN BODY BLOCK");
+				Util.debug2("ERROR SYNC IN BODY BLOCK");
 				// goto next Sync Token and retry statement
 				while (currentToken.type.ordinal() < STRONG_SYM_BB.ordinal())
 					nextToken();
@@ -813,11 +819,13 @@ public class Parser {
 	private static void whileStatement() throws IllegalTokenException {
 		debug1("whileStatement");
 		condFixStack.push(condFixup);
-		condFixup=new Vector<Integer>();
+		condFixup = new Vector<Integer>();
 		expect(TWHILE);
 		expectWeak(TLPAREN);
 		int whileLoopStart = CodeGenerator.PC;
-		expression(); // jump to cmp again
+		condMode = true;
+		expression();
+		condMode = false;
 		expectWeak(TRPAREN);
 		expectWeak(TLBRACES);
 		int trueJump = CodeGenerator.PC;
@@ -826,16 +834,18 @@ public class Parser {
 		// fixup 
 		CodeGenerator.elseAndLoopJump(whileLoopStart);
 		CodeGenerator.fixConditionJump(condFixup, CodeGenerator.PC, trueJump);
-		condFixup=condFixStack.pop();
+		condFixup = condFixStack.pop();
 	}
 
 	private static void ifStatement() throws IllegalTokenException {
 		debug1("ifStatement");
 		condFixStack.push(condFixup);
-		condFixup=new Vector<Integer>();
+		condFixup = new Vector<Integer>();
 		expect(TIF);
 		expectWeak(TLPAREN);
+		condMode = true;
 		expression();
+		condMode = false;
 		expectWeak(TRPAREN);
 		expectWeak(TLBRACES);
 		int trueJump = CodeGenerator.PC;
@@ -854,7 +864,7 @@ public class Parser {
 		} else {
 			CodeGenerator.fixConditionJump(condFixup, CodeGenerator.PC, trueJump);
 		}
-		condFixup=condFixStack.pop();
+		condFixup = condFixStack.pop();
 	}
 
 	private static void returnStatement() throws IllegalTokenException {
@@ -894,15 +904,15 @@ public class Parser {
 				if (booleanLevel <= fixi.level) {
 					count++;
 					veci.add(fixi.position);
-					fixi.level=booleanLevel-1;
+					fixi.level = booleanLevel - 1;
 				}
 			}
-			int index=count;
+			int index = count;
 			while (count > 2) {
-				CodeGenerator.fixOrJumps(veci.get(index-count), false,false);
+				CodeGenerator.fixOrJumps(veci.get(index - count), false, false);
 				count--;
 			}
-			CodeGenerator.fixOrJumps(veci.get(index-count), true,false);
+			CodeGenerator.fixOrJumps(veci.get(index - count), true, false);
 			andExpression(orMap);
 		}
 		booleanLevel -= 1;
@@ -923,12 +933,12 @@ public class Parser {
 				if (booleanLevel <= fixi.level) {
 					count++;
 					veci.add(fixi.position);
-					fixi.level=booleanLevel-1;
+					fixi.level = booleanLevel - 1;
 				}
 			}
-			int index=count;
+			int index = count;
 			while (count > 2) {
-				CodeGenerator.fixOrJumps(veci.get(index-count), false,true);
+				CodeGenerator.fixOrJumps(veci.get(index - count), false, true);
 				count--;
 			}
 			//CodeGenerator.fixOrJumps(veci.get(index-count), true);
@@ -955,10 +965,12 @@ public class Parser {
 	private static Item term(LinkedList<fixUps> vec) throws IllegalTokenException {
 		debug1("term");
 		Item item1 = factor(vec);
+		if (item1 == null && currentToken.type == TMINUS) {
+			item1 = new Item(2, CodeGenerator.INTTYPE, 0);
+		}
 		Item item2 = null, returnItem = null;
 
 		if (currentToken.type == TPLUS || currentToken.type == TMINUS) {
-
 			int indexFirst = tokenList.size() - 1; // y=(z)+4 geht so nicht ist
 			// aber auch fis
 			String termKind = getOperation();
@@ -995,7 +1007,6 @@ public class Parser {
 					currentToken.type == TMOD) {
 				returnItem = delayedCodeGen(getOperation(), indexFirst, returnItem, expression());
 			}
-
 		}
 		if (item2 != null)
 			return returnItem;
@@ -1180,14 +1191,14 @@ public class Parser {
 			if (currentToken.type == TLPAREN) {
 				methodCallSuffix();
 			}
-		} else if (currentToken.type == TMINUS || currentToken.type == TNUMBER) {
+		} else if (currentToken.type == TNUMBER) {
 			returnItem = new Item(2, CodeGenerator.INTTYPE, intValue()); // return
 			// Immediate
 		} else if (currentToken.type == TCHAR_VALUE) {
 			returnItem = new Item(2, CodeGenerator.CHARTYPE, Integer.parseInt(currentToken.value)); // return
 			expect(TCHAR_VALUE);
 		} else if (currentToken.type == TTRUE || currentToken.type == TFALSE)
-			booleanValue();
+			returnItem = booleanValue();
 		else if (currentToken.type == TSTRING_VALUE)
 			expect(TSTRING_VALUE);
 		else if (currentToken.type == TNULL)
@@ -1211,12 +1222,11 @@ public class Parser {
 		debug1("condition");
 
 		Item item = term(fixupMap);
+		Item item2 = null;
 		if (currentToken.type.startSetRelation()) {
-
 			int op = 0;
 			if (item.mode == 1 || item.mode == 2)
-				putValue2Reg(tokenList.size() - 1);
-
+				item.type = putValue2Reg(tokenList.size() - 1);
 			if (currentToken.type == TEQL) {
 				expect(TEQL);
 				expect(TEQL);
@@ -1239,43 +1249,53 @@ public class Parser {
 				op = CodeGenerator.BLT;
 			}
 
-			item = term(fixupMap);
-			if (item.mode == 1 || item.mode == 2)
+			item2 = term(fixupMap);
+			if (item2.mode == 1 || item2.mode == 2)
 				putValue2Reg(tokenList.size() - 1);
+
+			// type Checking
+			if (!compareItemType(item, item2)) {
+				syntaxError("Cannot compare incompatible types in line: " + currentToken.lineNumber);
+			}
 
 			int pcPos = CodeGenerator.relation(op);
 			fixupMap.add(new fixUps(pcPos, booleanLevel));
 			condFixup.add(pcPos);
-
+		} else if (tokenList.get(tokenList.size()-1).type!=TRPAREN && tokenList.get(tokenList.size()-1).type!=TRBRACK &&condMode && item2 == null && item.type != null) {
+			if (item.mode == 2 && item.type == CodeGenerator.BOOLTYPE) {
+				int pcPos = CodeGenerator.boolAss(true, item.val);
+				fixupMap.add(new fixUps(pcPos, booleanLevel));
+				condFixup.add(pcPos);
+			} else if (getIdentifersCell(tokenList.size() - 1).getType() == CodeGenerator.BOOLTYPE) {
+				putValue2Reg(tokenList.size() - 1);
+				int pcPos = CodeGenerator.boolAss(false, item.val);
+				fixupMap.add(new fixUps(pcPos, booleanLevel));
+				condFixup.add(pcPos);
+			}
 		}
 		return item;
 	}
 
 	private static int intValue() throws IllegalTokenException {
 		debug1("intValue");
-		boolean neg = false;
-		if (currentToken.type == TMINUS) {
-			expect(TMINUS); // TODO minus is not in Number
-			neg = true;
-		}
 		expect(TNUMBER);
-		if (neg)
-			return 0 - Integer.parseInt(tokenList.get(tokenList.size() - 1).getIdentValue()); // returns last entrie from the token
-		// list
-		else
-			return Integer.parseInt(tokenList.get(tokenList.size() - 1).getIdentValue()); // returns last entrie from the token
-		// list
+		return Integer.parseInt(tokenList.get(tokenList.size() - 1).getIdentValue()); // returns last entrie from the token
 	}
 
-	private static void booleanValue() throws IllegalTokenException {
+	private static Item booleanValue() throws IllegalTokenException {
 		debug1("booleanValue");
-		if (currentToken.type == TTRUE)
+		if (currentToken.type == TTRUE) {
 			expect(TTRUE);
-		else if (currentToken.type == TFALSE)
+			tokenList.get(tokenList.size() - 1).value = "1";
+			return (new Item(2, CodeGenerator.BOOLTYPE, 1));
+		} else if (currentToken.type == TFALSE) {
 			expect(TFALSE);
-		else
+			tokenList.get(tokenList.size() - 1).value = "0";
+			return (new Item(2, CodeGenerator.BOOLTYPE, 0));
+		} else
 			syntaxError("Wrong token " + currentToken.type.toString() +
 					", boolean Value expected, in line: " + currentToken.lineNumber);
+		return null;
 	}
 
 	private static TypeDesc primitive() throws IllegalTokenException {
@@ -1354,7 +1374,7 @@ public class Parser {
 	 * @param write2Register
 	 * @throws IllegalTokenException
 	 */
-	static private void putIdentifiers2Reg(int index) {
+	static private TypeDesc putIdentifiers2Reg(int index) {
 
 		SymbolTableCell cell = getIdentifersCell(index);
 
@@ -1368,14 +1388,17 @@ public class Parser {
 			typeError();
 			e.printStackTrace();
 		}
+		return cell.getType();
 	}
 
 	// Identifiers and Numbers y=9; y=i; used when only one is after "="
-	static private void putValue2Reg(int index) {
+	static private TypeDesc putValue2Reg(int index) {
 		if (tokenList.get(index).type == TSIDENT)
-			putIdentifiers2Reg(index);
+			return putIdentifiers2Reg(index);
 		else
 			CodeGenerator.addI(Integer.parseInt(tokenList.get(index).value));
+
+		return null;
 	}
 
 	/**
