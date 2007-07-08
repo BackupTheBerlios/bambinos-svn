@@ -447,6 +447,7 @@ public class Parser {
 
 		// Parameter:
 		Vector<String> paramVector = new Vector<String>(); // TODO vorerst,
+		Vector<TypeDesc> typeVector = new Vector<TypeDesc>(); // TODO vorerst,
 		// brauche dann ein
 		// Objekt statt
 		// String
@@ -455,12 +456,13 @@ public class Parser {
 			// dataTypeDescriptor
 			// (startSet is
 			// dataType )
-			dataTypeDescriptor();
+			typeVector.add(dataTypeDescriptor());
 			paramVector.add(tokenList.get(tokenList.size() - 1).value);
 			while (currentToken.type == TCOMMA || currentToken.type.startSetSimpleDeclaration()) {
 				expectWeak(TCOMMA);
-				dataTypeDescriptor();
+				typeVector.add(dataTypeDescriptor());
 				paramVector.add(tokenList.get(tokenList.size() - 1).value);
+				
 			}
 		}
 		expectWeak(TRPAREN);
@@ -474,7 +476,7 @@ public class Parser {
 		CodeGenerator.symbolTable.getSymbol(name).methodSymbols.fixOffset(paramVector.size() + 2);
 		int i = 0;
 		while (i < paramVector.size()) {
-			add2SymTable(paramVector.get(i), SymbolTableCell.ClassType.var, CodeGenerator.INTTYPE,
+			add2SymTable(paramVector.get(i), SymbolTableCell.ClassType.var, typeVector.get(i),
 					1);
 			i++;
 		}
@@ -883,12 +885,13 @@ public class Parser {
 		expectWeak(TSEMICOLON);
 	}
 
-	private static void dataTypeDescriptor() throws IllegalTokenException {
+	private static TypeDesc dataTypeDescriptor() throws IllegalTokenException {
 		debug1("dataTypeDescriptor");
-		dataType();
+		TypeDesc type=dataType();
 		identifier();
 		if (currentToken.type == TLBRACK)
 			arraySelector();
+		return type;
 	}
 
 	private static Item expression() throws IllegalTokenException {
