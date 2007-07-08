@@ -9,7 +9,7 @@ public class TestStuff {
 	
 	public static int output(int value){
 
-		//print(value);
+		println(value);
 		
 	}
 	
@@ -27,16 +27,17 @@ public class TestStuff {
 		int x = 0;
 		int y = 1;
 	
-		if (((((a*20) > (b+b+1)) && (c == d)) && (c == 'a')) || (c == 'a')) {
-			print(x);
+		//if (((((a*20) > (b+b+1)) && (c == d)) && (c == 'a')) || (c == 'a')) {
+		if (a == b) {
+			output(x);
 		} else {
-			print(y);
+			output(y);
 		}
 	
 		if (c == d) {
-			print(x);
+			output(x);
 		} else {
-			print(y);
+			output(y);
 		}
 	
 	
@@ -54,7 +55,7 @@ public class TestStuff {
 		if (a == 5) {
 			calc(a, b, c);
 		} else {
-			print(a);
+			output(a);
 		}
 		
 		compare(a,a,x,x);
