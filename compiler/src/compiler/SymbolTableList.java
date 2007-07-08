@@ -4,22 +4,6 @@ import java.util.LinkedList;
 import java.util.ListIterator;
 import java.util.Vector;
 
-import java.io.File;
-import java.io.RandomAccessFile;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-
-import javax.xml.parsers.*;
-
-
-import org.xml.sax.InputSource;
-import org.xml.sax.helpers.XMLReaderFactory;
-import org.xml.sax.SAXException;
-
-import com.sun.org.apache.xerces.internal.parsers.DOMParser;
-import com.sun.xml.internal.ws.streaming.XMLReader;
-import org.w3c.dom.Document;
-
 import compiler.SymbolTableCell.ClassType;
 import compiler.Util.IllegalTokenException;
 
