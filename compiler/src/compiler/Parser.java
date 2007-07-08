@@ -802,6 +802,7 @@ public class Parser {
 		if (currentToken.type == TSIDENT) {
 			identifier();
 			SymbolTableCell cell = getIdentifersCell(tokenList.size() - 1);
+			putValue2Reg(tokenList.size()-1);
 			CodeGenerator.printIO(cell.getType(), cell.getOffset());
 		} else if (currentToken.type == TNUMBER || currentToken.type == TMINUS) {
 			//CodeGenerator.printIO(intValue());
@@ -1261,12 +1262,12 @@ public class Parser {
 			int pcPos = CodeGenerator.relation(op);
 			fixupMap.add(new fixUps(pcPos, booleanLevel));
 			condFixup.add(pcPos);
-		} else if (tokenList.get(tokenList.size()-1).type!=TRPAREN && tokenList.get(tokenList.size()-1).type!=TRBRACK &&condMode && item2 == null && item.type != null) {
-			if (item.mode == 2 && item.type == CodeGenerator.BOOLTYPE) {
+		} else if (condMode && item2 == null ){
+			if (item.mode == 2 && item.type!=null &&item.type == CodeGenerator.BOOLTYPE) {
 				int pcPos = CodeGenerator.boolAss(true, item.val);
 				fixupMap.add(new fixUps(pcPos, booleanLevel));
 				condFixup.add(pcPos);
-			} else if (getIdentifersCell(tokenList.size() - 1).getType() == CodeGenerator.BOOLTYPE) {
+			} else if (getIdentifersCell(tokenList.size() - 1)!= null&& getIdentifersCell(tokenList.size() - 1).getType() != null && getIdentifersCell(tokenList.size() - 1).getType() == CodeGenerator.BOOLTYPE) {
 				putValue2Reg(tokenList.size() - 1);
 				int pcPos = CodeGenerator.boolAss(false, item.val);
 				fixupMap.add(new fixUps(pcPos, booleanLevel));

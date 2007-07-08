@@ -11,17 +11,18 @@ import compiler.Util.TypeErrorException;
 public class CodeGenerator {
 
 	// format 1 instructions
-	public static final int ADDI = 0, SUBI = 1, MULI = 2, DIVI = 3, MODI = 4, CMPI = 5, CHKI = 6,
-			ANDI = 7, BICI = 8, ORI = 9, XORI = 10, LSHI = 11, ASHI = 12, LDW = 13, LDB = 14,
-			POP = 15, STW = 16, STB = 17, PSH = 18, BEQ = 19, BNE = 20, BLT = 21, BGE = 22,
-			BGT = 23, BLE = 24, PRNI = 25, PRNC = 26, HIGHEST_FORMAT_1 = 29;
-
+	public static final int ADDI=0, SUBI=1, MULI=2, DIVI=3,MODI=4, CMPI=5, 
+	CHKI=6, ANDI=7, BICI=8, ORI=9, XORI=10, LSHI=11, ASHI=12, LDW=13, 
+	LDB=14, POP=15, STW=16, STB=17, PSH=18, BEQ=19, BNE=20, BLT=21, 
+	BGE=22, BGT=23, BLE=24, HIGHEST_FORMAT_1=29;
+	
 	// format 2 instructions
-	public static final int ADD = 30, SUB = 31, MUL = 32, DIV = 33, MOD = 34, CMP = 35, CHK = 36,
-			AND = 37, BIC = 38, OR = 39, XOR = 40, LSH = 41, ASH = 42, HIGHEST_FORMAT_2 = 49;
-
+	public static final int ADD=30,  SUB=31,  MUL=32,  DIV=33, MOD=34,  CMP = 35,  CHK=36,  
+	AND=37,  BIC=38, OR=39,  XOR=40,  LSH=41,  ASH=42, PRNI=43, PRNC=44, PRNB=45, HIGHEST_FORMAT_2=49;
+	
+	
 	// format 3 instructions
-	public static final int BSR = 50, RET = 51, HIGHEST_FORMAT_3 = 63;
+	public static final int BSR=50, RET=51, HIGHEST_FORMAT_3=63;
 
 	public static SymbolTableList symbolTable;
 
@@ -319,13 +320,13 @@ public class CodeGenerator {
 	 */
 	public static void printIO(TypeDesc type, int offset) {
 		if (type == INTTYPE)
-			putOpCode(new OpCodeElement("PRNI", PRNI, 0, FP, offset));
+			putOpCode(new OpCodeElement("PRNI", PRNI, 0, 0, getCurrentReg()));
 
 		if (type == CHARTYPE)
-			putOpCode(new OpCodeElement("PRNC", PRNC, 0, FP, offset));
+			putOpCode(new OpCodeElement("PRNC", PRNC, 0, 0, getCurrentReg()));
 
 		if (type == BOOLTYPE)
-			putOpCode(new OpCodeElement("PRNI", PRNI, 0, FP, offset));
+			putOpCode(new OpCodeElement("PRNB", PRNB, 0, 0, getCurrentReg()));
 	}
 
 	public static void fixMainProc(int vecPos, int proc) {
