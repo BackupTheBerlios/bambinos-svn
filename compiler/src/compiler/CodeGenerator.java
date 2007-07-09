@@ -3,6 +3,7 @@ package compiler;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.util.HashMap;
 import java.util.ListIterator;
 import java.util.Vector;
 
@@ -36,6 +37,8 @@ public class CodeGenerator {
 	final static TypeDesc BOOLTYPE = new TypeDesc(2, TypeDesc.DataType.boolT, 1);
 	final static TypeDesc CHARTYPE = new TypeDesc(2, TypeDesc.DataType.charT, 1);
 
+	
+	public static HashMap<String, TypeDesc> ObjectTypes = new HashMap<String, TypeDesc>();
 	/*
 	 * Generate array with compile-time TypeDesc for arrays,objects,...
 	 * 

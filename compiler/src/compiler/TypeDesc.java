@@ -3,7 +3,7 @@ package compiler;
 public class TypeDesc {
 
 	
-	private int form; // array, record (class) 0...record 1...array  2...primitive
+	private int form; // array, record (class) 0...class 1...array  2...primitive
 	private int len; // arrays, number of lenght
 	DataType base; // for arrays which type, int,char,String,boolean
 	SymbolTableList fields;

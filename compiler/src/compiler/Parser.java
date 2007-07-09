@@ -56,6 +56,7 @@ import static compiler.Ident.TokenID.TWHILE;
 import static compiler.Util.debug1;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Stack;
@@ -81,7 +82,6 @@ public class Parser {
 	 */
 	static boolean setCodeGeneration = true;
 	private static int countTLBRACES;
-	private static CodeGenerator genCode;
 
 	static Ident currentToken = new Ident();
 
@@ -94,6 +94,8 @@ public class Parser {
 
 	private static int booleanLevel;
 	private static boolean condMode;
+	
+//	private static HashMap<String,SymbolTableList> symList = new HashMap<String, SymbolTableList>();
 
 	public static void main(String[] args) {
 		@SuppressWarnings("unused")
@@ -102,7 +104,7 @@ public class Parser {
 		Scanner.importSource(args[0].concat(args[1]));
 
 		/* initialize Code Generator */
-		genCode = new CodeGenerator();
+		new CodeGenerator();
 
 		program();
 		// while (true){
@@ -291,10 +293,9 @@ public class Parser {
 		}
 
 		if (currentToken.type.equals(TIMPORT)) {
-			Vector<SymbolTableList> importSymList = new Vector<SymbolTableList>();
 			while (currentToken.type.equals(TIMPORT))
 				try {
-					packageImport(importSymList); // optional 0,n
+					packageImport(); // optional 0,n
 				} catch (IllegalTokenException e) {
 					while (currentToken.type.ordinal() < STRONG_SYM_CB.ordinal())
 						nextToken();
@@ -310,7 +311,7 @@ public class Parser {
 		expectWeak(TSEMICOLON);
 	}
 
-	static private void packageImport(Vector<SymbolTableList> symList) throws IllegalTokenException {
+	static private void packageImport() throws IllegalTokenException {
 		expect(TIMPORT);
 		identifier();
 
@@ -335,12 +336,9 @@ public class Parser {
 		expectWeak(TSEMICOLON);
 
 		SymbolTableList list = new SymbolTableList();
-		new ParseSymbolFile(moduleName, list);
-		symList.add(list);
-		list.printSymbolTable();
-		SymbolTableCell cell = symList.get(0).getGlobalSymbol("ttest");
-		if (cell != null)
-			System.out.println("Symbol a: " + cell.getName() + cell.getType() + cell.isGlobalScope());
+		ParseSymbolFile symFile = new ParseSymbolFile(moduleName, list);
+		CodeGenerator.ObjectTypes.put(moduleName, new TypeDesc(0,list,symFile.sum));
+		//list.printSymbolTable();
 
 	}
 
@@ -357,7 +355,6 @@ public class Parser {
 		} catch (IllegalTokenException e) {
 			e.printStackTrace();
 		}
-
 	}
 
 	/**
@@ -548,10 +545,7 @@ public class Parser {
 		debug1("primitiveDeclaration");
 		TypeDesc type = primitive();
 		identifier();
-
-		// TODO Discuss : wenn id mehr als 2 token, zb.: Parser.methA geht noch
-		// nicht !!
-		// aber bei primitiveDeclaration geht parser.methA doch eh nicht oder ?
+		
 		if (currentToken.type == TEQL) {
 			Item item = assignmentSuffix();
 
@@ -565,7 +559,6 @@ public class Parser {
 		}
 
 		add2SymTable(tokenList.get(1).getIdentValue(), SymbolTableCell.ClassType.var, type, 1);
-		// Store Word
 		CodeGenerator.storeWord(CodeGenerator.symbolTable.getSymbol(tokenList.get(1).value));
 	}
 
@@ -1389,6 +1382,7 @@ public class Parser {
 	static private void identifier() throws IllegalTokenException {
 		expect(TSIDENT);
 		while (currentToken.type == TDOT) {
+			// Util.x
 			expect(TDOT);
 			expect(TSIDENT);
 		}

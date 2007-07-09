@@ -26,6 +26,7 @@ public class ParseSymbolFile extends DefaultHandler {
 	private boolean globalScope = true;
 	private String methodName;
 	private boolean methodMode;
+	public int sum;
 
 	public ParseSymbolFile(String fileName, SymbolTableList list) {
 		ParseSymbolFile.list = list;
@@ -94,8 +95,13 @@ public class ParseSymbolFile extends DefaultHandler {
 			cell = new SymbolTableCell(ClassType.var, globalScope, false);
 		} else if (s.equals("</variable>") || s.equals("</array>")) {
 			if (cell != null) {
-				if (globalScope)
+				if (globalScope){
 					list.add(cell);
+					if(cell.getSize()==0)
+						sum++;
+					else
+						sum+=cell.getSize();
+				}
 				else
 					list.getSymbol(methodName).methodSymbols.add(cell);
 			}
