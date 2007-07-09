@@ -37,6 +37,13 @@ public class SymbolTableCell {
 	public SymbolTableCell() {
 
 	}
+	public SymbolTableCell(ClassType classType,boolean scope,boolean createSublist) {
+		this.classType=classType;
+		this.globalScope=scope;
+		if (createSublist){
+			methodSymbols = new SymbolTableList();
+		}
+	}
 
 	/**
 	 * Needed for method declarations, because size has to be fixed up later
@@ -88,5 +95,26 @@ public class SymbolTableCell {
 
 	public void setGlobalScope(boolean globalScope) {
 		this.globalScope = globalScope;
+	}
+
+	public void setClassType(ClassType classType) {
+		this.classType = classType;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public void setType(String type) {
+		if (type.equals("intT"))
+			this.type=CodeGenerator.INTTYPE;
+		if (type.equals("charT"))
+			this.type=CodeGenerator.CHARTYPE;
+		if (type.equals("boolT"))
+			this.type=CodeGenerator.BOOLTYPE;
+	}
+
+	public void setSize(int size) {
+		this.size = size;
 	}
 }
