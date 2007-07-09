@@ -42,6 +42,7 @@ public class SymbolTableCell {
 		this.globalScope=scope;
 		if (createSublist){
 			methodSymbols = new SymbolTableList();
+			this.classType=ClassType.method;
 		}
 	}
 

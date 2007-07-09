@@ -111,7 +111,7 @@ public class Parser {
 		// break;
 		// }
 
-		CodeGenerator.symbolTable.printSymbolTable();
+		//CodeGenerator.symbolTable.printSymbolTable();
 
 		System.out.println("");
 		System.out.println("Compiling " + args[1] + ".");
@@ -337,7 +337,8 @@ public class Parser {
 		SymbolTableList list = new SymbolTableList();
 		new ParseSymbolFile(moduleName, list);
 		symList.add(list);
-		SymbolTableCell cell = symList.get(0).getGlobalSymbol("i");
+		list.printSymbolTable();
+		SymbolTableCell cell = symList.get(0).getGlobalSymbol("ttest");
 		if (cell != null)
 			System.out.println("Symbol a: " + cell.getName() + cell.getType() + cell.isGlobalScope());
 

@@ -92,7 +92,7 @@ public class ParseSymbolFile extends DefaultHandler {
 	private void addString(String s) throws SAXException {
 		if (s.equals("<variable") || s.equals("<array")) {
 			cell = new SymbolTableCell(ClassType.var, globalScope, false);
-		} else if (s.equals("</variable>") || s.equals("</array>)")) {
+		} else if (s.equals("</variable>") || s.equals("</array>")) {
 			if (cell != null) {
 				if (globalScope)
 					list.add(cell);
@@ -103,11 +103,11 @@ public class ParseSymbolFile extends DefaultHandler {
 			cell = new SymbolTableCell(ClassType.var, true, true);
 			methodMode=true;
 			globalScope = false;
-		} else if (s.equals("</symbolfile>")) {
-			if (globalScope)
-				list.add(cell);
-			else
-				list.getSymbol(methodName).methodSymbols.add(cell);
+//		} else if (s.equals("</symbolfile>")) {
+//			if (globalScope)
+//				list.add(cell);
+//			else
+//				list.getSymbol(methodName).methodSymbols.add(cell);
 		} else if (s.equals("<symbols") && cell != null) {
 			list.add(cell);
 			methodMode=false;
