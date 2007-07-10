@@ -74,8 +74,8 @@ public class ObjectFile {
 						+ ((int) elem.charAt(i + 1) << 16)
 						+ ((int) elem.charAt(i + 2) << 8)
 						+ ((int) elem.charAt(i + 3));
+				file.writeInt(number);
 			}
-			file.writeInt(number);
 			file.writeInt(offset);
 		}
 	}
