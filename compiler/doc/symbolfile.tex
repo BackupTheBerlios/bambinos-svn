@@ -6,11 +6,26 @@ Because the symbolfile is just read one time during compilation, it cannot be
 seen as a performance factor. So we decided to write the symbolfile in
 xml-format as it is a good representation of objects. 
 \subsection{Structure}
-The symbolfile starts with a list of the so-called \emph{module anchors}. Every
+The root-tag of the symbolfile is \emph{<symbolfile>}. After the xml-header and
+the root-tag the symbolfile starts with a list of the so-called \emph{module anchors}. Every
 module anchor represents a module that's imported. In xml-syntax this lookes
-like that: \\
-After that the actual symboltable representation starts. There are 3 different
-elementtypes that can be described here:
+like that:
+\begin{lstlisting}[caption={module anchors}]
+<modules>
+	<module>
+		<name> modulename 1 </name>
+	</module>
+	<module>
+		<name> modulename 2 </name>
+	</module>
+	<module>
+		<name> modulename 3 </name>
+	</module>
+</modules>
+\end{lstlisting}
+
+After the module anchors the actual symboltable representation starts. It is
+enclosed in a \emph{<symbols>}-tag There are 3 different elementtypes that can be described here:
 \begin{itemize}
   \item variables
   \item arrays
@@ -22,6 +37,14 @@ A variable has 2 properties:
   \item one of the primitive datatypes like \emph{boolean}, \emph{int} or \emph{char}
   \item the name of the variable in the sourcecode
 \end{itemize}
+
+\begin{lstlisting}[caption={variables}]
+<variable>
+	<type> type </type>
+	<name> name </name>
+</variable>
+\end{lstlisting}
+
 \subsubsection{arrays}
 An array has 3 properties
 \begin{itemize}
@@ -29,6 +52,15 @@ An array has 3 properties
   \item the name of the variable in the sourcecode
   \item the number of elements in the array
 \end{itemize}
+
+\begin{lstlisting}[caption={arrays}]
+<array>
+	<type> type </type>
+	<name> name </name>
+	<size> size </size>
+</array>
+\end{lstlisting}
+
 \subsubsection{methods}
 An array has 3 properties and contains another symboltable with the parameters
 of the method. 
@@ -39,3 +71,17 @@ of the method.
   \item the number of elements in the array
 \end{itemize}
 So the description of a method is a recursive search through the symboltable.
+
+\begin{lstlisting}[caption={methods}]
+<method>
+	<type> type </type>
+	<name> name </name>
+	<size> size </size>
+	<symbols>
+		<variable>
+			<type> type </type>
+			<name> name </name>
+		<variable>
+	</symbols>
+</method>
+\end{lstlisting}
