@@ -1,0 +1,11 @@
+\section{The scanner}
+\label{scanner}
+The scanner reads a sourcefile and returns all symbols found as tokens. The
+scanner is implemented as a class that is instantiated by the parser. 
+\begin{lstlisting}[caption={read a symbol}]
+Scanner myScanner = new Scanner();
+myScanner.importSource("filename");
+	
+myScanner.getSym(); 
+\end{lstlisting}
+This example returns one token. The valid tokens are defined in the class \emph{Ident}.
