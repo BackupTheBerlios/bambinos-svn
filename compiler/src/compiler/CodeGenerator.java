@@ -404,11 +404,11 @@ public class CodeGenerator {
 			objectFile.file.writeInt(number);
 			HashMap<String, Integer> map = symbolTable.getGlobalSymList();
 			objectFile.file.writeInt(symbolTableLength);
-			objectFile.writeTable(map);
+			objectFile.writeTable(map,true);
 			// lenght of fixup Table
 			objectFile.file.writeInt(getLenghtofTable(fixupTable));
 			// fixup Table
-			objectFile.writeTable(fixupTable);
+			objectFile.writeTable(fixupTable,false);
 			// opCode
 			writeOpCode(objectFile.file);
 			objectFile.file.close();

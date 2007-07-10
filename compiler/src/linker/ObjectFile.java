@@ -60,12 +60,14 @@ public class ObjectFile {
 	 * @param map
 	 * @throws IOException
 	 */
-	public void writeTable(HashMap<String, Integer> map) throws IOException {
-		for ( Map.Entry<String,Integer> e : map.entrySet()) {
-			int number=0;
-			String elem=e.getKey();
-			int offset=e.getValue();
-			elem=elem.concat("=");
+	public void writeTable(HashMap<String, Integer> map, boolean addComp)
+			throws IOException {
+		for (Map.Entry<String, Integer> e : map.entrySet()) {
+			int number = 0;
+			String elem = e.getKey();
+			int offset = e.getValue();
+			if (addComp)
+				elem = elem.concat("=");
 			elem = makeCorrString(elem);
 			for (int i = 0; i < elem.length(); i += 4) {
 				number = ((int) elem.charAt(i) << 24)
@@ -77,13 +79,14 @@ public class ObjectFile {
 			file.writeInt(offset);
 		}
 	}
+
 	// creates Strings which are divisible by 4
 	public String makeCorrString(String x) {
 		int mod = x.length() % 4;
-		if (mod != 0){
+		if (mod != 0) {
 			mod = 4 - mod;
 			while (mod > 0) {
-				x=x.concat("0");
+				x = x.concat("0");
 				mod--;
 			}
 		}
