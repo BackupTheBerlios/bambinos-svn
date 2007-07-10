@@ -105,62 +105,6 @@ public class SymbolFile {
 
 	}
 
-//	/**
-//	 * 
-//	 * @param filename
-//	 * @return SymbolTableList
-//	 */
-//	public SymbolTableList createSymboltableFromFile(String filename) {
-//
-//		DOMParser parser = new DOMParser();
-//
-//		try {
-//
-//			parser.parse(this.filename);
-//
-//			Document doc = parser.getDocument();
-//
-//			Node root = doc.g
-//
-//			NodeList nodes = root.getChildNodes();
-//
-//			for (int i = 0; i < nodes.getLength(); i++) {
-//
-//				if (nodes.item(i).getNodeName() == "modules") {
-//					modules = nodes.item(i).getChildNodes();
-//
-//					for (int j = 0; j < modules.getLength(); j++) {
-//
-//						Node module = modules.item(j);
-//
-//						NodeList moduleParameters = module.getChildNodes();
-//
-//						for (int k = 0; k < moduleParameters.getLength(); k++) {
-//
-//							Node name = moduleParameters.item(k);
-//
-//							if (name.getNodeName().equals("name")) {
-//								System.out.println(name.getNodeValue());
-//								moduleList.addElement(name.getNodeValue());
-//							}
-//
-//						}
-//
-//					}
-//
-//					break;
-//				}
-//			}
-//		} catch (SAXException sax) {
-//			System.out.println("ERROR: Invalid xml-syntax");
-//			return null;
-//		} catch (IOException io) {
-//			System.out.println("ERROR: reading symbolfile");
-//			return null;
-//		}
-//
-//	}
-
 	private String readModuleName(NodeList nodes) {
 		String name = new String();
 

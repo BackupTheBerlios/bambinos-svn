@@ -1,5 +1,6 @@
 package compiler;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.ListIterator;
 import java.util.Vector;
@@ -158,17 +159,6 @@ public class SymbolTableList {
 		symbolFile.appendLine("</symbols>");
 	}
 
-//	public void importModuleAnchors(SymbolFile symbolFile) {
-//		
-//		Vector<String> modules = new Vector<String>();
-//		
-//		modules = symbolFile.readModuleAnchors();
-//		
-//		for (int i = 0; i < modules.size(); i++) {
-//			System.out.println("module: " + modules.elementAt(i));
-//		}
-//	}
-
 	/**
 	 * Identifier for searching is the name of the variable or method ....
 	 * First the global scope will be search, next the last local scope. This means the scope of the last added method.
@@ -220,6 +210,29 @@ public class SymbolTableList {
 		return getSymbol(name);
 	}
 
+	
+	public HashMap<String, Integer> getGlobalSymList(){
+		HashMap<String, Integer> map = new HashMap<String, Integer>();
+		
+		ListIterator<SymbolTableCell> iter = symList.listIterator();
+		int i = 0;
+		int size=0;
+		while (iter.hasNext()) {
+			SymbolTableCell currentCell = iter.next();
+			i++;
+			String name=currentCell.getName().concat("=");
+			int count=name.length();
+			if (count % 4 == 0)
+				size+=name.length()/4+1;
+			else
+				size+=name.length()/4+2;
+			map.put(currentCell.getName(), currentCell.getOffset());
+		}
+		CodeGenerator.symbolTableLength=size;
+		return map;
+	}
+	
+	
 	public void printSymbolTable() {
 		ListIterator<SymbolTableCell> iter = symList.listIterator();
 		System.out.println("Symbol Table:");

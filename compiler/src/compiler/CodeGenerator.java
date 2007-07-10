@@ -1,11 +1,14 @@
 package compiler;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.HashMap;
 import java.util.ListIterator;
 import java.util.Vector;
+
+import linker.ObjectFile;
 
 import compiler.Util.TypeErrorException;
 
@@ -37,7 +40,7 @@ public class CodeGenerator {
 	final static TypeDesc BOOLTYPE = new TypeDesc(2, TypeDesc.DataType.boolT, 1);
 	final static TypeDesc CHARTYPE = new TypeDesc(2, TypeDesc.DataType.charT, 1);
 
-	
+	public static HashMap<String, Integer> fixupTable = new HashMap<String, Integer>();
 	public static HashMap<String, TypeDesc> ObjectTypes = new HashMap<String, TypeDesc>();
 	/*
 	 * Generate array with compile-time TypeDesc for arrays,objects,...
@@ -65,7 +68,9 @@ public class CodeGenerator {
 
 	// some helper, fixup, ... fields
 	private static int methodFix;
-	private static int mainAddr = 0;
+	public static int mainAddr = -50;
+
+	public static int symbolTableLength;
 
 	public static class OpCodeElement {
 		int Instruction;
@@ -99,8 +104,6 @@ public class CodeGenerator {
 		topReg = 0;
 		heap = 0;
 		putOpCode(new OpCodeElement("ADDI", ADDI, SP, 0, 4096));
-		// putOpCode(new OpCodeElement("ADDI", ADDI, FP, 0, 4096));
-
 	}
 
 	public static int getCurrentReg() {
@@ -393,57 +396,117 @@ public class CodeGenerator {
 
 	}
 
-	public static void write2File(String name) {
+	public static void writeObjectFile(String filename) {
+		ObjectFile objectFile = new ObjectFile(filename.concat(".obj"), "rw");
+		try {
+			objectFile.file.writeInt(0);
+			int number = (BSR << 26) + (mainAddr);
+			objectFile.file.writeInt(number);
+			objectFile.writeTable(symbolTable.getGlobalSymList());
+			objectFile.file.writeInt(symbolTableLength);
+			// lenght of fixup Table
+			objectFile.file.writeInt(getLenghtofTable(fixupTable));
+			// fixup Table
+			objectFile.writeTable(fixupTable);
+			// opCode
+			writeOpCode(objectFile.file);
+			objectFile.file.close();
+			System.out.println("Outputfile: " + filename.concat(".obj"));
+			System.out.println("");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+	}
+
+	private static int getLenghtofTable(HashMap<String, Integer> map) {
+		int size = 0;
+		for (String name : map.keySet()) {
+			name = name.concat("=");
+			int count = name.length();
+			if (count % 4 == 0)
+				size += name.length() / 4 + 1;
+			else
+				size += name.length() / 4 + 2;
+		}
+		return size;
+	}
+
+	/**
+	 * if main is available and no Class is importet write binary file, esle
+	 * write object file.
+	 */
+	public static void writeOutputFile(String name) {
+		if (mainAddr != 50 && fixupTable.isEmpty())
+			writeBinaryFile(name);
+		else
+			writeObjectFile(name);
+	}
+
+	public static void writeBinaryFile(String name) {
 
 		File test = new File(name.concat(".bin"));
 		test.delete();
 
+		RandomAccessFile output = null;
 		try {
-			RandomAccessFile output = new RandomAccessFile(name.concat(".bin"),
-					"rw");
+			output = new RandomAccessFile(name.concat(".bin"), "rw");
+		} catch (FileNotFoundException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
 
-			output.writeInt(0);
-
-			for (int i = 0; i < opCode.size(); i++) {
-				int number = 0;
-
-				// F1
-				if (opCode.get(i).Instruction < HIGHEST_FORMAT_1) {
-
-					int sign = 0;
-					if (opCode.get(i).c < 0) {
-						sign = 1;
-						opCode.get(i).c = 0 - opCode.get(i).c;
-					}
-
-					number = (opCode.get(i).Instruction << 26)
-							+ (opCode.get(i).a << 21) + (opCode.get(i).b << 16)
-							+ (sign << 15) + (opCode.get(i).c);
-
-				}
-				// F2
-				else if (opCode.get(i).Instruction < HIGHEST_FORMAT_2)
-					number = (opCode.get(i).Instruction << 26)
-							+ (opCode.get(i).a << 21) + (opCode.get(i).b << 16)
-							+ (opCode.get(i).extra << 5) + (opCode.get(i).c);
-
-				// F3
-				else if (opCode.get(i).Instruction < HIGHEST_FORMAT_3)
-					number = (opCode.get(i).Instruction << 26)
-							+ (opCode.get(i).c);
-
-				output.writeInt(number);
-				Util.debug2("PC " + (i + 1) + "   "
-						+ Integer.toBinaryString(number) + " "
-						+ opCode.get(i).opString + " ("
-						+ opCode.get(i).Instruction + ") " + opCode.get(i).a
-						+ " " + opCode.get(i).b + " " + opCode.get(i).c);
-			}
+		try {
+			output.writeInt(1);
+			writeOpCode(output);
 			output.close();
 			System.out.println("Outputfile: " + name.concat(".bin"));
 			System.out.println("");
-		} catch (IOException io) {
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
+	}
+
+	private static void writeOpCode(RandomAccessFile output) throws IOException {
+		int i = 0;
+		if (mainAddr == -50)
+			i = 1;
+		for (; i < opCode.size(); i++) {
+			int number = 0;
+
+			// F1
+			if (opCode.get(i).Instruction < HIGHEST_FORMAT_1) {
+
+				int sign = 0;
+				if (opCode.get(i).c < 0) {
+					sign = 1;
+					opCode.get(i).c = 0 - opCode.get(i).c;
+				}
+
+				number = (opCode.get(i).Instruction << 26)
+						+ (opCode.get(i).a << 21) + (opCode.get(i).b << 16)
+						+ (sign << 15) + (opCode.get(i).c);
+
+			}
+			// F2
+			else if (opCode.get(i).Instruction < HIGHEST_FORMAT_2)
+				number = (opCode.get(i).Instruction << 26)
+						+ (opCode.get(i).a << 21) + (opCode.get(i).b << 16)
+						+ (opCode.get(i).extra << 5) + (opCode.get(i).c);
+
+			// F3
+			else if (opCode.get(i).Instruction < HIGHEST_FORMAT_3)
+				number = (opCode.get(i).Instruction << 26) + (opCode.get(i).c);
+
+			output.writeInt(number);
+			Util.debug2("PC " + (i + 1) + "   "
+					+ Integer.toBinaryString(number) + " "
+					+ opCode.get(i).opString + " (" + opCode.get(i).Instruction
+					+ ") " + opCode.get(i).a + " " + opCode.get(i).b + " "
+					+ opCode.get(i).c);
 		}
 
 	}
