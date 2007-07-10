@@ -1,7 +1,26 @@
 \documentclass[a4paper,10pt]{article}
 
 \usepackage[T1]{fontenc}
+\usepackage{color, listings}
 
+\lstset{language=[Sharp]C, % Grundsprache ist C und Dialekt ist Sharp (C#)
+basicstyle=\small,
+captionpos=b, % Beschriftung ist unterhalb
+%frame=lines, % Oberhalb und unterhalb des Listings ist eine Linie
+frame=rlub
+basicstyle=\ttfamily, % Schriftart
+keywordstyle=\color{blue}, % Farbe für die Keywords wie public, void, object u.s.w.
+commentstyle=\color{green}, % Farbe der Kommentare
+stringstyle=\color{red}, % Farbe der Zeichenketten
+breaklines=true, % Wordwrap a.k.a. Zeilenumbruch aktiviert
+showstringspaces=false, % emph legt Farben für bestimmte Wörter manuell fest
+emph={double,bool,int,unsigned,char,true,false,void},
+emphstyle=\color{blue},
+emph={Assert,Test},
+emphstyle=\color{red},
+emph={[2]\using,\#define,\#ifdef,\#endif}, 
+emphstyle={[2]\color{blue}}
+}
 
 %\renewcommand{\rmdefault}{ppl} %Palatino
 %\renewcommand{\rmdefault}{cmfib} % computer modern fibonacci 365
@@ -71,6 +90,6 @@ Alle Ausdruecke werden bei uns in der Klasse Symboltable ueberprueft auf Korrekt
 \input{parser.tex}
 \input{memory.tex}
 \input{symbolfile.tex}
-
+\input{objectfile.tex}
 
 \end{document}
