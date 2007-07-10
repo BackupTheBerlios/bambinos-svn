@@ -400,15 +400,19 @@ public class CodeGenerator {
 		ObjectFile objectFile = new ObjectFile(filename.concat(".obj"), "rw");
 		try {
 			objectFile.file.writeInt(0);
-			int number = (BSR << 26) + (mainAddr);
+			int number;
+			if (mainAddr < 0)
+				number = (BSR << 26) + (1 << 25) + (0-mainAddr);
+			else
+				number = (BSR << 26) + (mainAddr);
 			objectFile.file.writeInt(number);
 			HashMap<String, Integer> map = symbolTable.getGlobalSymList();
 			objectFile.file.writeInt(symbolTableLength);
-			objectFile.writeTable(map,true);
+			objectFile.writeTable(map, true);
 			// lenght of fixup Table
 			objectFile.file.writeInt(getLenghtofTable(fixupTable));
 			// fixup Table
-			objectFile.writeTable(fixupTable,false);
+			objectFile.writeTable(fixupTable, false);
 			// opCode
 			writeOpCode(objectFile.file);
 			objectFile.file.close();
