@@ -342,12 +342,12 @@ public class Parser {
 
 			}
 		}
-		moduleName = tokenList.get(tokenList.size() - 1).value + ".sym";
+		moduleName = tokenList.get(tokenList.size() - 1).value;
 		CodeGenerator.symbolTable.addModule(packageName);
 		expectWeak(TSEMICOLON);
 
 		SymbolTableList list = new SymbolTableList();
-		ParseSymbolFile symFile = new ParseSymbolFile(moduleName, list);
+		ParseSymbolFile symFile = new ParseSymbolFile(moduleName + ".sym", list);
 		CodeGenerator.ObjectTypes.put(moduleName, new TypeDesc(0, list,
 				symFile.sum));
 		// list.printSymbolTable();
@@ -705,16 +705,28 @@ public class Parser {
 		debug1("methodCallSuffix");
 		expect(TLPAREN);
 		int procMethod = 0;
-		String abroadClassMember = null;
+		String foreignClassMember = null;
 		// check the proc, the absolute programm counter where the method starts
-		boolean member=true;
+		boolean member = true;
 		if (classMember)
 			procMethod = getIdentifersCell(tokenList.size() - 2).getProc(); // TODO
 		else {
 			procMethod = -55;
-			abroadClassMember = tokenList.get(tokenList.size() - 4).value + "."
+			String className = tokenList.get(tokenList.size() - 4).value;
+			foreignClassMember = className + "."
 					+ tokenList.get(tokenList.size() - 2).value;
-			member=false;
+			// check if class exists
+			if (!CodeGenerator.ObjectTypes.containsKey(className))
+				syntaxError("Module does not exist in line: "
+						+ currentToken.lineNumber);
+			SymbolTableCell cell = CodeGenerator.ObjectTypes.get(className).fields
+					.getGlobalSymbol(tokenList.get(tokenList.size() - 2).value);
+			if (cell == null)
+				syntaxError("Module: " + className
+						+ " does not contain a symbol: "
+						+ tokenList.get(tokenList.size() - 2).value
+						+ " in line: " + currentToken.lineNumber);
+			member = false;
 		}
 
 		if (currentToken.type.startSetExpression()) {
@@ -738,7 +750,7 @@ public class Parser {
 		// Method Call
 		int fixup = CodeGenerator.methodCall(procMethod);
 		if (!member) {
-			CodeGenerator.fixupTable.put(abroadClassMember, fixup);
+			CodeGenerator.fixupTable.put(foreignClassMember, fixup);
 		}
 
 	}
