@@ -402,8 +402,9 @@ public class CodeGenerator {
 			objectFile.file.writeInt(0);
 			int number = (BSR << 26) + (mainAddr);
 			objectFile.file.writeInt(number);
-			objectFile.writeTable(symbolTable.getGlobalSymList());
+			HashMap<String, Integer> map = symbolTable.getGlobalSymList();
 			objectFile.file.writeInt(symbolTableLength);
+			objectFile.writeTable(map);
 			// lenght of fixup Table
 			objectFile.file.writeInt(getLenghtofTable(fixupTable));
 			// fixup Table
