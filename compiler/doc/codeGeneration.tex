@@ -1,0 +1,18 @@
+\section{Code Generation}
+
+\subsection{Expressions}
+
+Expressions act a central part in our compiler. Expressions are used for all kind of assignments, parameters, they are used for size declaration of arrays, for complex boolean and arithmetic expressions. Therefore expressions have to be very flexible and they have to support all kinds of data types. The advantage of such a powerful method is that a programmer can be very flexible in writing code, the disadvantage is that the caller method must do type checking.
+One of our focus, when we implemented our compiler was to be very reliable when compiling expressions. We can compile and evaluate very long and complex expression, we have no limit at all in complexity :) .
+
+At the end of an expression call the value is always put on a register. Boolean expressions are more complicated, see \ref{labelBoolean}. The type of the expression has always to be returned for further type checking. See \ref{labelTypeCheck}.
+
+\subsubsection{Delayed Codegeneration}
+We support delayed code generation for arithmetic expressions.
+
+
+
+\subsection{Boolean Representation}
+\label{labelBoolean}
+
+\subsection{Arrays}
