@@ -2,8 +2,20 @@
 ComPiler compiles code for RISC-based architectures. It has 32 registers each
 with size 32 Bit (4 Byte). Register 0 (R0) has always the value 0. Register 31
 (R31) is reserved for return addresses. In a branch instruction the PC is stored
-in R31. 
-
+in R31. \\
+ 
+\begin{tabular}{|c|}
+\hline
+register 0 \\
+\hline 
+register 1 - 29 \\
+\hline
+instruction register \\
+\hline
+return address \\
+\hline 
+\end{tabular}
+\\
 The instruction register (IR) holds the current instruction being executed. \newline 
 The program counter (PC) contains the address of the instruction to be
 fetched next. \newline
