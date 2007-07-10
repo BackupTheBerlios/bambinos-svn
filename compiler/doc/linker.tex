@@ -1,0 +1,270 @@
+\part{The linker}
+The linker is a intermediate step between processing the sourcecode and executing a
+binary. It combines objectfiles from the compiler to one binary for the virtual
+machine. 
+\\
+A linker is needed if a compiler wants to provide \emph{separate compilation}.
+That means that a program can import methods from a precompiled module. The
+program just needs a symbolfile to find out which methods the module offers. \\
+But a problem arises when the compiler wants to create a binary from the
+program-sourcecode. The compiler knows that the called method exists in the
+module (from the symbolfile) but it doesn't know the content of that method. \\
+So before the program can be executed the linker has to copy the relevant data
+from the affected objectfiles together into one binary. The objectfiles contain
+all the information the linker needs to fullfill that work.    
+
+\section{The objectfile}
+\label{objectfile}
+The objectfile is a intermediate file created by the compiler, that already
+contains generated code and a lot of meta-information. The linker reads this
+objectfile and creates a binaryfile. \\
+The reason for that intermediate step is, that if modules are imported the
+compiler doesn't have all the data he needs to create a valid and executable binary. 
+So the objectfile offers the needed information like the program entry point, which
+methods are loaded from modules and were to find that methods in these modules. \\
+Based in that information the linker can link the compiled code in the
+objectfiles together and create one executable binary.
+
+\subsection{Structure}
+\label{linker:objectfile:structure}
+The structure of an objectfile is quite simple as one can see below. Its basic
+datasize is 32 bit. That means all data except character are represented and 
+stored as 32 bit integers. A character is a 1-byte-value (8-bit). \\
+\begin{figure}[h]
+	\begin{center}
+	
+		\begin{tabular}{|c|}
+			\hline
+			magic word \\
+			\hline 
+			branch instruction to main method \\
+			\hline
+			lenght of offset table \\
+			\hline
+			offset table \\ \\
+			\hline
+			lenght of fixup table \\
+			\hline
+			fixup table \\ \\
+			\hline
+			opCode \\ \\
+			\hline 
+		\end{tabular}
+	
+	\end{center}
+
+\caption{structure of an objectfile}
+\label{linker:objectfile:example:structure}
+
+\end{figure} 
+
+\subsubsection{magic word} 
+\label{linker:objectfile:magic_word}
+The magic word identifies the objectfile. Its value has to be $0$ represented
+by a 32 bit integer value. 
+\subsubsection{branch instruction to main method}
+\label{linker:objectfile:branch_to_main}
+This is an integer-representation of the branch-instruction to the address of
+the main-method in this objectfile. 
+\subsubsection{length of the offset table}
+\label{linker:objectfile:length_offset_table}
+The length of the offset table as a 32 bit integer value. The unit of this value
+is one 32 bit word. 
+\subsubsection{offset table}
+\label{linker:objectfile:offset_table}
+In the offset table variable- or methodnames and their offsets in the current
+module are saved. That means that every exported module element stands in the
+offset table with its name and opCode offset in the modulefile.  \\
+The example in ~\ref{linker:objectfile:example:offset_table} shows the method
+\emph{print}:
+
+\begin{figure}[h]
+	\begin{center}
+		\begin{tabular}{|c|c|c|c|}
+			\hline
+			P &  R & I & N \\
+			\hline
+			T &  = &  0 & 0 \\
+			\hline 
+			\multicolumn{4}{|c|}{value} \\
+			\hline
+			\multicolumn{4}{|c|}{\ldots} \\
+			\hline
+		\end{tabular}
+	\end{center}
+	\caption{offset table}
+	\label{linker:objectfile:example:offset_table}
+\end{figure}
+
+The bytes until the equal-sign form the name of the symbol. The next bytes
+are skipped so that only complete 32 bit words are read (in our example 2 bytes). 
+The next 32 bit word is the offset of the instruction (opCode) for access to that 
+element in the module. The length of the offset table (~\ref{linker:objectfile:length_offset_table})  
+defines how often this operations are performed. 
+
+\subsubsection{length of the fixup table}
+\label{linker:objectfile:length_fixup_table}
+The length of the fixup table as a 32 bit integer value. The unit of this value
+is one 32 bit word. 
+\subsubsection{fixup table}
+\label{linker:objectfile:fixup_table}
+In the fixup table the imported symbols are listed. That means their modulename,
+their name and their offset in the module are stored. \\
+The example in ~\ref{linker:objectfile:example:fixup_table} shows a fixup table
+with the \emph{print}-method from the module \emph{Util}.
+
+\begin{figure}[h]
+		
+	\begin{center}
+		\begin{tabular}{|c|c|c|c|}
+			\hline
+			U & T & I & L \\
+			\hline
+			. & P & R & I \\
+			\hline
+			N & T & = & 0 \\
+			\hline 
+			\multicolumn{4}{|c|}{value} \\
+			\hline
+			\multicolumn{4}{|c|}{\ldots} \\
+			\hline
+		\end{tabular}
+	\end{center}
+	
+	\caption{fixup table}
+	\label{linker:objectfile:example:fixup_table}
+\end{figure}
+The bytes from the beginning to the first dot form the modulename. The following
+bytes to the equals-sign form the symbolname. The next bytes (in our example one
+byte) are skipped so that only 32 bit words are read. \\
+This reading-operation is performed until the number of words in the length of
+the fixup table (~\ref{linker:objectfile:length_fixup_table}) is read.
+
+\section{Processing of the objectfiles}
+\label{linker:objectfile_procession}
+As mentioned above the linker combines one or more objectfiles to one binary for
+execution in the virtual machine.\\ 
+
+\begin{figure}[h]
+
+\begin{tabular}{c c}
+
+		\begin{tabular}{|c|}
+			\hline
+			0 \\
+			\hline 
+			0 \\
+			\hline
+			0 \\
+			\hline
+			\\ \\ \\ \\ \\ \\
+			\hline
+			4 \\
+			\hline
+			% the fixup table
+			\begin{tabular}{|c|c|c|c|}
+				U & T & I & L \\
+				\hline
+				. & P & R & I \\
+				\hline
+				N & T & = & 0 \\
+				\hline 
+				\multicolumn{4}{|c|}{18} \\
+			\end{tabular}
+			% ! the fixup table
+			\\
+			\hline
+			% the opCode
+			\begin{tabular}{c}
+				$ \cdots $ \\
+				\hline
+				line 18: method call for Util.print \\
+				\hline
+				$ \cdots $ \\
+			\end{tabular}
+			% ! the opCode
+			\\
+			\hline 
+		\end{tabular}
+
+		\begin{tabular}{|c|}
+			\hline
+			0 \\
+			\hline 
+			0 \\
+			\hline
+			6 \\
+			\hline
+			% offset table
+			\begin{tabular}{|c|c|c|c|}
+				P & R & I & N \\
+				\hline
+				T &  = &  0 & 0 \\
+				\hline 
+				\multicolumn{4}{|c|}{23} \\
+				\hline
+				C & A & L & C \\
+				\hline
+				= &  0 &  0 & 0 \\
+				\hline 
+				\multicolumn{4}{|c|}{42} \\
+			\end{tabular}
+			% ! offset table
+			\\ 
+			\hline
+			0 \\
+			\hline
+			\\ \\ \\ \\
+			\hline
+			% the opCode
+			\begin{tabular}{c}
+				$ \cdots $ \\
+				\hline
+				line 23: entry point of method print \\
+				\hline
+				$ \cdots $ \\
+			\end{tabular}
+			% ! the opCode
+			\\
+			\hline 
+		\end{tabular}
+
+\end{tabular}
+\caption{The objectfile of the main-module and the util-module}
+\label{linker:example:linker}
+\end{figure}
+
+The example in ~\ref{linker:example:linker} shows what data the linker reads from the
+objectfiles and how this data is processed. \\
+The fixup table from the main-objectfile (left example) shows which information
+must be read from the offset table of the imported objectfile (util-objectfile)
+(right example). The offset-information from the fixup table determines the
+position in the opCode that needs to be updated (18 in our example). 
+That means: \\
+Line 18 of the opCode in the main-module is a call of a method in another module
+(module util, method print). 
+\\
+In the objectfile of that module (util) there is description where to find that
+method. This description lies in the offset table. So the linker knows now where
+the command that has to be fixed in the main-module lies and what information it
+needs.  
+\\
+The information in the offset table is of course relative. How the linker
+creates an absolute position for that method will be described later. 
+
+\section{The binaryfile}
+The binaryfile is an file that can be executed by the virtual machine. It hardly
+provides any meta-information but just executable code (opCode). This file is
+created when a linker links one or more objectfiles together. \\
+The opCode is already created by the compiler and written into the objectfiles.
+The linker copies that opCode together into a binaryfile and fixes
+branchinformation in that opCode. \\
+As we have heared before the opCode in the binary is addressed relatively. That
+means that the first line of code in a module can be the 100th line of code in
+the binary. So we need to fix that addressed, because otherwise
+branch-instructions would point to incorrect addresses. 
+ 
+
+
+\subsection{Structure}
+
