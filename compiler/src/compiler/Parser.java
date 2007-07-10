@@ -707,12 +707,14 @@ public class Parser {
 		int procMethod = 0;
 		String abroadClassMember = null;
 		// check the proc, the absolute programm counter where the method starts
+		boolean member=true;
 		if (classMember)
 			procMethod = getIdentifersCell(tokenList.size() - 2).getProc(); // TODO
-		else if (!classMember) {
+		else {
 			procMethod = -55;
 			abroadClassMember = tokenList.get(tokenList.size() - 4).value + "."
 					+ tokenList.get(tokenList.size() - 2).value;
+			member=false;
 		}
 
 		if (currentToken.type.startSetExpression()) {
@@ -735,7 +737,7 @@ public class Parser {
 
 		// Method Call
 		int fixup = CodeGenerator.methodCall(procMethod);
-		if (!classMember) {
+		if (!member) {
 			CodeGenerator.fixupTable.put(abroadClassMember, fixup);
 		}
 

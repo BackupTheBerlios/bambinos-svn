@@ -13,9 +13,8 @@ public class SymbolTableCell {
 	SymbolTableList methodSymbols;
 	private int proc; // program counter of methods (needed in opcode)
 	private int offset; //offset is negative , (wirth names it val)
-	private int size; // in 4 bytes
+	private int size; // in words(4 bytes)
 	private boolean globalScope;
-	private int objectDesc; // a unique number that describes the type of the table-entry. 
 	
 
 	public SymbolTableCell(String name, ClassType classType, TypeDesc type,
@@ -30,7 +29,6 @@ public class SymbolTableCell {
 		this.offset = offset;
 		this.size = size;
 		this.globalScope=globalScope;
-		this.objectDesc = 0;
 
 	}
 

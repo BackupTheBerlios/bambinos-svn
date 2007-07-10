@@ -438,7 +438,7 @@ public class CodeGenerator {
 	 * write object file.
 	 */
 	public static void writeOutputFile(String name) {
-		if (mainAddr != 50 && fixupTable.isEmpty())
+		if (mainAddr != -50 && fixupTable.isEmpty())
 			writeBinaryFile(name);
 		else
 			writeObjectFile(name);
