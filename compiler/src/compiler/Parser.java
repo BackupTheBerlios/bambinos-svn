@@ -728,7 +728,7 @@ public class Parser {
 		// Method Call
 		int fixup = CodeGenerator.methodCall(procMethod);
 		if (!member) {
-			CodeGenerator.fixupTable.put(foreignClassMember, fixup);
+			CodeGenerator.fixupTable.put(foreignClassMember, fixup+1);
 		}
 		return returnItem;
 
