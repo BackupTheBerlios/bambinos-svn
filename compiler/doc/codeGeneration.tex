@@ -2,17 +2,231 @@
 
 \subsection{Expressions}
 
-Expressions act a central part in our compiler. Expressions are used for all kind of assignments, parameters, they are used for size declaration of arrays, for complex boolean and arithmetic expressions. Therefore expressions have to be very flexible and they have to support all kinds of data types. The advantage of such a powerful method is that a programmer can be very flexible in writing code, the disadvantage is that the caller method must do type checking.
-One of our focus, when we implemented our compiler was to be very reliable when compiling expressions. We can compile and evaluate very long and complex expression, we have no limit at all in complexity :) .
+Expressions act a central part in our compiler. Expressions are used for all kind of assignments, parameters, 
+they are used for size declaration of arrays, for complex boolean and arithmetic expressions. 
+Therefore expressions have to be very flexible and have to support all kinds of data types. 
+The advantage of such a powerful method is that a programmer can be very flexible in writing code, 
+the disadvantage is it is possible to create unstable code. Therefore the caller method has always to do a type check.
+One of our focus, when we implemented our compiler was to be very reliable when compiling expressions.
+We can compile and evaluate very long and complex expression, we have no limit at all in complexity :) .
 
-At the end of an expression call the value is always put on a register. Boolean expressions are more complicated, see \ref{labelBoolean}. The type of the expression has always to be returned for further type checking. See \ref{labelTypeCheck}.
+At the end of an expression we return an Item which holds status information about the expression.
+This information can be:
+\begin{itemize}
+  \item value of the expression is already in a Register (when a operation occurred)
+  \item expression is a constant
+  \item expression is a variable
+  \item the return Item does always contain the type of the expression too, see \ref{labelTypeCheck}.
+\end{itemize}
+Boolean expressions are more complicated, see \ref{labelBoolean}. 
 
-\subsubsection{Delayed Codegeneration}
-We support delayed code generation for arithmetic expressions.
+\subsubsection{Delayed codegeneration}
+We support delayed code generation for arithmetic expressions. It is often unnecessary to load constants immediately to a register.
+Consider following example $(3 + 4) * x$, without delayed code generation every constant is loaded into a register:
+\begin{quote}
+\begin{tabbing}
+erste \= Spaltes\=  st sehr breit Spalte\=vierte \kill
+\>ADDI \> 1,0,3\>R1:=3\\
+\>ADDI \> 2,0,1\>R2:=4\\
+\>ADD \>1,1,2\>R1:=R1+R2\\
+\>LDW \> 1,0,x\>R2:=x\\
+\>MUL \>1,1,2\>R1:=R1*R2\\
+\end{tabbing}
+\end{quote}
+The same example with delayed code generation, $(3+4)$ will be calculated by the compiler (constant folding):
+\begin{quote}
+\begin{tabbing}
+erste \= Spaltes\=  st sehr breit Spalte\=vierte \kill
+\>LDW \> 1,0,x\>R1:=x\\
+\>MULI \>1,0,7\>R1:=R1*7\\
+\end{tabbing}
+\end{quote}
 
-
-
-\subsection{Boolean Representation}
+\subsection{Boolean representation}
 \label{labelBoolean}
+We support a conditional and a repeated statement which both needs boolean expressions. Boolean expressions can be:
+\begin{itemize}
+  \item on of the key words \texttt{true} or \texttt{false},
+  \item a boolean variable,
+  \item a relation ($==$,$<=$,$>=$,$<$,$>$,$!=$),
+  \item in addition boolean expressions can contain boolean operations AND ($ \&\& $)  and OR ($||$). 
+\end{itemize}
+
+\subsubsection{Default output of relations}
+For simple expressions which contains a relation in it, we generator output code adequate for the AND operator:
+The relation $(a<b)$ is leading to following output:
+\begin{quote}
+\begin{tabbing}
+erste \= Spaltes\=  Jump\= Spaltes \kill
+\>CMP\>a,b\\
+\>BGE\>\>F(alse Jump)\\
+\end{tabbing}
+\end{quote}
+
+\subsubsection{Nested boolean expression}
+We implemented different levels for nested boolean expressions.
+Consider following expression: 
+\begin{quote}
+$\underbrace{(\underbrace{\underbrace{(a<b)}_{3}\&\&\underbrace{(b<c)}_{3}}_{2})||(\ldots)}_1 $
+\end{quote}
+The operator $ \&\& $ has only permission to edit already generated output code of the same level or of deeper levels. When a
+boolean operation has edit a certain output code $x$ the level of $x$ will be decreased. When $ \&\& $ is finished in the example above,
+then all output code statements will be of the same level as $ \&\& $. This ensures that operations following the OR $||$ operator where the
+$\ldots$ are can not edit previous output code.
+That way we need brackets for a completed sub-expression and $||$ does not bind stronger than $ \&\& $. We did not improve this since we
+have limited time for our compiler development.
+
+\subsubsection{Editing rules for boolean expressions}
+\begin{enumerate}
+  \item (default)
+  \begin{quote}
+	\begin{tabbing}
+	xxxxxxxxxSpalteserste \= Spaltes\=  Jump\= Spaltes \kill
+	$(a<b)$\>CMP\>a,b\\
+	\>BGE\>\>F(alse Jump)\\
+	\end{tabbing}
+	\end{quote}
+OR changes the precending control instruction when it has a false jump. It inverts the control instruction and changes the false into a true
+  jump.
+    \begin{quote}
+	\begin{tabbing}
+	xxxxxxxxxSpalteserste \= Spaltes\=  Jump\= Spaltes \kill
+	$(a<b) || $\>CMP\>a,b\\
+	\>BLT\>\>T(rue Jump)\\
+	\end{tabbing}
+	\end{quote}
+\begin{verbatim}
+
+\end{verbatim}
+    \item
+    
+  \begin{quote}
+	\begin{tabbing}
+	xxxxxxxxxSpalteserste \= Spaltes\=  Jump\= Spaltes \kill
+	$((a<b) \&\&  (b<d))$\>CMP\>a,b\\
+	\>BGE\>\>F(alse Jump)\\
+	\>CMP\>b,d\\
+	\>BGE\>\>F(alse Jump)\\
+	\end{tabbing}
+	\end{quote}
+      The operator OR changes the precending control instruction at position x, as described above. In addition it changes all False
+      instructions at position < x to the programm counter next to $||$.  
+  \begin{quote}
+	\begin{tabbing}
+	xxxxxxxxxSpalteserste \= Spaltes\=  Jump\= Spaltes \kill
+	$((a<b) \&\&  (b<d))||$\>CMP\>a,b\\
+	\>BGE\>\>next instruction after $||$\\
+	\>CMP\>b,d\\
+	\>BLT\>\>T(rue Jump)\\
+	\end{tabbing}
+	\end{quote}
+\begin{verbatim}
+
+\end{verbatim}
+
+  \item   
+  \begin{quote}
+	\begin{tabbing}
+	xxxxxxxxxSpalteserste \= Spaltes\=  Jump\= Spaltes \kill
+	$((a<b) ||  (b<d))||$\>CMP\>a,b\\
+	\>BLT\>\>T(rue Jump)\\
+	\>CMP\>b,d\\
+	\>BGE\>\>F(alse Jump)\\
+	\end{tabbing}
+	\end{quote}
+The boolean operator OR does only change the precending control instruction as described in the first rule.
+  \begin{quote}
+	\begin{tabbing}
+	xxxxxxxxxSpalteserste \= Spaltes\=  Jump\= Spaltes \kill
+	$((a<b) ||  (b<d))||$\>CMP\>a,b\\
+	\>BLT\>\>T(rue Jump)\\
+	\>CMP\>b,d\\
+	\>BLT\>\>T(rue) Jump)\\
+	\end{tabbing}
+	\end{quote}
+\end{enumerate}
+The AND operator works analogous, only true and false are inverted. The left false and true jumps which are not fixed at the end of the
+expression will be fixed in the condition or repeated statements. Our rules works
+really good, we can parse every expression independent of the complexity. We tested expressions with a level of 10 and more. \begin{small}
+                                                          Idea copyright by team ComPiler :)
+                                                          \end{small}
+Worth notifying is that $\&\&$ works same as in Java when the first
+expression is false the second one will not be evaluated. Analogous works $||$.
+\subsection{Modules}
+We support seperate compilation and we can call functions of a foreign class when the class is beeing imported.
+
+\subsection{Methods}
+Methods are one of the most important tool for structuring programms. The methods we can compile can have parameters and a return value. The
+parameter can be of any kind of types (primitive,object). Our methods are able to hold local variables according to local hiding principle.
+The steps a method goes through in our compiler:
+\begin{itemize}
+  \item When the parser recognize a method declaration the method gets an entry (cell $x$) in the global symbol table (\ref{labelSymboltable}).
+  \item The return type will be recognized and stored as the method's type in the cell $x$. When a module serves as return
+  type, then the module must have been imported. If no return type is declared a syntax errror will be printed.
+  \item Next, the parameters are parsed and for each parameter an entry in the methods separate symbol table is created. The offset of the
+  parameters is a positive value. 
+  \item The methods prolog is executed  TODO LINK and the program counter of the prolog start is stored in cell $x$ of the global
+  symboltable. The programmcounter is needed for further method calls. 
+  \item Next, method's body will get parsed. All new symbols which are declared are stored in the sub- symbol list of the method. These
+  local variables have a negative offset and is relative to cell $x$ of the method.
+  \item At the end of the body we calculate the size of the method. We sum the size of the elements in the local symbol table and
+  store the value into cell $x$ of the global symbol table.
+  \item The methods epilog is executed. TODO LINK
+  \item At this moment the method is ready to be called, recursive calls are possible too.
+\end{itemize}
+\begin{verbatim}
+
+\end{verbatim}
+\begin{quote}
+Method's Prolog: \\
+\begin{itemize}
+  \item push return adress from the link register (R31) onto the stack
+  \item push frame pointer (R29) onto the stack
+  \item move frame pionter onto the current stack pointer
+  \item decrease stack pointer with the size of the method (sum of local variables) 
+\end{itemize}
+\end{quote}
+\begin{verbatim}
+
+\end{verbatim}
+
+\begin{quote}
+Method's Epilog: \\
+\begin{itemize}
+  \item move the stack pointer (R30) to the current frame pointer. Thats the advantage of the stack, we just move the stack pointer and the
+  memory is free.
+  \item pop, write back the old frame pointer
+  \item pop, write back the old return adress
+  \item jump to the return adress and continue
+\end{itemize}
+\end{quote}
+\begin{quote}
+\begin{verbatim}
+
+\end{verbatim}
+Method Call: \\
+\begin{itemize}
+  \item put paramaters onto the stack
+  \item branch to method
+\end{itemize}
+
+\end{quote}
 
 \subsection{Arrays}
+\label{labelArrays}
+In our compiler an array is represented as several variables of the specified type, as many as the size of the array is. We implemented arrays
+in an early stage of our compiler, at this stage we did not have moduls. The advantage of this implementation is that it is simple and
+sufficient, the disadvantage is that we have no operations on arrays. \\
+An array declaration has to be one this:
+\begin{lstlisting}[caption={array declaration}]
+dataType[] name = new dataType[expression];
+dataType[] name = dataType[expression];
+\end{lstlisting}
+\paragraph{}When parsing an array declaration the type and size of the array will be stored in the symbol table. Arrays can be
+local and global. To store new elements in the array they have to be, of course be of the same type. In addition we check we check the
+index bounds when writing or accesing an element of an array at compile time.  
+
+
+
+
+
