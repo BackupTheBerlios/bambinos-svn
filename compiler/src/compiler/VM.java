@@ -209,7 +209,7 @@ public class VM {
 			
 			// if the binary file starts with our magic word, the file is read into memory. 
 			// otherwise the memory remains empty
-			if (magicWord == 0) {
+			if (magicWord == 1) {
 				
 				while (currentInstruction != null) {
 					integerCurrentInstruction = file.readInt();
