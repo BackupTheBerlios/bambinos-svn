@@ -467,8 +467,6 @@ public class CodeGenerator {
 
 	private static void writeOpCode(RandomAccessFile output) throws IOException {
 		int i = 0;
-		if (mainAddr == -50)
-			i = 1;
 		for (; i < opCode.size(); i++) {
 			int number = 0;
 
