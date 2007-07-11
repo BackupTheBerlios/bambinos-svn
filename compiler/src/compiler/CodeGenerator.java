@@ -6,9 +6,11 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.ListIterator;
 import java.util.Vector;
 
+import linker.FixupTableElement;
 import linker.ObjectFile;
 
 import compiler.Util.TypeErrorException;
@@ -41,7 +43,7 @@ public class CodeGenerator {
 	final static TypeDesc BOOLTYPE = new TypeDesc(2, TypeDesc.DataType.boolT, 1);
 	final static TypeDesc CHARTYPE = new TypeDesc(2, TypeDesc.DataType.charT, 1);
 
-	public static HashMap<String, Integer> fixupTable = new HashMap<String, Integer>();
+	public static Vector<FixupTableElement> fixupTable = new Vector<FixupTableElement>();
 	public static HashMap<String, TypeDesc> ObjectTypes = new HashMap<String, TypeDesc>();
 	/*
 	 * Generate array with compile-time TypeDesc for arrays,objects,...
@@ -409,11 +411,11 @@ public class CodeGenerator {
 			objectFile.file.writeInt(number);
 			HashMap<String, Integer> map = symbolTable.getGlobalSymList();
 			objectFile.file.writeInt(symbolTableLength);
-			objectFile.writeTable(map, true);
+			objectFile.writeTable(map);
 			// lenght of fixup Table
 			objectFile.file.writeInt(getLenghtofTable(fixupTable));
 			// fixup Table
-			objectFile.writeTable(fixupTable, true);
+			objectFile.writeTable(fixupTable);
 			// opCode
 			writeOpCode(objectFile.file);
 			objectFile.file.close();
@@ -426,9 +428,10 @@ public class CodeGenerator {
 
 	}
 
-	private static int getLenghtofTable(HashMap<String, Integer> map) {
+	private static int getLenghtofTable(Vector<FixupTableElement> map) {
 		int size = 0;
-		for (String name : map.keySet()) {
+		for (int i=0;i<map.size();i++) {
+			String name=map.get(i).module;
 			name = name.concat("=");
 			int count = name.length();
 			if (count % 4 == 0)

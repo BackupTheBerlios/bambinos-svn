@@ -42,7 +42,7 @@ public class ObjectFile {
 
 			this.moduleName = getModuleName(filename);
 			this.file = openFile(filename, mode);
-			
+
 		} else {
 			return;
 		}
@@ -57,6 +57,7 @@ public class ObjectFile {
 		}
 
 	}
+
 	/**
 	 * Extracts the modulename from a filename. That means the path and the file-ending are cut
 	 * @param filename
@@ -64,38 +65,50 @@ public class ObjectFile {
 	 * @author lacki
 	 */
 	private String getModuleName(String filename) {
-		
+
 		String moduleName = new String();
-		
+
 		filename = filename.split("\\.")[0];
 		String[] pathElements = filename.split(File.separator);
-		
-		moduleName = pathElements[pathElements.length-1];
-		
+
+		moduleName = pathElements[pathElements.length - 1];
+
 		return moduleName;
-		
+
 	}
-	
+
 	/**
 	 * writes the Symbol and the fixup Table into the object file
 	 * 
 	 * @param map
 	 * @throws IOException
 	 */
-	public void writeTable(HashMap<String, Integer> map, boolean addComp)
-			throws IOException {
+	public void writeTable(HashMap<String, Integer> map) throws IOException {
 		for (Map.Entry<String, Integer> e : map.entrySet()) {
 			int number = 0;
 			String elem = e.getKey();
 			int offset = e.getValue();
-			if (addComp)
-				elem = elem.concat("=");
+			elem = elem.concat("=");
 			elem = makeCorrString(elem);
 			for (int i = 0; i < elem.length(); i += 4) {
-				number = ((int) elem.charAt(i) << 24)
-						+ ((int) elem.charAt(i + 1) << 16)
-						+ ((int) elem.charAt(i + 2) << 8)
-						+ ((int) elem.charAt(i + 3));
+				number = ((int) elem.charAt(i) << 24) + ((int) elem.charAt(i + 1) << 16) +
+						((int) elem.charAt(i + 2) << 8) + ((int) elem.charAt(i + 3));
+				file.writeInt(number);
+			}
+			file.writeInt(offset);
+		}
+	}
+
+	public void writeTable(Vector<FixupTableElement> map) throws IOException {
+		for (int i = 0; i < map.size(); i++) {
+			int number = 0;
+			String elem = map.get(i).module;
+			int offset = map.get(i).offset;
+			elem = elem.concat("=");
+			elem = makeCorrString(elem);
+			for (int j = 0; j < elem.length(); j += 4) {
+				number = ((int) elem.charAt(j) << 24) + ((int) elem.charAt(j + 1) << 16) +
+						((int) elem.charAt(j + 2) << 8) + ((int) elem.charAt(j + 3));
 				file.writeInt(number);
 			}
 			file.writeInt(offset);
@@ -126,12 +139,11 @@ public class ObjectFile {
 
 		// Writes the class property magicWord
 		if (magicWord != null) {
-			
+
 			if (magicWord != 0) {
 				return INVALID_MAGIC_WORD;
 			}
-			
-			
+
 			this.magicWord = magicWord;
 		} else {
 			return INVALID_MAGIC_WORD;
@@ -214,8 +226,7 @@ public class ObjectFile {
 			pathElements = path.split("\\.");
 
 			if (pathElements.length != 2) {
-				System.out
-						.println("Error while reading fixupTable. Invalid file syntax.");
+				System.out.println("Error while reading fixupTable. Invalid file syntax.");
 				return null;
 			}
 
@@ -234,13 +245,11 @@ public class ObjectFile {
 
 		// the Vector that contains the FixupTableElements is traversed into an
 		// array
-		FixupTableElement[] fixupTable = new FixupTableElement[tmpFixupTableElements
-				.size()];
-		
+		FixupTableElement[] fixupTable = new FixupTableElement[tmpFixupTableElements.size()];
+
 		for (int i = 0; i < tmpFixupTableElements.size(); i++) {
 			fixupTable[i] = tmpFixupTableElements.elementAt(i);
 		}
-		
 
 		return fixupTable;
 	}
@@ -282,9 +291,8 @@ public class ObjectFile {
 
 		// the Vector that contains the OffsetTableElements is traversed into an
 		// array
-		OffsetTableElement[] offsetTable = new OffsetTableElement[tmpOffsetTableElements
-				.size()];
-		
+		OffsetTableElement[] offsetTable = new OffsetTableElement[tmpOffsetTableElements.size()];
+
 		for (int i = 0; i < tmpOffsetTableElements.size(); i++) {
 			offsetTable[i] = tmpOffsetTableElements.elementAt(i);
 		}
@@ -315,11 +323,11 @@ public class ObjectFile {
 		}
 
 		Integer[] opCode = new Integer[tmpOpCode.size()];
-		
+
 		for (int i = 0; i < tmpOpCode.size(); i++) {
 			opCode[i] = tmpOpCode.elementAt(i);
 		}
-		
+
 		//opCode = (Integer[]) tmpOpCode.toArray();
 
 		return opCode;
@@ -345,7 +353,7 @@ public class ObjectFile {
 			value = value + (char) currentByte;
 			currentByte = readNextByte();
 		}
-		
+
 		// the equals-sign needs to be added to the read-bytes
 		bytesRead++;
 
@@ -354,7 +362,7 @@ public class ObjectFile {
 		// assure that we have read full words
 		int bytesToRead = bytesRead % 4;
 		bytesToRead = 4 - bytesToRead;
-		
+
 		for (int i = 0; i < bytesToRead; i++) {
 			readNextByte();
 		}
@@ -373,6 +381,7 @@ public class ObjectFile {
 
 		try {
 			currentWord = this.file.readInt();
+			System.out.println(currentWord);
 			return currentWord;
 		} catch (EOFException eof) {
 			return null;
@@ -417,8 +426,7 @@ public class ObjectFile {
 			this.file.seek(offset * 4);
 
 		} catch (IOException io) {
-			System.out
-					.println("Cannot set filepointer to specified position in objectFile");
+			System.out.println("Cannot set filepointer to specified position in objectFile");
 		}
 
 	}
@@ -434,15 +442,14 @@ public class ObjectFile {
 
 		try {
 			currentOffset = this.file.getFilePointer();
-			
+
 			if ((currentOffset % 4) == 0) {
 				return currentOffset / 4;
 			} else {
 				System.out.println("Invalid objectFile structure");
 				return -1;
 			}
-			
-			
+
 		} catch (IOException io) {
 			System.out.println("An error occurred while reading objectFile");
 			return -1;

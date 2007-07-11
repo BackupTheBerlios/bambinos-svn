@@ -61,6 +61,8 @@ import java.util.LinkedList;
 import java.util.Stack;
 import java.util.Vector;
 
+import linker.FixupTableElement;
+
 import compiler.Ident.TokenID;
 import compiler.SymbolTableCell.ClassType;
 import compiler.Util.IllegalTokenException;
@@ -728,7 +730,7 @@ public class Parser {
 		// Method Call
 		int fixup = CodeGenerator.methodCall(procMethod);
 		if (!member) {
-			CodeGenerator.fixupTable.put(foreignClassMember, fixup+1);
+			CodeGenerator.fixupTable.add(new FixupTableElement(foreignClassMember, fixup+1));
 		}
 		return returnItem;
 
