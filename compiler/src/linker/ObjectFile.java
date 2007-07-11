@@ -1,6 +1,7 @@
 package linker;
 
 import java.io.EOFException;
+import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.HashMap;
@@ -9,7 +10,9 @@ import java.util.Vector;
 
 public class ObjectFile {
 
+	public String moduleName;
 	public Integer magicWord;
+	public Integer mainInstruction;
 	public int offsetTableSize;
 	public int fixupTableSize;
 
@@ -37,8 +40,9 @@ public class ObjectFile {
 
 		if ((mode.equals("r")) || (mode.equals("rw"))) {
 
+			this.moduleName = getModuleName(filename);
 			this.file = openFile(filename, mode);
-
+			
 		} else {
 			return;
 		}
@@ -53,7 +57,25 @@ public class ObjectFile {
 		}
 
 	}
-
+	/**
+	 * Extracts the modulename from a filename. That means the path and the file-ending are cut
+	 * @param filename
+	 * @return modulename
+	 * @author lacki
+	 */
+	private String getModuleName(String filename) {
+		
+		String moduleName = new String();
+		
+		filename = filename.split("\\.")[0];
+		String[] pathElements = filename.split(File.separator);
+		
+		moduleName = pathElements[pathElements.length-1];
+		
+		return moduleName;
+		
+	}
+	
 	/**
 	 * writes the Symbol and the fixup Table into the object file
 	 * 
@@ -104,13 +126,19 @@ public class ObjectFile {
 
 		// Writes the class property magicWord
 		if (magicWord != null) {
+			
+			if (magicWord != 0) {
+				return INVALID_MAGIC_WORD;
+			}
+			
+			
 			this.magicWord = magicWord;
 		} else {
 			return INVALID_MAGIC_WORD;
 		}
 
 		// Skips the jump-to-main-method command (BSR xxx) (4 bytes)
-		readNextWord();
+		this.mainInstruction = readNextWord();
 
 		// reads the length of the offsetTable (length is in words)
 		Integer offsetTableSize = readNextWord();
@@ -183,7 +211,7 @@ public class ObjectFile {
 
 			path = readStringFromFile('=');
 
-			pathElements = path.split(".");
+			pathElements = path.split("\\.");
 
 			if (pathElements.length != 2) {
 				System.out
@@ -208,7 +236,11 @@ public class ObjectFile {
 		// array
 		FixupTableElement[] fixupTable = new FixupTableElement[tmpFixupTableElements
 				.size()];
-		fixupTable = (FixupTableElement[]) tmpFixupTableElements.toArray();
+		
+		for (int i = 0; i < tmpFixupTableElements.size(); i++) {
+			fixupTable[i] = tmpFixupTableElements.elementAt(i);
+		}
+		
 
 		return fixupTable;
 	}
@@ -252,7 +284,10 @@ public class ObjectFile {
 		// array
 		OffsetTableElement[] offsetTable = new OffsetTableElement[tmpOffsetTableElements
 				.size()];
-		offsetTable = (OffsetTableElement[]) tmpOffsetTableElements.toArray();
+		
+		for (int i = 0; i < tmpOffsetTableElements.size(); i++) {
+			offsetTable[i] = tmpOffsetTableElements.elementAt(i);
+		}
 
 		return offsetTable;
 
@@ -280,7 +315,12 @@ public class ObjectFile {
 		}
 
 		Integer[] opCode = new Integer[tmpOpCode.size()];
-		opCode = (Integer[]) tmpOpCode.toArray();
+		
+		for (int i = 0; i < tmpOpCode.size(); i++) {
+			opCode[i] = tmpOpCode.elementAt(i);
+		}
+		
+		//opCode = (Integer[]) tmpOpCode.toArray();
 
 		return opCode;
 	}
@@ -305,11 +345,16 @@ public class ObjectFile {
 			value = value + (char) currentByte;
 			currentByte = readNextByte();
 		}
+		
+		// the equals-sign needs to be added to the read-bytes
+		bytesRead++;
 
 		// bytesRead indicates how many bytes were read.
 		// since we are wordaligned we need to read some additional bytes to
 		// assure that we have read full words
 		int bytesToRead = bytesRead % 4;
+		bytesToRead = 4 - bytesToRead;
+		
 		for (int i = 0; i < bytesToRead; i++) {
 			readNextByte();
 		}
@@ -369,7 +414,7 @@ public class ObjectFile {
 
 		try {
 
-			this.file.seek(offset);
+			this.file.seek(offset * 4);
 
 		} catch (IOException io) {
 			System.out
@@ -389,7 +434,15 @@ public class ObjectFile {
 
 		try {
 			currentOffset = this.file.getFilePointer();
-			return currentOffset;
+			
+			if ((currentOffset % 4) == 0) {
+				return currentOffset / 4;
+			} else {
+				System.out.println("Invalid objectFile structure");
+				return -1;
+			}
+			
+			
 		} catch (IOException io) {
 			System.out.println("An error occurred while reading objectFile");
 			return -1;
