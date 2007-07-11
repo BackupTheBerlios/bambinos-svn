@@ -7,7 +7,7 @@ public class Util {
 	//private static boolean debug1 = true; // default
 
 	//print opCode and Code Generation Stuff
-	private static boolean debug2 = false; // default
+	private static boolean debug2 = true; // default
 	//debug2 = true; // default
 	
 	

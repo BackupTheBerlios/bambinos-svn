@@ -314,7 +314,22 @@ public class VM {
 				
 			// format 3 instructions
 			} else if ((opCode > HIGHEST_FORMAT_2) && (opCode <= HIGHEST_FORMAT_3)) {
-				targetValue = currentInstruction & 67108863; 
+							
+				// targetValue sind die ersten 25 bit
+				targetValue = currentInstruction & 33554431;
+				
+				if (targetValue == 55) {
+					System.out.println(123);
+				}
+				
+				// signBit ist das 26ste Bit. Wenn es 1 ist, ist die Zahl negativ, sonst positiv
+				signBit = currentInstruction & 33554432;
+				signBit = signBit >>> 25;
+				
+				if (signBit == 1) {
+					targetValue = targetValue * (-1);
+				}
+				
 				firstSourceValue = 0;
 				firstSourceValue = 0;
 				secondSourceValue = 0;
@@ -1094,7 +1109,7 @@ public class VM {
 		if (registers[r2] != null) {
 			int intValue = registers[r2];
 			
-			outputDisplay.append(intValue + " ");
+			outputDisplay.append(intValue + " " + "\n");
 			System.out.println(intValue);
 		}	
 		
@@ -1110,7 +1125,7 @@ public class VM {
 			int intValue = registers[r2];
 			char charValue = (char)intValue;
 			
-			outputDisplay.append(charValue + " ");
+			outputDisplay.append(charValue + " " + "\n");
 			System.out.println(charValue);
 					
 		}	
@@ -1135,7 +1150,7 @@ public class VM {
 			}
 			
 			if (booleanValueRepresentation.equals("") == false) {
-				outputDisplay.append(booleanValueRepresentation);
+				outputDisplay.append(booleanValueRepresentation + "\n");
 				System.out.println(booleanValueRepresentation);
 			}
 			
