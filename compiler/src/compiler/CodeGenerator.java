@@ -464,7 +464,7 @@ public class CodeGenerator {
 		}
 
 		try {
-			output.writeInt(0);
+			output.writeInt(1);
 			writeOpCode(output);
 			output.close();
 			System.out.println("Outputfile: " + name.concat(".bin"));
