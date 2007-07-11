@@ -411,7 +411,7 @@ public class CodeGenerator {
 			objectFile.file.writeInt(symbolTableLength);
 			objectFile.writeTable(map, true);
 			// lenght of fixup Table
-			objectFile.file.writeInt(getLenghtofTable(fixupTable)-1);
+			objectFile.file.writeInt(getLenghtofTable(fixupTable));
 			// fixup Table
 			objectFile.writeTable(fixupTable, true);
 			// opCode
