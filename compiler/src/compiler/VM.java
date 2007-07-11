@@ -1104,6 +1104,7 @@ public class VM {
 		
 		if (debug) {
 			instructionDisplay.append("PRNI " + registers[r0] + ", " + registers[r1] + ", " +  registers[r2]);
+			instructionDisplay.append("\n");
 		}
 		
 		if (registers[r2] != null) {
@@ -1119,6 +1120,7 @@ public class VM {
 
 		if (debug) {
 			instructionDisplay.append("PRNC " + registers[r0] + ", " + registers[r1] + ", " +  registers[r2]);
+			instructionDisplay.append("\n");
 		}
 		
 		if (registers[r2] != null) {
@@ -1136,6 +1138,7 @@ public class VM {
 
 		if (debug) {
 			instructionDisplay.append("PRNB " + registers[r0] + ", " + registers[r1] + ", " +  registers[r2]);
+			instructionDisplay.append("\n");
 		}
 		
 		String booleanValueRepresentation = new String();
@@ -1165,8 +1168,22 @@ public class VM {
 			instructionDisplay.append("\n");
 		}
 		
-		registers[31] = PC;
-		PC = jumpAddress; 
+		// the jumpAddress is (-1) marks the exit-symbol. The execution of the vm stops
+		if (jumpAddress == (-1)) {
+			if (debug) {
+				instructionDisplay.append("Exit symbol found...exiting");
+				instructionDisplay.append("\n");
+			}
+			
+			PC = null;
+			
+		// otherwise the standard bsr instruction is executed
+		} else {
+			
+			registers[31] = PC;
+			PC = jumpAddress; 
+		}
+		
 		
 		
 	}
