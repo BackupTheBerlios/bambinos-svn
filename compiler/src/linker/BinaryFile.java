@@ -15,10 +15,15 @@ public class BinaryFile {
 	private ObjectFile mainModule;
 	private String filename = new String();
 	
+	private final Integer header = 1;
+	
 	public BinaryFile(ObjectFile mainModule) {
 		
 		this.moduleList = new Hashtable<String, Integer>();
 		this.instructions = new Vector();
+		
+		// writes the header to the instructions (so that the first instruction starts with 1)
+		this.instructions.add(this.header);
 		
 		this.mainModule = mainModule;
 		
@@ -57,14 +62,17 @@ public class BinaryFile {
 					
 					// offset of the imported module
 					Integer importedModuleOffset = moduleList.get(importedModule.moduleName);
-					Integer fixupOffsetInOffsetTable = importedModuleOffset + currentOffsetTableElement.offset;
+					
+					// we substract 1 because the offset is already the first value of the opCode
+					Integer fixupOffsetInOffsetTable = importedModuleOffset + currentOffsetTableElement.offset - 1;
 					
 					// offset of the main module
-					Integer fixupOffsetInFixupTable = mainModuleOffset + currentFixupTableElement.offset;
+					Integer fixupOffsetInFixupTable = mainModuleOffset + currentFixupTableElement.offset - 1;
 					
 					// fix the command in the main-module with the address of the imported module
-					Integer instructionValue = fixCommand(this.instructions.elementAt(fixupOffsetInFixupTable), fixupOffsetInOffsetTable);
-					instructions.set(fixupOffsetInFixupTable, instructionValue);
+					Integer currentInstruction = this.instructions.elementAt(fixupOffsetInFixupTable);
+					currentInstruction = fixCommand(currentInstruction, fixupOffsetInOffsetTable);
+					instructions.set(fixupOffsetInFixupTable, currentInstruction);
 					
 				}
 				
@@ -128,6 +136,8 @@ public class BinaryFile {
 	 */
 	public void export() {
 		
+		System.out.println("exporting binary file");
+		
 		this.prepareBinaryFile();
 		
 		for (int i = 0; i < this.instructions.size(); i++) {
@@ -135,6 +145,8 @@ public class BinaryFile {
 			this.writeWord(this.instructions.elementAt(i));
 			
 		}
+		
+		System.out.println("data written into file " + this.filename );
 		
 	}
 	
@@ -148,12 +160,7 @@ public class BinaryFile {
 		tmpBinary.delete();
 		
 		
-		this.binaryFile = this.openFile(filename);
-		
-		// writes the header to the binary file
-		this.writeWord(1);
-		this.writeWord(mainModule.mainInstruction);
-		
+		this.binaryFile = this.openFile(filename);		
 		
 	}
 	
