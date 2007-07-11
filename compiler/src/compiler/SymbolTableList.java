@@ -226,7 +226,7 @@ public class SymbolTableList {
 				size+=name.length()/4+1;
 			else
 				size+=name.length()/4+2;
-			map.put(currentCell.getName(), currentCell.getOffset());
+			map.put(currentCell.getName(), currentCell.getProc());
 		}
 		CodeGenerator.symbolTableLength=size;
 		return map;
