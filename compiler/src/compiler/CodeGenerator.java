@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.ListIterator;
 import java.util.Vector;
@@ -463,7 +464,7 @@ public class CodeGenerator {
 		}
 
 		try {
-			output.writeInt(1);
+			output.writeInt(0);
 			writeOpCode(output);
 			output.close();
 			System.out.println("Outputfile: " + name.concat(".bin"));
@@ -560,5 +561,11 @@ public class CodeGenerator {
 		putOpCode(new OpCodeElement("BNE", BEQ, getCurrentReg(), -100));
 		decreaseReg();
 		return PC - 2;
+	}
+
+	public static void fixReturnJumps(ArrayList<Integer> fixReturn) {
+		for(int j=0; j<fixReturn.size();j++){
+			opCode.get(fixReturn.get(j)).c=PC;
+		}
 	}
 }
