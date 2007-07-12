@@ -23,7 +23,12 @@ public class ObjectFile {
 	private long offsetTableOffset;
 	private long fixupTableOffset;
 	private long opCodeOffset;
+	
+	private OffsetTableElement[] offsetTable;
+	private FixupTableElement[] fixupTable;
 
+	private int offsetInBinaryFile = -1;
+	
 	private boolean writeable = false;
 
 	public RandomAccessFile file;
@@ -56,6 +61,15 @@ public class ObjectFile {
 			}
 		}
 
+	}
+	
+	public void setBinaryOffset(int value) {
+		this.offsetInBinaryFile = value;
+	}
+	
+	
+	public int getBinaryOffset() {
+		return this.offsetInBinaryFile;
 	}
 
 	/**
@@ -164,16 +178,22 @@ public class ObjectFile {
 
 		this.offsetTableOffset = getCurrentFileOffset();
 
+		
+		this.offsetTable = this.readOffsetTable();
+		
+		/*
 		// skips the offsetTable TODO
 		for (int i = 0; i < this.offsetTableSize; i++) {
 			readNextWord();
 		}
-
+		*/
+		
+		
 		// reads the length of the fixupTable (length is in words)
 		Integer fixupTableSize = readNextWord();
 
 		this.fixupTableOffset = getCurrentFileOffset();
-
+	
 		// writes the class property fixupTableSize
 		if (fixupTableSize != null) {
 			this.fixupTableSize = fixupTableSize;
@@ -181,16 +201,37 @@ public class ObjectFile {
 			return INVALID_FILESTRUCTURE;
 		}
 
+		this.fixupTable = this.readFixupTable();
+		
+		/*
 		// skips the fixupTable TODO
 		for (int i = 0; i < this.fixupTableSize; i++) {
 			readNextWord();
 		}
-
+		*/
+		
+		
 		this.opCodeOffset = getCurrentFileOffset();
 
 		return SUCCESS;
 	}
+	
+	public FixupTableElement[] getFixupTable() {
+		return this.fixupTable;
+	}
+	
+	public OffsetTableElement[] getOffsetTable() {
+		return this.offsetTable;
+	}
+	
+	public void setFixupTable(FixupTableElement[] fixupTable) {
+		this.fixupTable = fixupTable;
+	}
 
+	public void setOffsetTable(OffsetTableElement[] offsetTable) {
+		this.offsetTable = offsetTable;
+	}
+	
 	/**
 	 * reads the fixup-table from the object file and returns its elements in an
 	 * array
@@ -198,7 +239,7 @@ public class ObjectFile {
 	 * @return Array of FixupTableElements
 	 * @author Lacki
 	 */
-	public FixupTableElement[] getFixupTable() {
+	public FixupTableElement[] readFixupTable() {
 
 		// sets the filepointer to the beginning of the fixuptable
 		this.setFileOffset(this.fixupTableOffset);
@@ -261,7 +302,7 @@ public class ObjectFile {
 	 * @return Array of OffsetTableElements
 	 * @author Lacki
 	 */
-	public OffsetTableElement[] getOffsetTable() {
+	public OffsetTableElement[] readOffsetTable() {
 
 		// sets the filepointer to the beginning of the offsetTable
 		this.setFileOffset(this.offsetTableOffset);
@@ -469,10 +510,13 @@ public class ObjectFile {
 	 */
 	private RandomAccessFile openFile(String filename, String mode) {
 
-		File test = new File(filename);
-		test.delete();
-		
 		try {
+			
+			if (mode.equals("rw")) {
+				File tmpFile = new File(filename);
+				tmpFile.delete();
+			}
+			
 			RandomAccessFile objectFile = new RandomAccessFile(filename, mode);
 
 			// sets the class property writeable to false or true respectively
