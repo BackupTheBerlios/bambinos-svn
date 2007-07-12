@@ -1,8 +1,8 @@
 \section{Parser}
 
-In our recursive-descent Parser we implemented all EBNF production rules as
+In our recursive-descent Parser we implemented all EBNF (see \label{labelEBNF}) production rules as
 methods. The production rules of our EBNF allows alternatives, repetitions and optional parts.
-Figure (\ref{parser_deb}) shows a dependence diagram of the parser methods.  
+%Figure (\ref{parser_deb}) shows a dependence diagram of the parser methods.  
 
 To ensure that our EBNF is LL(1) conform, we created the a list with the first sets.
 The parser compares the actual token with the first-sets symbol
@@ -11,13 +11,13 @@ To guarantee that the decision between two alternatives is correct, the first
 set of the alternatives must be disjunctive. We checked our EBNF with the Parser tool: coco, to ensure we are are LL(1) conform.
 % coco page http://www.ssw.uni-linz.ac.at/Research/Projects/Coco/
 
-\begin{figure}[h]
-\label{parser_deb}
-\begin{center}
-\includegraphics[width=13cm,height=13cm]{images/parser_edit.png}
-\end{center}
-\caption{parser methods dependencies}
-\end{figure}
+%\begin{figure}[h]
+%\label{parser_deb}
+%\begin{center}
+%\includegraphics[width=13cm,height=13cm]{images/parser_edit.png}
+%\end{center}
+%\caption{parser methods dependencies}
+%\end{figure}
 
 
 \subsection{First Symbols(first sets)}
@@ -63,30 +63,29 @@ term & not number simpleIdentifier StringValue charValue "NULL" "-" "true" "fals
 %
 
 \newpage
-\section{Syntax Error Handling}
-The Compiler is able to detect a certain amount of Syntax Errors. We distinguish between two error levels : week and strong errors.
+\subsection{Syntax Error Handling}
+The parser is able to detect many syntax errors. We distinguish between two error levels : week- and strong error levels.
 \begin{itemize}
-  \item \textbf{Week Errors} will be fixed by the parser. 
-  \item \textbf{Strong Errors} can not be fixed. 
+  \item \textbf{Week Errors} don't do any harm. 
+  \item \textbf{Strong Errors} will stop the code generation. 
 \end{itemize}
 
-\subsection{Week Errors (Warnings)}
+\subsubsection{Week Errors (Warnings)}
 \label{label_week_errors}
 Week errors are missing tokens which will be inserted by the parser.
-The code generator never get notice about those errors. When a week error occurs a warning will be displaced, the token will be
-inserted, parsing and code generation continues.
+The code generator never takes notice about those errors. When a week error occurs a warning will be displaced, the token will be inserted, parsing and code generation continues.
 Compiler is able to detect and correct following week errors:
 \begin{itemize}
   \item any missing ";"
   \item any missing ")" "\{" "\}" "]" 
   \item near all missing "(" except in an object declaration, because we have to distinguish between "[" and "(" 
   \item in class declarations a missing ``class'' will be fixed.
-  \item in method declarations when return type is missing (TODO !!!)
+  \item in method declarations a missing return type will be marked
   \item in method declarations when ``static'' is missing
   \item in parameterlists we will detect and correct missing ","
 \end{itemize}
 
-\subsection{Strong Errors}
+\subsubsection{Strong Errors}
 \label{label_strong_errors}
 Strong Errors can be syntax errors as well as invalid symbols or invalid words. When a strong error occurs the parser displaces a error
 message and the code generation will be stopped. The parser goes to the next strong symbol and continue parsing. In our parser
@@ -104,21 +103,62 @@ Strong Errors can be:
   \item any illegal terminal symbols, like identifier starting with a digit. This kind of error detects the scanner, and a
   error token will be delivered to the parser.
 \end{itemize}
-\begin{quote}
-For example, if we had a production
-\begin{verbatim}
-A = a b c.
-\end{verbatim}
-for which the input was
-\begin{verbatim}
-a x c
-\end{verbatim}
-the parser reports
-\begin{verbatim}
-TODO Message
-\end{verbatim}
-\end{quote}
+%\begin{quote}
 
+Listing 2 shows a code example with several syntax errors in it, which will be marked by the compiler. The consolen output is shown below of listing.
+
+\begin{figure}[h]
+\label{synErrors}
+%\begin{e}
+\includegraphics[width=12.5cm,height=8cm]{images/synError.png}
+%\end{center}
+\end{figure}
+
+%,label={synErrors}]
+%\begin{lstlisting}[caption={Input language example}]
+%package examples;
+%
+%import Util;
+%
+%public TestStuff {
+%
+%	int[] b = int[9]
+%	
+%	public static void compare(int a int b {
+%		int x = 0;
+%		int y = 1;
+%		if (x==y {
+%			println(x;
+%		
+%	}
+%}
+%\end{lstlisting}
+The consolen output, when compiling the file in listing 2:
+\begin{verbatim}
+Warning: missing symbol: CLASS in line 5
+Warning: missing symbol: NEW in line 7
+Warning: missing symbol: SEMICOLON in line 9
+Warning: missing symbol: COMMA in line 9
+Warning: missing symbol: RPAREN in line 9
+Warning: missing symbol: RPAREN in line 12
+Warning: missing symbol: RPAREN in line 13
+Warning: missing symbol: RBRACES in line 18
+\end{verbatim}
+
+
+\subsection {Type Savety}
+\label{labelTypeCheck}
+
+\subsubsection{Naming convention}
+We ensure that variable names in a separate scope are unique. Local variables can have the same name as global variables. 
+
+\subsubsection{Operator on incompatible Types}
+\begin{itemize}
+  \item will be ensured by EBNF
+  \item 
+\end{itemize}
+
+\subsubsection{Typechecking}
 
 \section{Symboltable}
 \label{labelSymboltable}
@@ -146,19 +186,7 @@ A cell holds following information:
 
 Imported Modules have their own Symboltable which are stored in seperate Container. For every imported Class file it's SymbolFile TODO LINK will be readed and a Symboltable created. To load a symbol from a imported Class file the name of the file must be specified, e.g. \texttt{Util.print()}.
 
-\section {Type Savety}
-\label{labelTypeCheck}
 
-\subsection{Naming convention}
-We ensure that variable names in a separate scope are unique. Local variables can have the same name as global variables. 
-
-\subsection{Operator on incompatible Types}
-\begin{itemize}
-  \item will be ensured by EBNF
-  \item 
-\end{itemize}
-
-\subsection{Typechecking}
 
 
 
