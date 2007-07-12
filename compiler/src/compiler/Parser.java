@@ -173,7 +173,8 @@ public class Parser {
 			 * missing token will be inserted
 			 */
 			if (l == ErrorLevel.WEEK) {
-				System.out.println("Warning: missing symbol: " + expectedID + " in line " +
+				String name=expectedID.toString().substring(1);
+				System.out.println("Warning: missing symbol: " + name + " in line " +
 						currentToken.lineNumber);
 
 				if (expectedID == TSEMICOLON)
