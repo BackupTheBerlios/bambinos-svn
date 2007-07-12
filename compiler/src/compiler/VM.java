@@ -318,10 +318,6 @@ public class VM {
 				// targetValue sind die ersten 25 bit
 				targetValue = currentInstruction & 33554431;
 				
-				if (targetValue == 55) {
-					System.out.println(123);
-				}
-				
 				// signBit ist das 26ste Bit. Wenn es 1 ist, ist die Zahl negativ, sonst positiv
 				signBit = currentInstruction & 33554432;
 				signBit = signBit >>> 25;
