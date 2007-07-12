@@ -1,7 +1,7 @@
 \part{The linker}
 The linker is a intermediate step between processing the sourcecode and executing a
-binary. It combines objectfiles from the compiler to one binary for the virtual
-machine. 
+binary. It reads the objectfiles of a compiled program and its imported
+modules and combines them to one binary for the virtual machine.
 \\
 A linker is needed if a compiler wants to provide \emph{separate compilation}.
 That means that a program can import methods from a precompiled module. The
@@ -10,7 +10,7 @@ But a problem arises when the compiler wants to create a binary from the
 program-sourcecode. The compiler knows that the called method exists in the
 module (from the symbolfile) but it doesn't know the content of that method. \\
 So before the program can be executed the linker has to copy the relevant data
-from the affected objectfiles together into one binary. The objectfiles contain
+from the affected objectfiles together into one binary. These objectfiles contain
 all the information the linker needs to fullfill that work.    
 
 \section{The objectfile}
@@ -108,8 +108,8 @@ The length of the fixup table as a 32 bit integer value. The unit of this value
 is one 32 bit word. 
 \subsubsection{fixup table}
 \label{linker:objectfile:fixup_table}
-In the fixup table the imported symbols are listed. That means their modulename,
-their name and their offset in the module are stored. \\
+In the fixup table the local and imported methods (methods from other modules) are
+listed. That means their modulename, their name and their offset in the module are stored. \\
 The example in ~\ref{linker:objectfile:example:fixup_table} shows a fixup table
 with the \emph{print}-method from the module \emph{Util}.
 
@@ -140,7 +140,7 @@ byte) are skipped so that only 32 bit words are read. \\
 This reading-operation is performed until the number of words in the length of
 the fixup table (~\ref{linker:objectfile:length_fixup_table}) is read.
 
-\section{Processing of the objectfiles}
+\subsection{Processing of the objectfiles}
 \label{linker:objectfile_procession}
 As mentioned above the linker combines one or more objectfiles to one binary for
 execution in the virtual machine.\\ 
@@ -236,35 +236,65 @@ execution in the virtual machine.\\
 
 The example in ~\ref{linker:example:linker} shows what data the linker reads from the
 objectfiles and how this data is processed. \\
-The fixup table from the main-objectfile (left example) shows which information
-must be read from the offset table of the imported objectfile (util-objectfile)
-(right example). The offset-information from the fixup table determines the
-position in the opCode that needs to be updated (18 in our example). 
-That means: \\
-Line 18 of the opCode in the main-module is a call of a method in another module
-(module util, method print). 
+The fixup table is the key element in linking. It points out that code
+instructions which need to be fixed (their jump addresses must be corrected).
+In the example the instruction at position 18 in the opCode must be corrected. \\
+These jump addresses can be read from the offset table. If an entry in the fixup
+table points to another module the offset table of that particular module
+provides that information.  \\
+In the example the offset table shows that the instruction at position 23 in the
+opCode of \emph{Util} is the target address for the jump instruction in the
+fixup table. \\
 \\
-In the objectfile of that module (util) there is description where to find that
-method. This description lies in the offset table. So the linker knows now where
-the command that has to be fixed in the main-module lies and what information it
-needs.  
-\\
-The information in the offset table is of course relative. How the linker
-creates an absolute position for that method will be described later. 
+The values the offset table provides are relative to their module. That means
+that in module \emph{Util} the entry point for the \emph{print}-instruction is
+at position 23 in the opCode. But if this objectfile is linked to another
+objectfile this opCode is appended to the opCode of the other objectFile. So
+these relative positions change. \\
+The linker takes care of this addressing inconsistency. It updates the offset
+table when a module is linked to another one. 
+
 
 \section{The binaryfile}
-The binaryfile is an file that can be executed by the virtual machine. It hardly
-provides any meta-information but just executable code (opCode). This file is
+The binaryfile is a file that can be executed by the virtual machine. It hardly
+provides any meta-information but mostly executable code (opCode). This file is
 created when a linker links one or more objectfiles together. \\
-The opCode is already created by the compiler and written into the objectfiles.
-The linker copies that opCode together into a binaryfile and fixes
-branchinformation in that opCode. \\
-As we have heared before the opCode in the binary is addressed relatively. That
-means that the first line of code in a module can be the 100th line of code in
-the binary. So we need to fix that addressed, because otherwise
-branch-instructions would point to incorrect addresses. 
- 
-
+Linking means that the opCode from the objectfiles is copied sequentially into the
+binaryfile and that jump addresses in this opCode are corrected. 
 
 \subsection{Structure}
-
+The binary file always starts with a magic word of length 32 bit, so that the
+virtual machine can identify it as an executable. The magic word always has the value 0.
+\\ \begin{figure}[h]
+		
+	\begin{center}
+		\begin{tabular}{|c|c|c|c|}
+			\hline
+				magic word (32 bit) \\
+			\hline
+				opCode of the main module \\	
+			\hline
+				$\cdots$ \\
+			\hline
+				exit instruction \\
+			\hline
+			opCode of the first imported module \\	
+			\hline
+				$\cdots$ \\
+			\hline
+			opCode of the second imported module \\	
+			\hline
+				$\cdots$ \\
+			\hline
+		\end{tabular}
+	\end{center}
+	
+	\caption{Structure of the binary file}
+	\label{linker:binaryfile:structure}
+\end{figure}
+After the magic word the opCode instructions of the main module are stored
+followed by an exit instruction (jump to address (-1)). If the virtual machine
+reads this instruction, it stops execution. \\
+The following content are the instructions of the imported modules in the order
+they were imported by the main module (importing means, that one of their
+methods was called).
