@@ -51,7 +51,7 @@ public class VM {
 	public static Integer IR = new Integer(0);
 	// current Instruction Position
 	public static Integer CIP = new Integer(0);
-	private static Integer[] memory = new Integer[4096];
+	private static Integer[] memory = new Integer[4097];
 	private static Integer[] instructions;
 	
 	
