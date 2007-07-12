@@ -97,6 +97,7 @@ public class Parser {
 	private static boolean condMode;
 	private static boolean classMember;
 	private static ArrayList<Integer> fixReturn = new ArrayList<Integer>();
+	private static String currentClassName;
 
 	// private static HashMap<String,SymbolTableList> symList = new
 	// HashMap<String, SymbolTableList>();
@@ -110,6 +111,16 @@ public class Parser {
 		/* initialize Code Generator */
 		new CodeGenerator();
 
+		
+		String[] name = new String[1];
+		if (args[1].endsWith("com"))
+			name = args[1].split(".com");
+
+		if (args[1].endsWith("java"))
+			name = args[1].split(".java");
+
+		currentClassName=name[0];
+		
 		program();
 		// while (true){
 		// nextToken();
@@ -121,13 +132,6 @@ public class Parser {
 
 		System.out.println("");
 		System.out.println("Compiling " + args[1] + ".");
-
-		String[] name = new String[1];
-		if (args[1].endsWith("com"))
-			name = args[1].split(".com");
-
-		if (args[1].endsWith("java"))
-			name = args[1].split(".java");
 
 		CodeGenerator.writeOutputFile(name[0]);
 		writeSymbolfile(name[0]);
@@ -692,6 +696,7 @@ public class Parser {
 		Item returnItem = null;
 		if (classMember) {
 			procMethod = getIdentifersCell(tokenList.size() - 2).getProc(); // TODO
+			foreignClassMember = currentClassName + "." + tokenList.get(tokenList.size() - 2).value;
 			returnItem = new Item(3, getIdentifersCell(tokenList.size() - 2).getType(), 0);
 		} else {
 			procMethod = -55;
