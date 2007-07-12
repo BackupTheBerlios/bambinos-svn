@@ -1,0 +1,126 @@
+\section{Appendix}
+\subsection{EBNF of input language}
+\label{labelEBNF}
+
+\begin{verbatim}
+
+
+CHARACTERS
+
+letter          = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".
+digit           = "0123456789".
+digitNonZero    = "123456789".
+
+cr              = '\r'.
+lf              = '\n'.
+tab             = '\t'.
+
+//ANY = any symbol from the ASCII Character Set
+char            = ANY - '"' - '\\' - '\'' - cr - lf.
+
+
+TOKENS
+
+equal           = '='.
+greater         = '>'.
+smaller         = '<'.
+not             = '!'.
+AND             = "&&".
+OR              = "||".
+SEMICOLON = ";".
+
+commentStart    = "/*".
+commentEnd      = "*/".
+
+number          = digitNonZero{digit}| "0".
+
+simpleIdentifier= letter{letter|digit}.
+StringValue     = '"'char{char}'"'.
+
+charValue       = '\''char'\''.
+
+COMMENTS FROM "/*" TO "*/" NESTED 
+COMMENTS FROM "//" TO cr lf
+
+multilineComment= commentStart {char} commentEnd.
+singlelineComment= "//" {char} lf.
+
+IGNORE cr + lf + tab
+
+
+PRODUCTIONS 
+
+
+program                 = [packageDeclaration] {packageImport} classDeclaration.
+
+packageDeclaration      = "package" identifier SEMICOLON.
+packageImport           = "import" identifier SEMICOLON.
+
+classDeclaration        = "public" "class" simpleIdentifier "{" classBlock "}".
+classBlock              = { objectDeclaration | simpleDeclaration } 
+                          { methodDeclaration }.
+
+objectDeclaration       = object objectDeclarationSuffix SEMICOLON. 
+simpleDeclaration       = primitiveDeclaration | primitiveArrayDeclaration | 
+                          stringDeclaration | stringArrayDeclaration .
+
+methodDeclaration       = "public" "static" ("void"|datatype) simpleIdentifier
+                          "("[datatypeDescriptor{"," datatypeDescriptor}]")" 
+                           "{" bodyBlock "}".
+
+primitiveDeclaration    = primitive identifier [assignmentSuffix] SEMICOLON.
+primitiveArrayDeclaration= primitiveArray identifier equal "new" primitive 
+                          "[" number "]" SEMICOLON.
+stringDeclaration       = "String" identifier equal "new" "String" 
+                          "(" [StringValue] ")" SEMICOLON.
+stringArrayDeclaration	= "String[]" identifier equal "new" "String" "["number"]" 
+                          SEMICOLON.
+
+objectDeclarationAssignmentMethodcall= identifier ( arrayDeclarationSuffix | 
+                          methodCallSuffix ) SEMICOLON.
+
+objectDeclarationSuffix = identifier equal "new" (object ( "("[expression]")" |
+                          "["number"]" ) | primitive "["number"]").
+assignmentSuffix        = equal expression.
+methodCallSuffix        = "("[expression {"," expression}]")".
+arrayDeclarationSuffix  = [arraySelector]( objectDeclarationSuffix | assignmentSuffix).
+ 
+bodyBlock               = { whileStatement | ifStatement | returnStatement | 
+                          simpleDeclaration | objectDeclarationAssignmentMethodcall | 
+                          printStatement }.
+
+whileStatement          = "while" "(" condition ")" "{" bodyBlock "}".
+ifStatement             = "if" "(" condition ")" "{" bodyBlock "}" [ "else" "{" 
+                          bodyBlock "}" ].
+returnStatement         = "return" expression SEMICOLON.
+printStatement          = "print" "(" (identifier | intValue | charValue | 
+                          StringValue ) ")" SEMICOLON.
+
+datatypeDescriptor      = datatype identifier [arraySelector].
+
+value                   = identifier [arraySelector | (methodCallSuffix)] | 
+                          intValue | charValue | booleanValue | StringValue |
+                          "NULL" | not value | "(" expression ")".
+factor                  = value {('*' | '/' | '%') value}.
+term                    = factor {("+" | "-") factor}.
+expression              = term {(AND|OR) term}.
+condition               = expression [(equal equal | not equal | greater [equal]|
+                          smaller [equal]) expression].
+TODO
+
+intValue                = ["-"]number.
+booleanValue            = "true" | "false".
+
+primitive               = "int" | "boolean" | "char".
+primitiveArray          = "int[]" | "boolean[]" | "char[]".
+object                  = simpleIdentifier.
+
+datatype                = primitive | "String" | "String[]" | object | primitiveArray.
+
+identifier              = simpleIdentifier {("."simpleIdentifier)}.
+arraySelector           = "[" [expression] "]".
+
+
+\end{verbatim}
+
+
