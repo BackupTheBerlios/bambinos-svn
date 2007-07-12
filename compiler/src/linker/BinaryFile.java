@@ -10,7 +10,7 @@ public class BinaryFile {
 
 	private RandomAccessFile binaryFile;
 	private Vector<Integer> instructions;
-	private Hashtable<String,Integer> moduleList;
+	private Hashtable<String,ObjectFile> moduleList;
 	
 	private ObjectFile mainModule;
 	private String filename = new String();
@@ -19,7 +19,7 @@ public class BinaryFile {
 	
 	public BinaryFile(ObjectFile mainModule) {
 		
-		this.moduleList = new Hashtable<String, Integer>();
+		this.moduleList = new Hashtable<String, ObjectFile>();
 		this.instructions = new Vector();
 		
 		// writes the header to the instructions (so that the first instruction starts with 1)
@@ -30,29 +30,59 @@ public class BinaryFile {
 		this.filename = mainModule.moduleName.concat(".bin");
 		
 		//this.binaryFile = openFile(filename);
-		this.addCode(mainModule);
+		this.mainModule = this.addCode(mainModule);
+		this.addExitSymbol();
 	}
 	
 	
-	private void fixAddressing(ObjectFile mainModule) {
-		
-		if (mainModule == null) {
-			mainModule = this.mainModule;
+	private OffsetTableElement[] fixOffsetTable(OffsetTableElement[] offsetTable, Integer moduleOffset) {
+						
+		for (int i = 0; i < offsetTable.length; i++) {
+			
+			OffsetTableElement currentElement = offsetTable[i];
+			
+			currentElement.offset = currentElement.offset + moduleOffset - 1;
+			
+			offsetTable[i] = currentElement;
 		}
 		
-		Integer mainModuleOffset = moduleList.get(mainModule.moduleName); 
+		return offsetTable;
 		
+	}
+	
+	private FixupTableElement[] fixFixupTable(FixupTableElement[] fixupTable, Integer moduleOffset) {
 		
-		FixupTableElement[] fixupTable = mainModule.getFixupTable();
 		
 		for (int i = 0; i < fixupTable.length; i++) {
 			FixupTableElement currentFixupTableElement = fixupTable[i];
 			
 			
-			ObjectFile importedModule = new ObjectFile(currentFixupTableElement.module.concat(".obj"), "r");
+			String importedModuleName = currentFixupTableElement.module.concat(".obj");
+			
+			ObjectFile importedModule;
+			
+			// if the module was already loaded into the binaryfile it doesn't have to be loaded again
+			if (this.moduleList.containsKey(currentFixupTableElement.module)) {
+				importedModule = moduleList.get(currentFixupTableElement.module);
+			} else {
+				importedModule = new ObjectFile(importedModuleName, "r");
+				importedModule = this.addCode(importedModule);
+				
+				importedModule = this.fixAddressing(importedModule);
+				
+			}
+			
+			
+			// offset of the imported module
+			//Integer importedModuleOffset = this.moduleList.get(importedModule);
+			Integer importedModuleOffset = importedModule.getBinaryOffset();
+			
+			
+			//importedModule = this.fixAddressing(importedModule);
+			
 			OffsetTableElement[] importedOffsetTable = importedModule.getOffsetTable();
 			
-			this.addCode(importedModule);
+			//importedOffsetTable = this.fixOffsetTable(importedOffsetTable, importedModuleOffset);
 			
 			for (int j = 0; j < importedOffsetTable.length; j++) {
 				
@@ -60,17 +90,21 @@ public class BinaryFile {
 				
 				if (currentOffsetTableElement.name.equals(currentFixupTableElement.name)) {
 					
-					// offset of the imported module
-					Integer importedModuleOffset = moduleList.get(importedModule.moduleName);
 					
 					// we substract 1 because the offset is already the first value of the opCode
-					Integer fixupOffsetInOffsetTable = importedModuleOffset + currentOffsetTableElement.offset - 1;
+					//Integer fixupOffsetInOffsetTable = importedModuleOffset + currentOffsetTableElement.offset - 1;
+					Integer fixupOffsetInOffsetTable = currentOffsetTableElement.offset;
+					
+					Integer currentInstruction;
+					
+					//currentInstruction = this.instructions.elementAt(fixupOffsetInOffsetTable);
+					//currentInstruction = fixCommand(currentInstruction, fixupOffsetInOffsetTable);
 					
 					// offset of the main module
-					Integer fixupOffsetInFixupTable = mainModuleOffset + currentFixupTableElement.offset - 1;
+					Integer fixupOffsetInFixupTable = moduleOffset + currentFixupTableElement.offset - 1;
 					
 					// fix the command in the main-module with the address of the imported module
-					Integer currentInstruction = this.instructions.elementAt(fixupOffsetInFixupTable);
+					currentInstruction = this.instructions.elementAt(fixupOffsetInFixupTable);
 					currentInstruction = fixCommand(currentInstruction, fixupOffsetInOffsetTable);
 					instructions.set(fixupOffsetInFixupTable, currentInstruction);
 					
@@ -78,14 +112,35 @@ public class BinaryFile {
 				
 			}
 			
-		
+			moduleList.put(importedModuleName, importedModule);
+			
 		}
 		
+		return fixupTable;
 	}
 	
-	public void fixAddressing() {
+	private ObjectFile fixAddressing(ObjectFile module) {
 		
-		fixAddressing(null);
+		//Integer moduleOffset = moduleList.get(module);
+		Integer moduleOffset = module.getBinaryOffset();
+		
+		//OffsetTableElement[] offsetTable = module.getOffsetTable();
+		//offsetTable = this.fixOffsetTable(offsetTable, moduleOffset);
+		
+		//module.setOffsetTable(offsetTable);
+		
+		FixupTableElement[] fixupTable = module.getFixupTable();
+		fixupTable = this.fixFixupTable(fixupTable, moduleOffset);
+		
+		module.setFixupTable(fixupTable);
+		
+		return module;		
+	}
+	
+	public ObjectFile fixAddressing() {
+		
+		ObjectFile mainModule = fixAddressing(this.mainModule);
+		return mainModule;
 		
 	}
 
@@ -112,21 +167,71 @@ public class BinaryFile {
 	 * @param objectFile
 	 * @author lacki
 	 */
-	public void addCode(ObjectFile objectFile) {
+	public ObjectFile addCode(ObjectFile objectFile) {
 		
 		// if the objectFile was already added to the binaryFile it won't be added again.
-		if ((objectFile == null) || (moduleList.containsKey(objectFile.moduleName))) {
-			return;
+		// that means it must have a valid offsetInBinary-value (!= -1)
+		if ((objectFile == null) || (objectFile.getBinaryOffset() != (-1))) {
+			return objectFile;
 		}
 		
+		
+		moduleList.put(objectFile.moduleName, objectFile);
+		
 		Integer[] opCode = objectFile.getOpCode();
+		
+		
 		// writes the modulename and the offset of the module code in the instructions-vector into the instructions-vector
-		this.moduleList.put(objectFile.moduleName, this.instructions.size());
+		Integer moduleOffset = this.instructions.size();
+		objectFile.setBinaryOffset(moduleOffset);
+		//this.moduleList.put(objectFile, moduleOffset);
+		
+		
+		// TODO fix Addressing of offsettable
+		OffsetTableElement[] offsetTable = objectFile.getOffsetTable();
+		
+		for (int i = 0; i < offsetTable.length; i++) {
+			
+			OffsetTableElement currentElement = offsetTable[i];
+			currentElement.offset = currentElement.offset + moduleOffset - 1;
+			
+			offsetTable[i] = currentElement;
+			
+		}
 		
 		// writes the opCode in the instructions-vector
 		for (int i=0; i < opCode.length; i++) {
 			this.instructions.addElement(opCode[i]);
 		}
+		
+		return objectFile;
+		
+	}
+	
+	/**
+	 * Adds an exit instruction to the instructions-vector. If this symbol is executed by the VM, the program execution stops.
+	 * This symbol is intended as the last executed command in the binary.
+	 * The instruction means "BSR -1" 
+	 * @author lacki
+	 */
+	private void addExitSymbol() {
+		
+		Integer exitInstruction = new Integer(0);
+		
+		Integer opCode = new Integer(50);
+		Integer value = new Integer(1);
+		
+		exitInstruction = opCode;
+		exitInstruction = exitInstruction << 1;
+		
+		exitInstruction = exitInstruction | 1;
+		
+		
+		exitInstruction = exitInstruction << 25;
+		
+		exitInstruction = exitInstruction | value;
+		
+		this.instructions.addElement(exitInstruction);
 		
 	}
 	
