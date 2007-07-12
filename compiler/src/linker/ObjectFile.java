@@ -246,6 +246,12 @@ public class ObjectFile {
 
 		Vector<FixupTableElement> tmpFixupTableElements = new Vector<FixupTableElement>();
 
+		
+		long tmp1 = this.getCurrentFileOffset();
+		long tmp2 = this.fixupTableOffset;
+		long tmp3 = this.fixupTableSize;
+		
+		
 		// this verifies, that we don't read more than the data from the
 		// fixup-table
 		// the fixupTableOffset + fixupTableSize tells us how much we need to
@@ -402,8 +408,11 @@ public class ObjectFile {
 		// since we are wordaligned we need to read some additional bytes to
 		// assure that we have read full words
 		int bytesToRead = bytesRead % 4;
-		bytesToRead = 4 - bytesToRead;
-
+		
+		if (bytesToRead > 0) {
+			bytesToRead = 4 - bytesToRead;	
+		}
+		
 		for (int i = 0; i < bytesToRead; i++) {
 			readNextByte();
 		}
