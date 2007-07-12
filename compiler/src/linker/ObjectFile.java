@@ -469,6 +469,9 @@ public class ObjectFile {
 	 */
 	private RandomAccessFile openFile(String filename, String mode) {
 
+		File test = new File(filename);
+		test.delete();
+		
 		try {
 			RandomAccessFile objectFile = new RandomAccessFile(filename, mode);
 
