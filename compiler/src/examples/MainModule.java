@@ -6,8 +6,10 @@ public class MainModule {
 
 	public static void main() {
 	
-		int a = 1;
-		Util.print(a);
+		int a = 2;
+		Util.calc(a);
+		
+		Util.print('z');
 	}
 	
 }
