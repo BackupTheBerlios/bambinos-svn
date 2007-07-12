@@ -1,5 +1,7 @@
 package examples;
 
+import Util2;
+
 public class Util {
 
 
@@ -17,8 +19,7 @@ public class Util {
 	}
 	
 	public static void print(char a) {
-		println(a);
-		println(a);
+		Util2.printChar(a);
 	}
 
 }
