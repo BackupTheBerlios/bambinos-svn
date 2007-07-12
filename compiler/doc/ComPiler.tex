@@ -8,7 +8,7 @@ basicstyle=\small,
 captionpos=b, % Beschriftung ist unterhalb
 %frame=lines, % Oberhalb und unterhalb des Listings ist eine Linie
 frame=rlub
-basicstyle=\ttfamily, % Schriftart
+basicstyle=\small\ttfamily, % Schriftart
 keywordstyle=\color{blue}, % Farbe für die Keywords wie public, void, object u.s.w.
 commentstyle=\color{green}, % Farbe der Kommentare
 stringstyle=\color{red}, % Farbe der Zeichenketten
@@ -30,7 +30,7 @@ emphstyle={[2]\color{blue}}
 \usepackage{graphicx}
 
 % Silbentrennung
-\usepackage[english,ngerman]{babel}
+%\usepackage[english,ngerman]{babel}
 
 % PDF
 %LaTeX erzeugt mit dem hyperref-Paket interaktive PDF-Dateien mit Bookmarks
@@ -49,7 +49,7 @@ emphstyle={[2]\color{blue}}
 % \usepackage[left=3cm,right=3cm,top=3cm,bottom=3cm,includeheadfoot]{geometry}
 
 %Umlaute ermöglichen
-\usepackage[latin1]{inputenc}
+%\usepackage[latin1]{inputenc}
 \usepackage{tabularx} % Seite 259 im Latex Buch, ist extrem cool !!
 \newcolumntype{Y}{>{\small\raggedright\arraybackslash}X}
 
@@ -69,7 +69,7 @@ emphstyle={[2]\color{blue}}
 %Linie unten
 \renewcommand{\footrulewidth}{0.5pt}
 
-\selectlanguage{english} 
+%\selectlanguage{english} 
 
 
 
@@ -81,16 +81,12 @@ emphstyle={[2]\color{blue}}
 \tableofcontents
 \newpage
 
-TODO:
-
-Welchen typen unterstuetzen wir
-Alle Ausdruecke werden bei uns in der Klasse Symboltable ueberprueft auf Korrektheit. 
-
-
+\input{overview.tex}
 \input{parser.tex}
-\input{memory.tex}
 \input{codeGeneration.tex}
+\input{memory.tex}
 \input{symbolfile.tex}
 \input{linker.tex}
+\input{appendix.tex}
 
 \end{document}
