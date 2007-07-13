@@ -79,7 +79,7 @@ bodyBlock = { whileStatement | ifStatement | returnStatement | simpleDeclaration
 whileStatement = "while" "(" condition ")" "{" bodyBlock "}".
 ifStatement = "if" "(" condition ")" "{" bodyBlock "}" [ "else" "{" bodyBlock "}" ].
 returnStatement = "return" expression SEMICOLON.
-printStatement = "print" "(" (identifier | intValue | charValue | StringValue ) ")" SEMICOLON.
+printStatement = "println" "(" (identifier | intValue | charValue | StringValue ) ")" SEMICOLON.
 
 datatypeDescriptor = datatype identifier [arraySelector].
 
