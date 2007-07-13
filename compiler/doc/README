@@ -1,0 +1,14 @@
+To run that example we offer some scripts that may help: 
+
+- compile.sh - compiles the files "Util2.java", Util.java, MainModule.java and links the resulting objectfiles (Util2.obj, Util.obj,
+MainModule.obj) to one executablefile (MainModule.bin) 
+
+- run.sh - starts the virtual machine and executes the executable MainModule.bin
+
+- run_gui.sh - starts the virtual machine with a graphical output window. 
+
+- run_debug.sh - starts the virtual machine in debug mode. This lets you step through the instruction from the binary file and shows the content of the vm-registers. 
+
+So to compile and run the example you need to run: 
+./compile.sh
+./run.sh
