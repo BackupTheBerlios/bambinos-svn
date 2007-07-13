@@ -8,21 +8,7 @@ xml-format as it is a good representation of objects.
 \subsection{Structure}
 The root-tag of the symbolfile is \emph{<symbolfile>}. After the xml-header and
 the root-tag the symbolfile starts with a list of the so-called \emph{module anchors}. Every
-module anchor represents a module that's imported. In xml-syntax this lookes
-like that:
-\begin{lstlisting}[caption={module anchors}]
-<modules>
-	<module>
-		<name> modulename 1 </name>
-	</module>
-	<module>
-		<name> modulename 2 </name>
-	</module>
-	<module>
-		<name> modulename 3 </name>
-	</module>
-</modules>
-\end{lstlisting}
+module anchor represents a module that's imported. You can see an example below.
 
 After the module anchors the actual symboltable representation starts. It is
 enclosed in a \emph{<symbols>}-tag There are 3 different elementtypes that can be described here:
@@ -31,19 +17,12 @@ enclosed in a \emph{<symbols>}-tag There are 3 different elementtypes that can b
   \item arrays
   \item methods 
 \end{itemize}
-\subsubsection{variables}
+\subsubsection{Variables}
 A variable has 2 properties: 
 \begin{itemize}
   \item one of the primitive datatypes like \emph{boolean}, \emph{int} or \emph{char}
   \item the name of the variable in the sourcecode
 \end{itemize}
-
-\begin{lstlisting}[caption={variables}]
-<variable>
-	<type> type </type>
-	<name> name </name>
-</variable>
-\end{lstlisting}
 
 \subsubsection{arrays}
 An array has 3 properties
@@ -53,13 +32,6 @@ An array has 3 properties
   \item the number of elements in the array
 \end{itemize}
 
-\begin{lstlisting}[caption={arrays}]
-<array>
-	<type> type </type>
-	<name> name </name>
-	<size> size </size>
-</array>
-\end{lstlisting}
 
 \subsubsection{methods}
 An array has 3 properties and contains another symboltable with the parameters
@@ -71,17 +43,39 @@ of the method.
   \item the number of elements in the array
 \end{itemize}
 So the description of a method is a recursive search through the symboltable.
+\\ \\
+Here is an example of a simple symbolfile: 
+\begin{lstlisting}[caption={Example symbolfile}]
+<symbolfile>
+	<modules>
+		<module>
+			<name> modulename 1 </name>
+		</module>
+	</modules>
 
-\begin{lstlisting}[caption={methods}]
-<method>
-	<type> type </type>
-	<name> name </name>
-	<size> size </size>
 	<symbols>
 		<variable>
 			<type> type </type>
 			<name> name </name>
-		<variable>
+		</variable>
+
+		<array>
+			<type> type </type>
+			<name> name </name>
+			<size> size </size>
+		</array>
+	
+		<method>
+			<type> type </type>
+			<name> name </name>
+			<size> size </size>
+			<symbols>
+				<variable>
+					<type> type </type>
+					<name> name </name>
+				<variable>
+			</symbols>
+		</method>
 	</symbols>
-</method>
+<symbolfile>
 \end{lstlisting}
