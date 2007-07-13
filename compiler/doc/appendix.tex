@@ -123,6 +123,50 @@ arraySelector           = "[" [expression] "]".
 
 \end{verbatim}
 
+
+\subsection{First Symbols(first sets)}
+\label{first_sets}
+\noindent
+\begin{tabularx}{\linewidth}{YY}
+program & ``\texttt{package}'' ``\texttt{import}'' ``\texttt{public}'' \\
+packageDeclaration & ``\texttt{package}'' \\
+packageImport & ``\texttt{import}'' \\
+classDeclaration & ``\texttt{public}'' \\
+identifier & simpleIdentifier \\
+classBlock & simpleIdentifier ``\texttt{public}'' ``\texttt{String}'' ``\texttt{String[]}'' ``\texttt{int}'' ``\texttt{boolean}'' ``\texttt{char}'' ``\texttt{int[]}'' ``\texttt{boolean[]}'' ``\texttt{char[]}'' \\
+objectDeclaration & simpleIdentifier \\
+simpleDeclaration & ``\texttt{String}'' ``\texttt{String[]}'' ``\texttt{int}'' ``\texttt{boolean}'' ``\texttt{char}'' ``\texttt{int[]}'' ``\texttt{boolean[]}'' ``\texttt{char[]}'' \\
+methodDeclaration & ``\texttt{public}'' \\
+object & simpleIdentifier \\
+objectDeclarationSuffix & simpleIdentifier \\
+primitiveDeclaration & ``\texttt{int}'' ``\texttt{boolean}'' ``\texttt{char}'' \\
+primitiveArrayDeclaration & ``\texttt{int[]}'' ``\texttt{boolean[]}'' ``\texttt{char[]}'' \\
+stringDeclaration & ``\texttt{String}'' \\
+stringArrayDeclaration & "String[]" \\
+datatype & simpleIdentifier "String" "int" "boolean" "char" \\
+datatypeDescriptor & simpleIdentifier "String" "int" "boolean" "char" \\
+bodyBlock & simpleIdentifier "String" "String[]" "while" "if" "return" "int" "boolean" "char" "int[]" "boolean[]" "char[]" \\
+primitive & "int" "boolean" "char" \\
+assignmentSuffix & equal \\
+primitiveArray & "int[]" "boolean[]" "char[]" \\
+objectDeclarationAssignmentMethodcall & simpleIdentifier \\
+arrayDeclarationSuffix & equal simpleIdentifier "[" \\
+methodCallSuffix & "(" \\
+expression & not number simpleIdentifier StringValue charValue "NULL" "-" "true" "false" \\
+arraySelector & "[" \\
+whileStatement & "while" \\
+ifStatement & "if" \\
+returnStatement & "return" \\
+condition & not number simpleIdentifier StringValue charValue "NULL" "-" "true" "false" \\
+value & not number simpleIdentifier StringValue charValue "NULL" "-" "true" "false" \\
+intValue & number "-" \\
+booleanValue & "true" "false" \\
+factor & not number simpleIdentifier StringValue charValue "NULL" "-" "true" "false" \\
+term & not number simpleIdentifier StringValue charValue "NULL" "-" "true" "false" \\
+\end{tabularx}
+
+
+
 \section{Work-sharing}
 \label{appendix:work-sharing}
 The compiler consists of several complex work packages where some fit together

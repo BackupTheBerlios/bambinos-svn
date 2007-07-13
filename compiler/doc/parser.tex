@@ -4,12 +4,12 @@ In our recursive-descent Parser we implemented all EBNF (see \label{labelEBNF}) 
 methods. The production rules of our EBNF allows alternatives, repetitions and optional parts.
 %Figure (\ref{parser_deb}) shows a dependence diagram of the parser methods.  
 
-To ensure that our EBNF is LL(1) conform, we created the a list with the first sets.
-The parser compares the actual token with the first-sets symbol
+To ensure that our EBNF is LL(1) conform, we created the a list with first sets.
+The parser compares the actual token with the first-sets symbols
 and takes decisions between alternatives. 
 To guarantee that the decision between two alternatives is correct, the first
-set of the alternatives must be disjunctive. We checked our EBNF with the Parser tool: coco, to ensure we are are LL(1) conform.
-% coco page http://www.ssw.uni-linz.ac.at/Research/Projects/Coco/
+set of the alternatives must be disjunctive. See apendix \ref{first_sets} for the first sets. We checked our EBNF with the Parser tool: coco, to
+ensure we are are LL(1) conform. % coco page http://www.ssw.uni-linz.ac.at/Research/Projects/Coco/
 
 %\begin{figure}[h]
 %\label{parser_deb}
@@ -20,92 +20,56 @@ set of the alternatives must be disjunctive. We checked our EBNF with the Parser
 %\end{figure}
 
 
-\subsection{First Symbols(first sets)}
-\label{first_sets}
-\noindent
-\begin{tabularx}{\linewidth}{YY}
-program & ``\texttt{package}'' ``\texttt{import}'' ``\texttt{public}'' \\
-packageDeclaration & ``\texttt{package}'' \\
-packageImport & ``\texttt{import}'' \\
-classDeclaration & ``\texttt{public}'' \\
-identifier & simpleIdentifier \\
-classBlock & simpleIdentifier ``\texttt{public}'' ``\texttt{String}'' ``\texttt{String[]}'' ``\texttt{int}'' ``\texttt{boolean}'' ``\texttt{char}'' ``\texttt{int[]}'' ``\texttt{boolean[]}'' ``\texttt{char[]}'' \\
-objectDeclaration & simpleIdentifier \\
-simpleDeclaration & ``\texttt{String}'' ``\texttt{String[]}'' ``\texttt{int}'' ``\texttt{boolean}'' ``\texttt{char}'' ``\texttt{int[]}'' ``\texttt{boolean[]}'' ``\texttt{char[]}'' \\
-methodDeclaration & ``\texttt{public}'' \\
-object & simpleIdentifier \\
-objectDeclarationSuffix & simpleIdentifier \\
-primitiveDeclaration & ``\texttt{int}'' ``\texttt{boolean}'' ``\texttt{char}'' \\
-primitiveArrayDeclaration & ``\texttt{int[]}'' ``\texttt{boolean[]}'' ``\texttt{char[]}'' \\
-stringDeclaration & ``\texttt{String}'' \\
-stringArrayDeclaration & "String[]" \\
-datatype & simpleIdentifier "String" "int" "boolean" "char" \\
-datatypeDescriptor & simpleIdentifier "String" "int" "boolean" "char" \\
-bodyBlock & simpleIdentifier "String" "String[]" "while" "if" "return" "int" "boolean" "char" "int[]" "boolean[]" "char[]" \\
-primitive & "int" "boolean" "char" \\
-assignmentSuffix & equal \\
-primitiveArray & "int[]" "boolean[]" "char[]" \\
-objectDeclarationAssignmentMethodcall & simpleIdentifier \\
-arrayDeclarationSuffix & equal simpleIdentifier "[" \\
-methodCallSuffix & "(" \\
-expression & not number simpleIdentifier StringValue charValue "NULL" "-" "true" "false" \\
-arraySelector & "[" \\
-whileStatement & "while" \\
-ifStatement & "if" \\
-returnStatement & "return" \\
-condition & not number simpleIdentifier StringValue charValue "NULL" "-" "true" "false" \\
-value & not number simpleIdentifier StringValue charValue "NULL" "-" "true" "false" \\
-intValue & number "-" \\
-booleanValue & "true" "false" \\
-factor & not number simpleIdentifier StringValue charValue "NULL" "-" "true" "false" \\
-term & not number simpleIdentifier StringValue charValue "NULL" "-" "true" "false" \\
-\end{tabularx}
+
 %
 
-\newpage
-\subsection{Syntax Error Handling}
+
+\subsection{Syntax error handling}
 The parser is able to detect many syntax errors. We distinguish between two error levels : weak- and strong error levels.
 \begin{itemize}
-  \item \textbf{weak Errors} don't do any harm. 
-  \item \textbf{Strong Errors} will stop the code generation. 
+  \item \textbf{Weak errors} don't do any harm. 
+  \item \textbf{Strong errors} will stop the code generation. 
 \end{itemize}
 
-\subsubsection{weak Errors (Warnings)}
+\subsubsection{Weak errors (Warnings)}
 \label{label_weak_errors}
-weak errors are missing tokens which will be inserted by the parser.
-The code generator never takes notice about those errors. When a weak error occurs a warning will be displaced, the token will be inserted, parsing and code generation continues.
+Weak errors are missing tokens which will be inserted by the parser.
+The code generator never takes notice about these errors. When a weak error occurs a warning will be displaced,
+ the token will be inserted, parsing and code generation continues.
 Compiler is able to detect and correct following weak errors:
 \begin{itemize}
   \item any missing ";"
   \item any missing ")" "\{" "\}" "]" 
-  \item near all missing "(" except in an object declaration, because we have to distinguish between "[" and "(" 
-  \item in class declarations a missing ``class'' will be fixed.
-  \item in method declarations a missing return type will be marked
-  \item in method declarations when ``static'' is missing
-  \item in parameterlists we will detect and correct missing ","
+  \item near all missing "(" except in an object declaration, because we have to distinguish between "[" and "(",
+  \item in class declarations a missing ``class'' will be fixed,
+  \item in method declarations a missing return type will be marked,
+  \item in method declarations when ``static'' is missing,
+  \item in parameter lists we detect missing ",".
 \end{itemize}
 
 \subsubsection{Strong Errors}
 \label{label_strong_errors}
 Strong Errors can be syntax errors as well as invalid symbols or invalid words. When a strong error occurs the parser displaces a error
-message and the code generation will be stopped. The parser goes to the next strong symbol and continue parsing. In our parser
-implementation we have sync operation implemented in three methods. See Figure (\ref{parser_deb}), marked methods (TODO) serves as
-synchronisation points. Synchronization works this way:
+message and the code generation is beeing stopped. The parser goes to the next strong symbol and continues parsing.
+In our parser we implemented synchronisation operations in three methods (bodyBlockStatement, classBlock and packageImport). Synchronization
+works this way:
 \begin{itemize}
-  \item one of the synchronization methods recognizes a strong error in one of its called method
-  \item the error will be printed and code generation will stop
-  \item the synchronization methods x fetches new tokens until the next ``\hyperref[first_sets]{first set}'' token of method x is fetched
+  \item One of the synchronization method recognizes a strong error in one of its called method,
+  \item the error will be printed and code generation will stop,
+  \item the synchronization methods x fetches new tokens until the next ``\hyperref[first_sets]{first set}'' token of method x is beeing 
+  fetched
 \end{itemize}
-Strong Errors can be:
+Strong errors can be:
 \begin{itemize}
-  \item misplaced tokens. When the current token does not correspond to EBNF rules, except of weak errors.
+  \item misplaced tokens, this means the current token does not correspond to EBNF rules, except it is a weak errors.
   \item any missing identifiers.
-  \item any illegal terminal symbols, like identifier starting with a digit. This kind of error detects the scanner, and a
+  \item any illegal terminal symbol, like identifier starting with a digit. This kind of error is being detected by the scanner, and a
   error token will be delivered to the parser.
 \end{itemize}
 %\begin{quote}
 
-Listing 2 shows a code example with several syntax errors in it, which will be marked by the compiler. The consolen output is shown below of listing.
+Listing 2 shows a code example with several syntax errors in it. Those syntax errors are all weak errors and the compiler gives out a warning.
+ The output of the console is shown below that listing.
 
 \begin{figure}[h]
 \label{synErrors}
@@ -133,7 +97,8 @@ Listing 2 shows a code example with several syntax errors in it, which will be m
 %	}
 %}
 %\end{lstlisting}
-The consolen output, when compiling the file in listing 2:
+\newpage
+The output of the console, after compiling the file in listing 2:
 \begin{verbatim}
 Warning: missing symbol: CLASS in line 5
 Warning: missing symbol: NEW in line 7
@@ -146,45 +111,70 @@ Warning: missing symbol: RBRACES in line 18
 \end{verbatim}
 
 
-\subsection {Type Savety}
+\subsection {Type safety}
 \label{labelTypeCheck}
+We create a type description for every type we support, for primitive types (integer,boolean,character) as well as for extended types (modules).
+A type descriptor is implemented as an object and holds following information: 
 
-\subsubsection{Naming convention}
-We ensure that variable names in a separate scope are unique. Local variables can have the same name as global variables. 
+\begin{tabular}{lp{6cm}}
+\texttt{int form} & Kind of the type, module,array,primitive \\
+\texttt{int len} & This field is for arrays only, it contains the number of elements. \\
+\texttt{DataType base} & For arrays only, it contains the type of the elements \\
+\texttt{SymbolTableList fields} & The symboltable of an imported module is stored here. \\
+\texttt{int size} & Size contains the size of a module. \\
+\end{tabular}
 
-\subsubsection{Operator on incompatible Types}
-\begin{itemize}
-  \item will be ensured by EBNF
-  \item 
-\end{itemize}
+For primitive types we have implemented types as final. For modules we create the type description dynamically. When we parse an import
+statement we read the symbolfile of the appropriate module $x$ and create a type description for $x$.
 
-\subsubsection{Typechecking}
+\subsubsection{Type checking}
+Type checking occurs in several code parts:
+
+\paragraph{Naming convention}
+We ensure that variable names are unique within it's scope. Local variables can have the same name as global variables or other local variables
+of an another method. Every symbol (variable,method) has a unique name and a certain type. 
+
+\paragraph{Operations on types}
+Certain operations make only sense on designed types. We ensure that arithmetic and boolean operations work on appropriate authorized
+types only. Arithmetic operators ${+,-,*,/}$ does only work with integer types. 
+Relations ${>,<,>=,<=,==,!=}$ work on primitive data types only. On these operations we check if the type of the variable
+ is the same before and after the operator.
+Boolean operations ${\&\&,||}$ can treat expressions of different types. 
+
+\paragraph{Assignments}
+In assignments we compare the type of the variable before and the expression afterward as well. On invalid type assignments the compiler
+prints a error message and the line number where it occurred.
+
+
 
 \section{Symboltable}
 \label{labelSymboltable}
 
-The Symboltable is used to beware various information about symbols during compile time.
-The Parser produces for every field (global variables, methods) and local variables an entry in the Symboltable.
+The symboltable is used to beware various information about symbols during compile time.
+The Parser produces for every field (global variables, methods) and local variables an entry in the symboltable.
 We distinguish between different scopes. The global scope and local scopes. Every
-method declaration has an entry in the gobal scope. The method's variables (local vars) are are stored in a sublist (local scope) of the corresponding method. TODO FIGURE
+method declaration has an entry in the global scope. The method's variables (local variables) are stored in a sublist of the corresponding
+method (local scope).
 
-The Symboltable is representet by the symboltable list (SymbolTableList.java) which consists of cells (SymbolTableCell.java).
+The Symboltable is represented by the symboltable list (SymbolTableList.java) which consists of cells (SymbolTableCell.java).
 A cell holds following information:
 \newline
 \newline
 \begin{tabular}{lp{6cm}}
 \texttt{String name} & Name of the entry (Variable name, Method name,\ldots) \\
 \texttt{ClassType classType} & kind of the entry: variable, array, procedure \\
-\texttt{TypeDesc type} & data type: int, bool, char, String \\
+\texttt{TypeDesc type} & data type: int, boolean, char \\
 \texttt{String value} & the value of the variable, when available \\
 \texttt{SymbolTableList methodSymbols} & methods have a sub list with symbol table cells (local scope)\\
 \texttt{int offset} & offset is negative \\
 \texttt{int size} & in 4 bytes (word) \\
-\texttt{int proc} & programm counter of methods (for fixups) \\
+\texttt{int proc} & program counter of methods (for fixups) \\
 \texttt{boolean globalScope} & scope information \\
 \end{tabular}
 
-Imported Modules have their own Symboltable which are stored in seperate Container. For every imported Class file it's SymbolFile TODO LINK will be readed and a Symboltable created. To load a symbol from a imported Class file the name of the file must be specified, e.g. \texttt{Util.print()}.
+Imported modules have their own symboltable which are stored in a separate container. For every imported module it's symbolfile 
+will be read and a symboltable created.
+ To load a symbol from a imported module the name of the file must be specified, e.g. \texttt{Util.print()}.
 
 
 
