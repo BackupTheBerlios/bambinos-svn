@@ -59,6 +59,7 @@ public class VM {
 	
 	
 	private static boolean debug = false;
+	private static boolean gui = false;
 	
 	// format 1 instructions
 	private static final int ADDI=0, SUBI=1, MULI=2, DIVI=3,MODI=4, CMPI=5, 
@@ -95,6 +96,12 @@ public class VM {
 				if (args[1].equals("--debug")) {
 					System.out.println(args[1]);
 					debug = true;
+					gui = true;
+				}
+				
+				if (args[1].equals("--gui")) {
+					System.out.println(args[1]);
+					gui = true;
 				}
 				
 			}
@@ -109,8 +116,11 @@ public class VM {
 		}
 		
 		
+		if (gui) {
+			initGui();
+		}
 		
-		initGui();
+		
 		
 		if (debug) {
 			initDebugGUI();
@@ -1105,8 +1115,10 @@ public class VM {
 		
 		if (registers[r2] != null) {
 			int intValue = registers[r2];
+			if (gui) {
+				outputDisplay.append(intValue + " " + "\n");
+			}
 			
-			outputDisplay.append(intValue + " " + "\n");
 			System.out.println(intValue);
 		}	
 		
@@ -1123,7 +1135,10 @@ public class VM {
 			int intValue = registers[r2];
 			char charValue = (char)intValue;
 			
-			outputDisplay.append(charValue + " " + "\n");
+			if (gui) {
+				outputDisplay.append(charValue + " " + "\n");
+			}
+			
 			System.out.println(charValue);
 					
 		}	
@@ -1149,7 +1164,9 @@ public class VM {
 			}
 			
 			if (booleanValueRepresentation.equals("") == false) {
-				outputDisplay.append(booleanValueRepresentation + "\n");
+				if (gui) {
+					outputDisplay.append(booleanValueRepresentation + "\n");
+				}
 				System.out.println(booleanValueRepresentation);
 			}
 			
