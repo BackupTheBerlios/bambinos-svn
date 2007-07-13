@@ -1,4 +1,4 @@
-\documentclass[a4paper,10pt]{article}
+\documentclass[a4paper,10pt, titlepage]{article}
 
 \usepackage[T1]{fontenc}
 \usepackage{color, listings}
@@ -72,8 +72,13 @@ emphstyle={[2]\color{blue}}
 %\selectlanguage{english} 
 
 
+\title{comPiler}
+\author{Rupert Gratz \and Matthias Lackenbucher}
 
 \begin{document}
+
+\maketitle
+
 
 {\sc Die Schriftart small caps (Kapit"alchen).}
 {\sf Die Schriftart sans serif (serifenlos).}
@@ -82,11 +87,17 @@ emphstyle={[2]\color{blue}}
 \newpage
 
 \input{overview.tex}
+\input{scanner.tex}
 \input{parser.tex}
 \input{codeGeneration.tex}
 \input{memory.tex}
 \input{symbolfile.tex}
 \input{linker.tex}
+\input{vm.tex}
+\input{conclusion.tex}
 \input{appendix.tex}
+
+\bibliographystyle{plain}
+\bibliography{compiler}
 
 \end{document}
