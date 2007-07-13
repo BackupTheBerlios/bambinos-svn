@@ -1,5 +1,5 @@
-\section{Appendix}
-\subsection{EBNF of input language}
+\part{Appendix}
+\section{EBNF of input language}
 \label{labelEBNF}
 
 \begin{verbatim}
@@ -93,7 +93,7 @@ whileStatement          = "while" "(" condition ")" "{" bodyBlock "}".
 ifStatement             = "if" "(" condition ")" "{" bodyBlock "}" [ "else" "{" 
                           bodyBlock "}" ].
 returnStatement         = "return" expression SEMICOLON.
-printStatement          = "print" "(" (identifier | intValue | charValue | 
+printStatement          = "println" "(" (identifier | intValue | charValue | 
                           StringValue ) ")" SEMICOLON.
 
 datatypeDescriptor      = datatype identifier [arraySelector].
@@ -123,4 +123,109 @@ arraySelector           = "[" [expression] "]".
 
 \end{verbatim}
 
+\section{Work-sharing}
+\label{appendix:work-sharing}
+The compiler consists of several complex work packages where some fit together
+and some are totally independend from each other. We tried to divide the work in
+a way that packages that fit together were handled by one person (following the
+principle of \emph{Too many cooks spoil the broth}). 
+However the whole planning effort was handled by both team members. We always
+aquired knowledge of compiler theory together, designed the work package and
+determined who implemented it. Concepts like the format of the objectfile were
+also developed together. \\
+These were Rupert's working packages:
+\begin{itemize}
+  \item parser
+  \item symboltable
+  \item code generation
+\end{itemize}
+These were Matthias' working packages:
+\begin{itemize}
+  \item scanner
+  \item symbolfile
+  \item linker
+  \item virtual machine
+\end{itemize}
 
+\section{Code example}
+The following example calculates the fibonacci number smaller than 10. \\
+The main module (\emph{MainModule.java}) imports the module \emph{Util}. The
+result of a computation is printed by the method \emph{print} in \emph{Util}. 
+
+\begin{lstlisting}[caption="MainModule.java"]
+package examples;
+
+import Util;
+
+public class MainModule {
+
+	public static int calcFibonacci(int a, int b) {
+		
+		a = a + b;
+		return a;
+	}
+	
+	public static void main() {
+	
+		int a = 0;
+		int b = 1;
+		int tmp;
+		
+		while (b < 10) {
+			
+			Util.print(b);
+			
+			a = calcFibonacci(a, b);
+			tmp = b;
+			b = a; 
+			a = tmp;	
+		}	
+	}	
+}
+\end{lstlisting}
+
+\emph{Util} itself imports the module \emph{Util2} and executes the method
+\emph{printInt} which writes the result to the output channel.
+\begin{lstlisting}[caption="Util.java"]
+package examples;
+
+import Util2;
+
+public class Util {
+	
+	public static void print(int a) {
+		Util2.printInt(a);
+	}
+}
+\end{lstlisting}
+
+\emph{Util2} just offers one method \emph{printInt} to write an integer value to
+the output-channel. \emph{println} is a statement of our input language (see
+~\ref{labelEBNF}).
+
+\begin{lstlisting}[caption="Util2.java"]
+package examples;
+
+public class Util2 {
+
+	public static void printInt(int a) {
+		println(a);
+	}
+}
+\end{lstlisting}
+\subsection{Running the example}
+To run that example we offer some scripts that may help: 
+\begin{description}
+\item[compile.sh] compiles the files \emph{Util2.java}, \emph{Util.java},
+\emph{MainModule.java} and links the resulting objectfiles (Util2.obj, Util.obj,
+MainModule.obj) to one executablefile (MainModule.bin) 
+\item[run.sh] starts the virtual machine and executes the executable \emph{MainModule.bin}
+\item[run\_gui.sh] starts the virtual machine with a graphical output window. 
+\item[run\_debug.sh] starts the virtual machine in debug mode. This lets you step
+through the instruction from the binary file and shows the content of the vm-registers. 
+\end{description}
+So to compile and run the example you need to type: 
+\begin{lstlisting}
+	./compile.sh
+	./run.sh
+\end{lstlisting}
