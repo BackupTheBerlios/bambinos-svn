@@ -1,7 +1,12 @@
-#!/bin/bash
+#!/bin/sh
 
-currentDir=`pwd`
+cd bin
 
-java ${currentDir}/bin/compiler/Parser ${currentDir}/src/examples/Util.java
-javac ./bin/compiler/Parser.java src/examples/MainModule.java
+java compiler.Parser ../src/examples/ Util2.java
+java compiler.Parser ../src/examples/ Util.java
+java compiler.Parser ../src/examples/ MainModule.java
+
+java linker.Linker ../MainModule.obj
+
+cd ..
 
