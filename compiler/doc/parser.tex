@@ -64,17 +64,17 @@ term & not number simpleIdentifier StringValue charValue "NULL" "-" "true" "fals
 
 \newpage
 \subsection{Syntax Error Handling}
-The parser is able to detect many syntax errors. We distinguish between two error levels : week- and strong error levels.
+The parser is able to detect many syntax errors. We distinguish between two error levels : weak- and strong error levels.
 \begin{itemize}
-  \item \textbf{Week Errors} don't do any harm. 
+  \item \textbf{weak Errors} don't do any harm. 
   \item \textbf{Strong Errors} will stop the code generation. 
 \end{itemize}
 
-\subsubsection{Week Errors (Warnings)}
-\label{label_week_errors}
-Week errors are missing tokens which will be inserted by the parser.
-The code generator never takes notice about those errors. When a week error occurs a warning will be displaced, the token will be inserted, parsing and code generation continues.
-Compiler is able to detect and correct following week errors:
+\subsubsection{weak Errors (Warnings)}
+\label{label_weak_errors}
+weak errors are missing tokens which will be inserted by the parser.
+The code generator never takes notice about those errors. When a weak error occurs a warning will be displaced, the token will be inserted, parsing and code generation continues.
+Compiler is able to detect and correct following weak errors:
 \begin{itemize}
   \item any missing ";"
   \item any missing ")" "\{" "\}" "]" 
@@ -98,7 +98,7 @@ synchronisation points. Synchronization works this way:
 \end{itemize}
 Strong Errors can be:
 \begin{itemize}
-  \item misplaced tokens. When the current token does not correspond to EBNF rules, except of week errors.
+  \item misplaced tokens. When the current token does not correspond to EBNF rules, except of weak errors.
   \item any missing identifiers.
   \item any illegal terminal symbols, like identifier starting with a digit. This kind of error detects the scanner, and a
   error token will be delivered to the parser.
