@@ -7,12 +7,11 @@ public class Util {
 	//private static boolean debug1 = true; // default
 
 	//print opCode and Code Generation Stuff
-	private static boolean debug2 = true; // default
+	private static boolean debug2 = false; // default
 	//debug2 = true; // default
 	
-	
 	//Supress important messages should be true !!
-	private static boolean debug3 = true; // default
+	private static boolean debug3 = false; // default
 
 	
 	

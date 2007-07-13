@@ -443,7 +443,6 @@ public class Parser {
 		// Add method to symboltable
 		int offsetBefore = CodeGenerator.symbolTable.getCurrentOffset();
 
-		// TODO
 		// 1. null = type ist nicht so einfach. Bei Objekten muss ich
 		// irgendwie den Typ vorher deklarieren und dann schauen welcher und
 		// irgendwo suchen (siehe Type typen die allgemein definiert sind
@@ -452,14 +451,11 @@ public class Parser {
 		add2SymTable(name, SymbolTableCell.ClassType.method, CodeGenerator.INTTYPE, 0);
 
 		// Parameter:
-		Vector<String> paramVector = new Vector<String>(); // TODO vorerst,
+		Vector<String> paramVector = new Vector<String>(); 
 		// replace Vector
 		// due Performance
 		// issue
-		Vector<TypeDesc> typeVector = new Vector<TypeDesc>(); // TODO vorerst,
-		// brauche dann ein
-		// Objekt statt
-		// String
+		Vector<TypeDesc> typeVector = new Vector<TypeDesc>(); 
 
 		if (currentToken.type.startSetSimpleDeclaration()) { // if
 			// dataTypeDescriptor
@@ -480,7 +476,6 @@ public class Parser {
 		// add parameters with positive offsets+2 relative from the frame
 		// pointer
 		// Add parameters to symboltable call by ref noch nicht implementiert !!
-		// TODO ich adde einfach mal nur Integer types ;
 		// muss in der Form int x, ... sein -- arrays, objekte geht noch nicht
 		CodeGenerator.symbolTable.getSymbol(name).methodSymbols.fixOffset(paramVector.size() + 2);
 		int i = 0;
@@ -597,7 +592,6 @@ public class Parser {
 		TypeDesc type = primitiveArray();
 		identifier(); // nur simple supported at the moment
 		expectWeak(TEQL);
-		// TODO improve can be over here
 		expectWeak(TNEW);
 		primitive();
 		expectWeak(TLBRACK);
