@@ -1,29 +1,29 @@
-\part{The linker}
-The linker is a intermediate step between processing the sourcecode and executing a
-binary. It reads the objectfiles of a compiled program and its imported
-modules and combines them to one binary for the virtual machine.
+\part{Linker}
+The linker is a intermediate step between processing the sourcecode and
+executing an executable. It reads the objectfiles of a compiled program and its imported
+modules and combines them to one executable for the virtual machine.
 \\
 A linker is needed if a compiler wants to provide \emph{separate compilation}.
 That means that a program can import methods from a precompiled module. The
 program just needs a symbolfile to find out which methods the module offers. \\
-But a problem arises when the compiler wants to create a binary from the
+But a problem arises when the compiler wants to create a executable from the
 program-sourcecode. The compiler knows that the called method exists in the
 module (from the symbolfile) but it doesn't know the content of that method. \\
 So before the program can be executed the linker has to copy the relevant data
-from the affected objectfiles together into one binary. These objectfiles contain
+from the affected objectfiles together into one executable. These objectfiles contain
 all the information the linker needs to fullfill that work.    
 
-\section{The objectfile}
+\section{Objectfile}
 \label{objectfile}
 The objectfile is a intermediate file created by the compiler, that already
 contains generated code and a lot of meta-information. The linker reads this
-objectfile and creates a binaryfile. \\
+objectfile and creates a executable file. \\
 The reason for that intermediate step is, that if modules are imported the
-compiler doesn't have all the data he needs to create a valid and executable binary. 
+compiler doesn't have all the data he needs to create a valid and executable. 
 So the objectfile offers the needed information like the program entry point, which
 methods are loaded from modules and were to find that methods in these modules. \\
 Based in that information the linker can link the compiled code in the
-objectfiles together and create one executable binary.
+objectfiles together and create one executable.
 
 \subsection{Structure}
 \label{linker:objectfile:structure}
@@ -142,8 +142,8 @@ the fixup table (~\ref{linker:objectfile:length_fixup_table}) is read.
 
 \subsection{Processing of the objectfiles}
 \label{linker:objectfile_procession}
-As mentioned above the linker combines one or more objectfiles to one binary for
-execution in the virtual machine.\\ 
+As mentioned above the linker combines one or more objectfiles to one executable for
+the virtual machine.\\ 
 
 \begin{figure}[h]
 
@@ -255,15 +255,17 @@ The linker takes care of this addressing inconsistency. It updates the offset
 table when a module is linked to another one. 
 
 
-\section{The binaryfile}
-The binaryfile is a file that can be executed by the virtual machine. It hardly
+\section{Executable file}
+\section{executable}
+The executable file is a file that can be executed by the virtual machine. It hardly
 provides any meta-information but mostly executable code (opCode). This file is
 created when a linker links one or more objectfiles together. \\
 Linking means that the opCode from the objectfiles is copied sequentially into the
-binaryfile and that jump addresses in this opCode are corrected. 
+executable file and that jump addresses in this opCode are corrected. 
 
 \subsection{Structure}
-The binary file always starts with a magic word of length 32 bit, so that the
+\label{linker:executable:structure}
+The executable file always starts with a magic word of length 32 bit, so that the
 virtual machine can identify it as an executable. The magic word always has the value 0.
 \\ \begin{figure}[h]
 		
@@ -289,8 +291,8 @@ virtual machine can identify it as an executable. The magic word always has the 
 		\end{tabular}
 	\end{center}
 	
-	\caption{Structure of the binary file}
-	\label{linker:binaryfile:structure}
+	\caption{Structure of the executable file}
+	\label{linker:executable:structure:figure}
 \end{figure}
 After the magic word the opCode instructions of the main module are stored
 followed by an exit instruction (jump to address (-1)). If the virtual machine
