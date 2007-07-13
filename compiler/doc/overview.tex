@@ -19,12 +19,13 @@ In the scope of compiler construction managed by Prof. Kirsch we implemented a c
 \item separate compilation (linking)
 \item syntax check (weak and strong error levels)
 \item type safety
+\item arithmetic and boolean operations
 \item basic I/O operations
 \end{itemize}
 
 
 \subsection{Input language}
-We decided to compile a LL(1) compliant subset of Java. The programming languange is defined by EBNF see \ref{labelEBNF}.
+We decided to compile a LL(1) compliant subset of Java. The programming language is defined by EBNF, see \ref{labelEBNF}.
 Listing \ref{example} shows any source file for our compiler.
 
 \begin{lstlisting}[caption={Input language example},label={example}]
@@ -74,7 +75,7 @@ public class Util {
 \subsection{Output language}
 Our output language is based on the RISC architecture defined by Wirth. The Code Generator creates object files for the linker, the linker itself creates a output file for executing on the Virtual Machine. Both, the object and the execution file are binary files.
 
-The binary file we execute on the Virtual Machine consist of a stream of operation code (3 adress code). Each operation is represented by a 32 bit word. Thus our compiler is continous word aligned and a word in ComPiler consists of 32 bit. 
+The binary file we execute on the Virtual Machine consist of a stream of operation code (3-address code). Each operation is represented by a 32 bit word. Thus our compiler is continuous word aligned and a word in ComPiler consists of 32 bit. 
 
 \begin{figure}[h]
 \label{components}
