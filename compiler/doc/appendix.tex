@@ -103,7 +103,8 @@ value                   = identifier [arraySelector | (methodCallSuffix)] |
                           "NULL" | not value | "(" expression ")".
 factor                  = value {('*' | '/' | '%') value}.
 term                    = factor {("+" | "-") factor}.
-relation                = term [(equal equal | not equal | greater [equal] | smaller [equal]) term].
+relation                = term [(equal equal | not equal | greater [equal] | 
+                          smaller [equal]) term].
 andExpression           = relation {(AND) relation}.
 expression              = andExpression {(OR) andExpression}.
 
