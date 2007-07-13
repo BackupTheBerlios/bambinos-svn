@@ -569,9 +569,15 @@ public class Parser {
 		if (currentToken.type == TEQL) {
 			Item item = assignmentSuffix();
 
+			if (item.mode == 1)
+				item.type = CodeGenerator.symbolTable.getSymbol(
+						tokenList.get(tokenList.size() - 1).value).getType();
+			
 			// type checking:
 			if (item.type != type)
 				syntaxError("Invalid Type assignment, in line :" + currentToken.lineNumber);
+			
+			
 
 			// initialisiere INT mit 0 wenn kein = kommt !
 		} else if (type.equals(CodeGenerator.INTTYPE)) {
