@@ -2,26 +2,25 @@
 In the scope of compiler construction managed by Prof. Kirsch we implemented a compiler. The language we choose to compile is a subset of Java and the compiler itself is written in Java too. We implemented a single-pass compiler, a linker and a virtual machine for executing the generated output file. Figure \ref{components} shows the parts of our compiler. The main source of literature was the book ``Compiler Construction'' written by Nikolaus Wirth.
 \paragraph{} Important design concepts:
 \begin{itemize}
- \item We iplemented a single-pass compiler, 
+ \item We implemented a single-pass compiler, 
  \item a recursive descent parser 
- \item based on DLX-Architecture (defined by Wirth).
+ \item based on the RISC-Architecture defined in % TODO Wirth.
 \end{itemize}
 \subsection{Features}A brief overview of the features our compiler supports:
 \begin{itemize}
-\item modules (classes)
+\item modules
+\item global hiding (implemented in modules)
 \item methods (with parameters and return values)
-\item global hiding (classes)
-\item local hiding (method calls)
+\item local hiding (implemented in methods)
 \item conditionals, loops
 \item one-dimensional arrays
 \item basic data types (boolean, int, char)
 \item extended data types (modules)
-\item seperate compilation (linking)
-\item Syntax check (weak and strong error levels)
+\item separate compilation (linking)
+\item syntax check (weak and strong error levels)
 \item type safety
 \item basic I/O operations
 \end{itemize}
-
 
 
 \subsection{Input language}
