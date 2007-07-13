@@ -75,8 +75,8 @@ is one 32 bit word.
 In the offset table variable- or methodnames and their offsets in the current
 module are saved. That means that every exported module element stands in the
 offset table with its name and opCode offset in the modulefile.  \\
-The example in ~\ref{linker:objectfile:example:offset_table} shows the method
-\emph{print}:
+The example in Figure ~\ref{linker:objectfile:example:offset_table} shows the
+method \emph{print}:
 
 \begin{figure}[h]
 	\begin{center}
@@ -110,8 +110,8 @@ is one 32 bit word.
 \label{linker:objectfile:fixup_table}
 In the fixup table the local and imported methods (methods from other modules) are
 listed. That means their modulename, their name and their offset in the module are stored. \\
-The example in ~\ref{linker:objectfile:example:fixup_table} shows a fixup table
-with the \emph{print}-method from the module \emph{Util}.
+The example in Figure ~\ref{linker:objectfile:example:fixup_table} shows a fixup
+table with the \emph{print}-method from the module \emph{Util}.
 
 \begin{figure}[h]
 		
@@ -234,8 +234,8 @@ the virtual machine.\\
 \label{linker:example:linker}
 \end{figure}
 
-The example in ~\ref{linker:example:linker} shows what data the linker reads from the
-objectfiles and how this data is processed. \\
+The example in Figure ~\ref{linker:example:linker} shows what data the linker reads
+from the objectfiles and how this data is processed. \\
 The fixup table is the key element in linking. It points out that code
 instructions which need to be fixed (their jump addresses must be corrected).
 In the example the instruction at position 18 in the opCode must be corrected. \\
