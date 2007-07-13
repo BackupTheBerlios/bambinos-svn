@@ -86,7 +86,7 @@ we have limited time developing our compiler.
 	\>BGE\>\>F(alse Jump)\\
 	\end{tabbing}
 	\end{quote}
-OR changes the precending control instruction when it has a false jump. 
+OR changes the preceding control instruction when it has a false jump. 
 It inverts the control instruction and changes the false into a true
   jump.
     \begin{quote}
@@ -110,8 +110,8 @@ It inverts the control instruction and changes the false into a true
 	\>BGE\>\>F(alse Jump)\\
 	\end{tabbing}
 	\end{quote}
-      The operator OR changes the precending control instruction at position x, as described above. In addition it changes all False
-      instructions at position < x to the programm counter next to $||$.  
+      The operator OR changes the preceding control instruction at position x, as described above. In addition it changes all False
+      instructions at position < x to the program counter next to $||$.  
   \begin{quote}
 	\begin{tabbing}
 	xxxxxxxxxSpalteserste \= Spaltes\=  Jump\= Spaltes \kill
@@ -154,7 +154,11 @@ really good, we can parse every expression independent of the complexity. We tes
 Worth notifying is that $\&\&$ works same as in Java when the first
 expression is false the second one will not be evaluated. Analogous works $||$.
 \subsection{Modules}
-We support seperate compilation and we can call functions of a foreign class when the class is beeing imported.
+We support separate compilation and we can call functions of a foreign class when the class is being imported. After compiling each module
+into a object file the linker will link them into a executable for the our virtual machine. Modules can contain global variables and methods.
+ The order of the declarations is important, when the first method is being declared no global variable declaration can
+ follow.
+
 
 \subsection{Methods}
 Methods are one of the most important tool for structuring programs. The methods we are able to compile can have parameters and a return
