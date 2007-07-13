@@ -103,10 +103,9 @@ value                   = identifier [arraySelector | (methodCallSuffix)] |
                           "NULL" | not value | "(" expression ")".
 factor                  = value {('*' | '/' | '%') value}.
 term                    = factor {("+" | "-") factor}.
-expression              = term {(AND|OR) term}.
-condition               = expression [(equal equal | not equal | greater [equal]|
-                          smaller [equal]) expression].
-TODO
+relation                = term [(equal equal | not equal | greater [equal] | smaller [equal]) term].
+andExpression           = relation {(AND) relation}.
+expression              = andExpression {(OR) andExpression}.
 
 intValue                = ["-"]number.
 booleanValue            = "true" | "false".
