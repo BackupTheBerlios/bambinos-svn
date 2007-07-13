@@ -1,4 +1,6 @@
-\section{The scanner}
+\part{Compiler}
+
+\section{Scanner}
 \label{scanner}
 The scanner reads a sourcefile and returns all symbols found as tokens. The
 scanner is implemented as a class that is instantiated by the parser. 
@@ -9,3 +11,16 @@ myScanner.importSource("filename");
 myScanner.getSym(); 
 \end{lstlisting}
 This example returns one token. The valid tokens are defined in the class \emph{Ident}.
+\\
+The scanner skips all spaces, single-line comments and multi-line-comments. \\
+In the following code only the symbols SIMPLEIDENTIFIER, EQUALS, NUMBER, SEMICOLON are
+read. \\
+\begin{lstlisting}[caption={comments}]
+
+// please raise for the declaration
+	a = 4;
+/*
+* and now for the multiline-comment
+*/
+
+\end{lstlisting}
