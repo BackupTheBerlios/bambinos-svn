@@ -1,4 +1,13 @@
-To run that example we offer some scripts that may help: 
+directory-overview: 
+> bin: contains the binaries of the compiler, linker and vm (.class files)
+	> compiler: compiler, vm
+	> linker: linker
+> src: contains the source-code of the compiler, linker and vm (.java files)
+	> compiler: compiler, vm
+	> examples: example
+	> linker: linker
+
+To compile, link and execute the example in src/examples we offer some scripts that may help:
 
 - compile.sh - compiles the files "Util2.java", Util.java, MainModule.java and links the resulting objectfiles (Util2.obj, Util.obj,
 MainModule.obj) to one executablefile (MainModule.bin) 
