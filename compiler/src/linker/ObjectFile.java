@@ -81,11 +81,14 @@ public class ObjectFile {
 	private String getModuleName(String filename) {
 
 		String moduleName = new String();
+		String moduleFileName = new String();
 
-		filename = filename.split("\\.")[0];
+		//filename = filename.split("\\.")[0];
 		String[] pathElements = filename.split(File.separator);
 
-		moduleName = pathElements[pathElements.length - 1];
+		moduleFileName = pathElements[pathElements.length - 1];
+		
+		moduleName = moduleFileName.split("\\.")[0];
 
 		return moduleName;
 
