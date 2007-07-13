@@ -4,16 +4,31 @@ import Util;
 
 public class MainModule {
 
+	public static int calcFibonacci(int a, int b) {
+		
+		a = a + b;
+		return a;
+	}
+	
+	
 	public static void main() {
 	
-		int a = 2;
-		int b = 5;
+		int a = 0;
+		int b = 1;
+		int tmp;
 		
-		int c = (a * b) * 3 * (6-4);
-				
-		Util.calc(c);
+		while (b < 10) {
+			
+			Util.print(b);
+			
+			a = calcFibonacci(a, b);
+			tmp = b;
+			b = a; 
+			a = tmp;
+			
+			
+		}
 		
-		Util.print('z');
 	}
 	
 }

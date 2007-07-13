@@ -2,8 +2,7 @@ package examples;
 
 public class Util2 {
 
-	public static void printChar(char a) {
+	public static void printInt(int a) {
 		println(a);
 	}
-	
 }

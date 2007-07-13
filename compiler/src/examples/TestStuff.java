@@ -26,24 +26,34 @@ public class TestStuff {
 	
 		int x = 0;
 		int y = 1;
-	
-		//if (((((a*20) > (b+b+1)) && (c == d)) && (c == 'a')) || (c == 'a')) {
-		if (a == b) {
+		int z = 4;
+		/*
+		//if (((((a*20) > (b+b+1)) && (c == d)) && (c == 'a') && (true))) {
+		if (false || true) {
 			output(x);
 		} else {
 			output(y);
 		}
+		*/
+		while (x <= 10) {
+			x = x + 'a';
+			output(x);
+		}
+		output(x);
 	
+		x = 'd';
+		
+		/*
 		if (c == d) {
 			output(x);
 		} else {
 			output(y);
 		}
-	
+	*/
 	
 	}
 	
-	public static void main(String[] args) {
+	public static void main() {
 		
 		int a=5;
 		int b=6;
