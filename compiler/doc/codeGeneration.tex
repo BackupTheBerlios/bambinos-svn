@@ -6,23 +6,23 @@ Expressions act a central part in our compiler. Expressions are used for all kin
 they are used for size declaration of arrays, for complex boolean and arithmetic expressions. 
 Therefore expressions have to be very flexible and have to support all kinds of data types. 
 The advantage of such a powerful method is that a programmer can be very flexible in writing code, 
-the disadvantage is it is possible to create unstable code. Therefore the caller method has always to do a type check.
-One of our focus, when we implemented our compiler was to be very reliable when compiling expressions.
+the disadvantage is that it is possible to create unstable code. Therefore we have always to do a type checking after calling
+the expression method.
+One of our focus, when we implemented our compiler was to be very reliable in compiling expressions.
 We can compile and evaluate very long and complex expression, we have no limit at all in complexity :) .
 
-At the end of an expression we return an Item which holds status information about the expression.
+At the end of an expression we return an item which holds status information about the expression.
 This information can be:
 \begin{itemize}
-  \item value of the expression is already in a Register (when a operation occurred)
-  \item expression is a constant
-  \item expression is a variable
-  \item the return Item does always contain the type of the expression too, see \ref{labelTypeCheck}.
+  \item Type of the evaluated expression (constant, variable or register value)
+  \item If the evaluated expression is a constant then the value is stored in the item too.
+  \item The returned item contains the type of the evaluated expression too.
 \end{itemize}
-Boolean expressions are more complicated, see \ref{labelBoolean}. 
+Compilation of boolean expressions is more complicated, see \ref{labelBoolean}. 
 
-\subsubsection{Delayed codegeneration}
-We support delayed code generation for arithmetic expressions. It is often unnecessary to load constants immediately to a register.
-Consider following example $(3 + 4) * x$, without delayed code generation every constant is loaded into a register:
+\subsubsection{Delayed code generation}
+We support delayed code generation in arithmetic expressions. It is often unnecessary to load constants immediately onto registers.
+Consider following example $(3 + 4) * x$, without delayed code generation every constant is loaded onto a register:
 \begin{quote}
 \begin{tabbing}
 erste \= Spaltes\=  st sehr breit Spalte\=vierte \kill
@@ -44,16 +44,16 @@ erste \= Spaltes\=  st sehr breit Spalte\=vierte \kill
 
 \subsection{Boolean representation}
 \label{labelBoolean}
-We support a conditional and a repeated statement which both needs boolean expressions. Boolean expressions can be:
+We support a conditional and a repeated statement, both need boolean expressions. Boolean expressions can be:
 \begin{itemize}
-  \item on of the key words \texttt{true} or \texttt{false},
+  \item one of the key words \texttt{true} or \texttt{false},
   \item a boolean variable,
-  \item a relation ($==$,$<=$,$>=$,$<$,$>$,$!=$),
-  \item in addition boolean expressions can contain boolean operations AND ($ \&\& $)  and OR ($||$). 
+  \item a result of a relation ($==$,$<=$,$>=$,$<$,$>$,$!=$),
+  \item in addition boolean expressions can contain boolean operations: AND ($ \&\& $)  and OR ($||$). 
 \end{itemize}
 
 \subsubsection{Default output of relations}
-For simple expressions which contains a relation in it, we generator output code adequate for the AND operator:
+For simple expressions which contain a relation in it, we generate output code adequate for the AND operator:
 The relation $(a<b)$ is leading to following output:
 \begin{quote}
 \begin{tabbing}
@@ -70,11 +70,11 @@ Consider following expression:
 $\underbrace{(\underbrace{\underbrace{(a<b)}_{3}\&\&\underbrace{(b<c)}_{3}}_{2})||(\ldots)}_1 $
 \end{quote}
 The operator $ \&\& $ has only permission to edit already generated output code of the same level or of deeper levels. When a
-boolean operation has edit a certain output code $x$ the level of $x$ will be decreased. When $ \&\& $ is finished in the example above,
-then all output code statements will be of the same level as $ \&\& $. This ensures that operations following the OR $||$ operator where the
-$\ldots$ are can not edit previous output code.
-That way we need brackets for a completed sub-expression and $||$ does not bind stronger than $ \&\& $. We did not improve this since we
-have limited time for our compiler development.
+boolean operation has edit a certain output code $x$ the level of $x$ will be decreased. When $ \&\& $ is finished (in the example above)
+ all output code statements will be of the same level as $ \&\& $. This ensures that operations following the OR $||$ operator (where the
+$\ldots$ are) can not edit previous output code.
+That way we always need brackets for a valid sub-expression and $||$ does not bind stronger than $ \&\& $. We did not improve this since
+we have limited time developing our compiler.
 
 \subsubsection{Editing rules for boolean operators}
 \begin{enumerate}
@@ -86,7 +86,8 @@ have limited time for our compiler development.
 	\>BGE\>\>F(alse Jump)\\
 	\end{tabbing}
 	\end{quote}
-OR changes the precending control instruction when it has a false jump. It inverts the control instruction and changes the false into a true
+OR changes the precending control instruction when it has a false jump. 
+It inverts the control instruction and changes the false into a true
   jump.
     \begin{quote}
 	\begin{tabbing}
@@ -156,33 +157,33 @@ expression is false the second one will not be evaluated. Analogous works $||$.
 We support seperate compilation and we can call functions of a foreign class when the class is beeing imported.
 
 \subsection{Methods}
-Methods are one of the most important tool for structuring programms. The methods we can compile can have parameters and a return value. The
-parameter can be of any kind of types (primitive,object). Our methods are able to hold local variables according to local hiding principle.
-The steps a method goes through in our compiler:
+Methods are one of the most important tool for structuring programs. The methods we are able to compile can have parameters and a return
+value. Our methods are able to hold local variables according to local hiding principle, see \ref{label_local_hiding}. The methods we
+support must are public and static. The steps a method declaration goes through in our compiler:
 \begin{itemize}
   \item When the parser recognize a method declaration the method gets an entry (cell $x$) in the global symbol table (\ref{labelSymboltable}).
   \item The return type will be recognized and stored as the method's type in the cell $x$. When a module serves as return
-  type, then the module must have been imported. If no return type is declared a syntax errror will be printed.
+  type, then the module must have been imported. If no return type is declared a syntax error will be printed.
   \item Next, the parameters are parsed and for each parameter an entry in the methods separate symbol table is created. The offset of the
   parameters is a positive value. 
-  \item The methods prolog is executed  TODO LINK and the program counter of the prolog start is stored in cell $x$ of the global
-  symboltable. The programmcounter is needed for further method calls. 
-  \item Next, method's body will get parsed. All new symbols which are declared are stored in the sub- symbol list of the method. These
-  local variables have a negative offset and is relative to cell $x$ of the method.
-  \item At the end of the body we calculate the size of the method. We sum the size of the elements in the local symbol table and
-  store the value into cell $x$ of the global symbol table.
-  \item The methods epilog is executed. TODO LINK
+  \item The methods prologue is executed and the program counter of the prologue start is stored in cell $x$ of the global
+  symboltable. The programcounter is needed for further method calls. 
+  \item Next, method's body will being parsed. All new symbols, which are declared in the body are being stored in the sub- symbol list of
+  the method. These local variables have a negative offset and have relative offsets to cell $x$ of the method.
+  \item At the end of the method's body we calculate the size of the method. We sum the size of each element of the local symbol table and
+  store the value into cell $x$ which resides in the global symbol table.
+  \item The methods epilogue is executed.
   \item At this moment the method is ready to be called, recursive calls are possible too.
 \end{itemize}
 \begin{verbatim}
 
 \end{verbatim}
 \begin{quote}
-Method's Prolog: \\
+Method's prologue: \\
 \begin{itemize}
-  \item push return adress from the link register (R31) onto the stack
+  \item push return address from the link register (R31) onto the stack
   \item push frame pointer (R29) onto the stack
-  \item move frame pionter onto the current stack pointer
+  \item move frame pointer onto the current stack pointer
   \item decrease stack pointer with the size of the method (sum of local variables) 
 \end{itemize}
 \end{quote}
@@ -191,13 +192,13 @@ Method's Prolog: \\
 \end{verbatim}
 
 \begin{quote}
-Method's Epilog: \\
+Method's Epilogue: \\
 \begin{itemize}
   \item move the stack pointer (R30) to the current frame pointer. Thats the advantage of the stack, we just move the stack pointer and the
   memory is free.
   \item pop, write back the old frame pointer
-  \item pop, write back the old return adress
-  \item jump to the return adress and continue
+  \item pop, write back the old return address
+  \item jump to the return address and continue
 \end{itemize}
 \end{quote}
 \begin{quote}
@@ -206,16 +207,35 @@ Method's Epilog: \\
 \end{verbatim}
 Method Call: \\
 \begin{itemize}
-  \item put paramaters onto the stack
+  \item put parameters onto the stack
   \item branch to method
 \end{itemize}
 
 \end{quote}
 
+\subsubsection{Main method}
+The main method needs to be treated special because the program execution starts there. When we link modules we must have at least one
+module which contains a main method. We can also deal with more modules containing a main method, because the linker needs the ``main''
+module as argument. 
+
+\subsubsection{Local hiding}
+\label{label_local_hiding}
+ComPiler offers local hiding of variables. That means, that procedures can
+contain variables that cannot be seen outside the procedure. Even if there
+exists a variable with the same name outside the procedure, these two don't
+interfere.
+
+\subsubsection{Memory organization of methods}
+In the memory a method and its content is hold in activation frames. An activation frames is a special memory context used for a
+method and its local variables.
+The memory for the activation frames is organized as a stack. The SP indicates the next free memory and the FP the base address of the
+current frame. When a method call happens, a new frame will be created and the frame pointer will be reassigned to the new frame. 
+
+
 \subsection{Arrays}
 \label{labelArrays}
 In our compiler an array is represented as several variables of the specified type, as many as the size of the array is. We implemented arrays
-in an early stage of our compiler, at this stage we did not have moduls. The advantage of this implementation is that it is simple and
+in an early stage of our compiler, at this stage we did not have modules. The advantage of this implementation is that it is simple and
 sufficient, the disadvantage is that we have no operations on arrays. \\
 An array declaration has to be one this:
 \begin{lstlisting}[caption={array declaration}]
@@ -223,10 +243,8 @@ dataType[] name = new dataType[expression];
 dataType[] name = dataType[expression];
 \end{lstlisting}
 \paragraph{}When parsing an array declaration the type and size of the array will be stored in the symbol table. Arrays can be
-local and global. To store new elements in the array they have to be, of course be of the same type. In addition we check we check the
-index bounds when writing or accesing an element of an array at compile time.  
-
-
+local and global. To store new elements in the array they have to be, of course, be of the same type. In addition we check the
+index bounds when writing or accessing an element of an array in compile time.  
 
 
 
