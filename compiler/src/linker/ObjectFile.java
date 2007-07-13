@@ -434,7 +434,6 @@ public class ObjectFile {
 
 		try {
 			currentWord = this.file.readInt();
-			System.out.println(currentWord);
 			return currentWord;
 		} catch (EOFException eof) {
 			return null;
