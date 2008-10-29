@@ -274,7 +274,7 @@ static void mbcd_setup_cdev(struct mbcd_dev *dev, int index)
 }
 
 
-int mbcd_init(void)
+int __init mbcd_init(void)
 {
 	int result, i;
 	dev_t dev = 0;
