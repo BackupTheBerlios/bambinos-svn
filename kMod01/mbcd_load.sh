@@ -26,6 +26,11 @@ echo "Major Number: $major"
 
 rm -f /dev/${device}
 mknod /dev/${device} c $major 0
+if [ ! "$?" = 0 ]; then
+	echo "Could not create Node"
+	exit 1
+fi
+echo "Node: /dev/$device created, major: $major"
 chgrp $group /dev/${device}
 chmod $mode  /dev/${device}
 
