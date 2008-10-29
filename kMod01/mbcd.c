@@ -39,7 +39,7 @@ int mbcd_open(struct inode *inode, struct file *filp){
 		if ( (filp->f_flags & O_ACCMODE) == O_WRONLY) {
 			//if (down_interruptible(&dev->sem))
 			//	return -ERESTARTSYS;
-			mbcd_trim(dev); /* ignore errors */
+			//mbcd_trim(dev); /* ignore errors */
 			//up(&dev->sem);
 		}
 	return 0;
@@ -49,11 +49,13 @@ int mbcd_release(struct inode *inode, struct file *filp){
 	return 0;
 }
 
-int mbcd_read(){
+int mbcd_read(struct file *filp, char __user *buf, size_t count,
+        loff_t *f_pos){
 	return 0;
 }
 
-int mbcd_write(){
+int mbcd_write(struct file *filp, const char __user *buf, size_t count,
+        loff_t *f_pos){
 	return 0;
 }
 
@@ -69,9 +71,9 @@ struct file_operations mbcd_fops = {
 /*
  * Set up the char_dev structure for this device.
  */
-static void mbcd_setup_cdev(struct mbcd_dev *dev, int index)
+static void mbcd_setup_cdev(struct mbcd_dev *dev)
 {
-	int err, devno = MKDEV(mbcd_major, mbcd_minor + index);
+	int err, devno = MKDEV(mbcd_major, mbcd_minor);
 
 	cdev_init(&dev->cdev, &mbcd_fops);
 	dev->cdev.owner = THIS_MODULE;
@@ -79,7 +81,7 @@ static void mbcd_setup_cdev(struct mbcd_dev *dev, int index)
 	err = cdev_add (&dev->cdev, devno, 1);
 	/* Fail gracefully if need be */
 	if (err){
-		printk(KERN_NOTICE "Error %d adding mbcd%d", err, index);
+		printk(KERN_NOTICE "Error %d adding mbcd%d", err);
 	}
 }
 
@@ -92,7 +94,7 @@ static int __init  mbcd_init(void) {
 	result_get_major = alloc_chrdev_region(&first, mbcd_minor, device_count, "mbcd");
 	mbcd_major = MAJOR(first);
 
-	mbcd_setup_cdev(&mbcd_devices, 0);
+	mbcd_setup_cdev(&mbcd_devices);
 
 	return 0;
 }
