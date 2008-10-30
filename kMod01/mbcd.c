@@ -120,8 +120,10 @@ ssize_t mbcd_read(struct file *filp, char __user *buf, size_t count,
 
 	if (down_interruptible(&dev->sem))
 		return -ERESTARTSYS;
-	if (*f_pos >= dev->size)
+	if (*f_pos >= dev->size){
+		retval=1;
 		goto out;
+	}
 	if (*f_pos + count > dev->size)
 		count = dev->size - *f_pos;
 
@@ -133,8 +135,10 @@ ssize_t mbcd_read(struct file *filp, char __user *buf, size_t count,
 	/* follow the list up to the right position (defined elsewhere) */
 	dptr = mbcd_follow(dev, item);
 
-	if (dptr == NULL || !dptr->data || ! dptr->data[s_pos])
+	if (dptr == NULL || !dptr->data || ! dptr->data[s_pos]){
+		retval=1;
 		goto out; /* don't fill holes */
+	}
 
 	// count = number of bytes to copy
 	if (count > quantum - q_pos){
@@ -187,8 +191,9 @@ ssize_t mbcd_write(struct file *filp, const char __user *buf, size_t count,
 			goto out;
 	}
 	/* write only up to the end of this quantum */
-	if (count > quantum - q_pos)
+	if (count > quantum - q_pos){
 		count = quantum - q_pos;
+	}
 
 	if (copy_from_user(dptr->data[s_pos]+q_pos, buf, count)) {
 		retval = -EFAULT;
