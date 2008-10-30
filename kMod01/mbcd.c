@@ -12,7 +12,7 @@ int mbcd_major =   0;
 int mbcd_minor =   0;
 int mbcd_nr_devs = 1;
 int mbcd_quantum = 4000;
-int mbcd_qset =    1000;
+int mbcd_qset =    20;
 
 
 MODULE_LICENSE("GPL");
@@ -136,9 +136,10 @@ ssize_t mbcd_read(struct file *filp, char __user *buf, size_t count,
 	if (dptr == NULL || !dptr->data || ! dptr->data[s_pos])
 		goto out; /* don't fill holes */
 
-	/* read only up to the end of this quantum */
-	if (count > quantum - q_pos)
-		count = quantum - q_pos;
+	// count = number of bytes to copy
+	if (count > quantum - q_pos){
+			count = quantum - q_pos;
+	}
 
 	if (copy_to_user(buf, dptr->data[s_pos] + q_pos, count)) {
 		retval = -EFAULT;
@@ -152,7 +153,7 @@ ssize_t mbcd_read(struct file *filp, char __user *buf, size_t count,
 	return retval;
 }
 
-int mbcd_write(struct file *filp, const char __user *buf, size_t count,
+ssize_t mbcd_write(struct file *filp, const char __user *buf, size_t count,
                 loff_t *f_pos)
 {
 	struct mbcd_dev *dev = filp->private_data;
