@@ -17,6 +17,7 @@ int mbcd_nr_devs = 1;
 int mbcd_quantum = 4000;
 int mbcd_qset =    20;
 int write_counts=0;
+int read_counts=0;
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("R. Gratz, M. Kasinger");
@@ -39,19 +40,7 @@ int mbcd_read_procmem(char *buf, char **start, off_t offset,
 		struct mbcd_qset *qs = d->data;
 		if (down_interruptible(&d->sem))
 			return -ERESTARTSYS;
-		len += sprintf(buf+len,"\nDevice %i: qset %i, q %i, sz %li\n",
-				i, d->qset, d->quantum, d->size);
-		for (; qs && len <= limit; qs = qs->next) { /* scan the list */
-			len += sprintf(buf + len, "  item at %p, qset at %p\n",
-					qs, qs->data);
-			if (qs->data && !qs->next) /* dump only the last item */
-				for (j = 0; j < d->qset; j++) {
-					if (qs->data[j])
-						len += sprintf(buf + len,
-								"    % 4i: %8p\n",
-								j, qs->data[j]);
-				}
-		}
+		len += sprintf(buf+len,"Read counts: %d ", read_counts);
 		up(&mbcd_devices[i].sem);
 	}
 	*eof = 1;
@@ -90,7 +79,7 @@ static void mbcd_seq_stop(struct seq_file *s, void *v)
 
 static int mbcd_seq_show(struct seq_file *s, void *v)
 {
-	seq_printf(s, "MBCD Write counts %p \n", write_counts);
+	seq_printf(s, "Write counts %p \n", write_counts);
 	return 0;
 }
 
@@ -132,10 +121,10 @@ static struct file_operations mbcd_proc_ops = {
 static void mbcd_create_proc(void)
 {
 	struct proc_dir_entry *entry;
-	create_proc_read_entry("mbcdmem", 0 /* default mode */,
+	create_proc_read_entry("mbcd_cread", 0 /* default mode */,
 			NULL /* parent dir */, mbcd_read_procmem,
 			NULL /* client data */);
-	entry = create_proc_entry("mbcdseq", 0, NULL);
+	entry = create_proc_entry("mbcd_cwrite", 0, NULL);
 	if (entry)
 		entry->proc_fops = &mbcd_proc_ops;
 }
@@ -143,8 +132,8 @@ static void mbcd_create_proc(void)
 static void mbcd_remove_proc(void)
 {
 	/* no problem if it was not registered */
-	remove_proc_entry("mbcdmem", NULL /* parent dir */);
-	remove_proc_entry("mbcdseq", NULL);
+	remove_proc_entry("mbcd_cread", NULL /* parent dir */);
+	remove_proc_entry("mbcd_cwrite", NULL);
 }
 
 
