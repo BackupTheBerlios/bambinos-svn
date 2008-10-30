@@ -2,9 +2,8 @@
  * mbcd.h
  *
  *  Created on: Oct 30, 2008
- *      Author: rgratz
+ *      Author: rgratz,kasinger
  */
-
 #ifndef MBCD_H_
 #define MBCD_H_
 
