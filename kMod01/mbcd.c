@@ -6,6 +6,9 @@
 #include <asm/uaccess.h>
 #include "mbcd.h"
 
+#include <linux/proc_fs.h>
+#include <linux/seq_file.h>
+
 
 
 int mbcd_major =   0;
@@ -19,6 +22,148 @@ MODULE_LICENSE("GPL");
 MODULE_AUTHOR("R. Gratz, M. Kasinger");
 MODULE_DESCRIPTION("A message buffering char device driver.");
 
+
+
+/*
+ * The proc filesystem: function to read and entry
+ */
+
+int mbcd_read_procmem(char *buf, char **start, off_t offset,
+                   int count, int *eof, void *data)
+{
+	int i, j, len = 0;
+	int limit = count - 80; /* Don't print more than this */
+
+	for (i = 0; i < mbcd_nr_devs && len <= limit; i++) {
+		struct mbcd_dev *d = &mbcd_devices[i];
+		struct mbcd_qset *qs = d->data;
+		if (down_interruptible(&d->sem))
+			return -ERESTARTSYS;
+		len += sprintf(buf+len,"\nDevice %i: qset %i, q %i, sz %li\n",
+				i, d->qset, d->quantum, d->size);
+		for (; qs && len <= limit; qs = qs->next) { /* scan the list */
+			len += sprintf(buf + len, "  item at %p, qset at %p\n",
+					qs, qs->data);
+			if (qs->data && !qs->next) /* dump only the last item */
+				for (j = 0; j < d->qset; j++) {
+					if (qs->data[j])
+						len += sprintf(buf + len,
+								"    % 4i: %8p\n",
+								j, qs->data[j]);
+				}
+		}
+		up(&mbcd_devices[i].sem);
+	}
+	*eof = 1;
+	return len;
+}
+
+
+/*
+ * For now, the seq_file implementation will exist in parallel.  The
+ * older read_procmem function should maybe go away, though.
+ */
+
+/*
+ * Here are our sequence iteration methods.  Our "position" is
+ * simply the device number.
+ */
+static void *mbcd_seq_start(struct seq_file *s, loff_t *pos)
+{
+	if (*pos >= mbcd_nr_devs)
+		return NULL;   /* No more to read */
+	return mbcd_devices + *pos;
+}
+
+static void *mbcd_seq_next(struct seq_file *s, void *v, loff_t *pos)
+{
+	(*pos)++;
+	if (*pos >= mbcd_nr_devs)
+		return NULL;
+	return mbcd_devices + *pos;
+}
+
+static void mbcd_seq_stop(struct seq_file *s, void *v)
+{
+	/* Actually, there's nothing to do here */
+}
+
+static int mbcd_seq_show(struct seq_file *s, void *v)
+{
+	struct mbcd_dev *dev = (struct mbcd_dev *) v;
+	struct mbcd_qset *d;
+	int i;
+
+	if (down_interruptible(&dev->sem))
+		return -ERESTARTSYS;
+	seq_printf(s, "\nDevice %i: qset %i, q %i, sz %li\n",
+			(int) (dev - mbcd_devices), dev->qset,
+			dev->quantum, dev->size);
+	for (d = dev->data; d; d = d->next) { /* scan the list */
+		seq_printf(s, "  item at %p, qset at %p\n", d, d->data);
+		if (d->data && !d->next) /* dump only the last item */
+			for (i = 0; i < dev->qset; i++) {
+				if (d->data[i])
+					seq_printf(s, "    % 4i: %8p\n",
+							i, d->data[i]);
+			}
+	}
+	up(&dev->sem);
+	return 0;
+}
+
+/*
+ * Tie the sequence operators up.
+ */
+static struct seq_operations mbcd_seq_ops = {
+	.start = mbcd_seq_start,
+	.next  = mbcd_seq_next,
+	.stop  = mbcd_seq_stop,
+	.show  = mbcd_seq_show
+};
+
+/*
+ * Now to implement the /proc file we need only make an open
+ * method which sets up the sequence operators.
+ */
+static int mbcd_proc_open(struct inode *inode, struct file *file)
+{
+	return seq_open(file, &mbcd_seq_ops);
+}
+
+/*
+ * Create a set of file operations for our proc file.
+ */
+static struct file_operations mbcd_proc_ops = {
+	.owner   = THIS_MODULE,
+	.open    = mbcd_proc_open,
+	.read    = seq_read,
+	.llseek  = seq_lseek,
+	.release = seq_release
+};
+
+
+/*
+ * Actually create (and remove) the /proc file(s).
+ */
+
+static void mbcd_create_proc(void)
+{
+	struct proc_dir_entry *entry;
+	create_proc_read_entry("mbcdmem", 0 /* default mode */,
+			NULL /* parent dir */, mbcd_read_procmem,
+			NULL /* client data */);
+	entry = create_proc_entry("mbcdseq", 0, NULL);
+	if (entry)
+		entry->proc_fops = &mbcd_proc_ops;
+}
+
+static void mbcd_remove_proc(void)
+{
+	/* no problem if it was not registered */
+	remove_proc_entry("mbcdmem", NULL /* parent dir */);
+	remove_proc_entry("mbcdseq", NULL);
+}
 
 
 
