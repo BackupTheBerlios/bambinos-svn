@@ -2,7 +2,7 @@
 # $Id: mbcd_load,v 1.4 2004/11/03 06:19:49 rubini Exp $
 module="mbcd"
 device="mbcd"
-mode="664"
+mode="777"
 
 # Group: since distributions do it differently, look for wheel or use staff
 if grep -q '^staff:' /etc/group; then
@@ -10,6 +10,8 @@ if grep -q '^staff:' /etc/group; then
 else
     group="wheel"
 fi
+
+/sbin/rmmod $device > /dev/null 2>&1
 
 echo "Load module: $module:"
 
