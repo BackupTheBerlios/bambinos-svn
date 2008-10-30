@@ -1,0 +1,22 @@
+PS Vertiefung Betriebssysteme Winter 2008/09
+
+
+Team:
+Rupert Gratz
+Markus Kasinger
+
+
+We have implemented:
+
+- a message buffering char device driver mbcd that buffers messages in the memory. Interaction is possible by using the device /dev/mbcd.
+
+- a producer process writing messages to the device
+
+- a consumer process reading messages from the device
+
+- a read- and write-counter-file in the proc file system
+
+
+
+
+
