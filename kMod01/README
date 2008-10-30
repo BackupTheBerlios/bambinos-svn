@@ -6,41 +6,41 @@ Rupert Gratz
 Markus Kasinger
 
 
-We have implemented:
+We feature:
 
-- a message buffering char device driver mbcd that buffers messages in the memory. Interaction is possible by using the device /dev/mbcd.
++ a message buffering char device driver mbcd that buffers messages in the memory. Interaction is possible by using the device /dev/mbcd.
 
-- a producer process writing messages to the device
++ a producer process writing messages to the device
 
-- a consumer process reading messages from the device
++ a consumer process reading messages from the device
 
-- a read- and write-counter-file in the proc file system
++ a read- and write-counter-file in the proc file system
 
 
 
 We have implemented this by using ANSI-C and only standard Linux-C-functions. What you find here is:
 
-mbcd.c: the actual device driver featuring all necessary methods to enable inserting and removing the module and providing read/write-access to the "in-memory"-device.
++ mbcd.c: the actual device driver featuring all necessary methods to enable inserting and removing the module and providing read/write-access to the "in-memory"-device.
 
-mbcd.h: header-file for mbcd.c defining the used structures.
++ mbcd.h: header-file for mbcd.c defining the used structures.
 
-producer.c: the producer-userland-application. Sends messages to the device.
++ producer.c: the producer-userland-application. Sends messages to the device.
 
-consumer.c: the consumer-userland-application. Reads messages from the device.
++ consumer.c: the consumer-userland-application. Reads messages from the device.
 
-file.c, file.h: provides functionality for dealing with files.
++ file.c, file.h: provides functionality for dealing with files.
 
-mytypes.h: "features" a str(ing) type.
++ mytypes.h: "features" a str(ing) type.
 
-Makefile: features "make", "make producer", "make consumer".
++ Makefile: features "make", "make producer", "make consumer".
 
-mbcd_load.sh: inserts the module and creates the device /dev/mbcd.
++ mbcd_load.sh: inserts the module and creates the device /dev/mbcd.
 
 
 
 HOW TO BUILD:
 
-Run "make" to build everything. Run "make producer" or "make consumer" for only building the userland applications.
+Run "make" to build everything. Run "make producer" or "make consumer" for only building the specific userland applications.
 
 
 
@@ -52,7 +52,7 @@ Now run (again as root) the "producer p", with p specifying the period in ms for
 
 Run (as root) "consumer p", with p specifying the period in ms for reading from the device.
 
-If arguement p is not specified a default of 100ms is being used.
+If arguement p is omitted a default of 100ms is being used.
 
 
 --
