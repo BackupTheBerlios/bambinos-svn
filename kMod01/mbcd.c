@@ -380,7 +380,7 @@ void mbcd_exit(void)
 	}
 
 	unregister_chrdev_region(devno, mbcd_nr_devs);
-
+	mbcd_remove_proc();
 	printk(KERN_NOTICE "mbcd: Device de-registered!");
 
 
@@ -425,9 +425,12 @@ int __init mbcd_init(void)
 	}
 
 
+
 	dev = MKDEV(mbcd_major, mbcd_minor + mbcd_nr_devs);
 
 	printk(KERN_ALERT "mbcd: Device registered, major  %d", mbcd_major);
+
+	mbcd_create_proc();
 
 	return 0;
 
