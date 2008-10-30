@@ -17,6 +17,17 @@ We have implemented:
 - a read- and write-counter-file in the proc file system
 
 
+We have implemented this by using only standard Linux-C-functions. What you find here is:
+
+mbcd.c: the actual device driver featuring all necessary methods to enable inserting and removing the module and providing read/write-access to the "in-memory"-device.
+
+mbcd.h: header-file for mbcd.c defining the used structures.
+
+producer.c: the producer-userland-application. sends messages to the device.
+
+consumer.c: the consumer-userland-application. reads messages from the device.
+
+
 
 
 
