@@ -28,7 +28,6 @@ MODULE_DESCRIPTION("A message buffering char device driver.");
 /*
  * The proc filesystem: function to read and entry
  */
-
 int mbcd_read_procmem(char *buf, char **start, off_t offset,
                    int count, int *eof, void *data)
 {
@@ -40,13 +39,24 @@ int mbcd_read_procmem(char *buf, char **start, off_t offset,
 		struct mbcd_qset *qs = d->data;
 		if (down_interruptible(&d->sem))
 			return -ERESTARTSYS;
-		len += sprintf(buf+len,"Read counts: %d ", read_counts);
+		len += sprintf(buf+len,"\nDevice %i: qset %i, q %i, sz %li\n",
+				i, d->qset, d->quantum, d->size);
+		for (; qs && len <= limit; qs = qs->next) { /* scan the list */
+			len += sprintf(buf + len, "  item at %p, qset at %p\n",
+					qs, qs->data);
+			if (qs->data && !qs->next) /* dump only the last item */
+				for (j = 0; j < d->qset; j++) {
+					if (qs->data[j])
+						len += sprintf(buf + len,
+								"    % 4i: %8p\n",
+								j, qs->data[j]);
+				}
+		}
 		up(&mbcd_devices[i].sem);
 	}
 	*eof = 1;
 	return len;
 }
-
 
 /*
  * For now, the seq_file implementation will exist in parallel.  The
@@ -74,12 +84,27 @@ static void *mbcd_seq_next(struct seq_file *s, void *v, loff_t *pos)
 
 static void mbcd_seq_stop(struct seq_file *s, void *v)
 {
-	/* Actually, there's nothing to do here */
+
 }
 
 static int mbcd_seq_show(struct seq_file *s, void *v)
 {
-	seq_printf(s, "Write counts %p \n", write_counts);
+	struct mbcd_dev *dev = (struct mbcd_dev *) v;
+	struct mbcd_qset *d;
+	int i;
+
+	if (down_interruptible(&dev->sem))
+		return -ERESTARTSYS;
+	seq_printf(s, "show meth");
+	for (d = dev->data; d; d = d->next) { /* scan the list */
+		if (d->data && !d->next) /* dump only the last item */
+
+			for (i = 0; i < dev->qset; i++) {
+				if (d->data[i])
+					seq_printf(s, "count qsets %d",i);
+			}
+	}
+	up(&dev->sem);
 	return 0;
 }
 
