@@ -16,7 +16,7 @@ int mbcd_minor =   0;
 int mbcd_nr_devs = 1;
 int mbcd_quantum = 4000;
 int mbcd_qset =    20;
-
+int write_counts=0;
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("R. Gratz, M. Kasinger");
@@ -90,25 +90,7 @@ static void mbcd_seq_stop(struct seq_file *s, void *v)
 
 static int mbcd_seq_show(struct seq_file *s, void *v)
 {
-	struct mbcd_dev *dev = (struct mbcd_dev *) v;
-	struct mbcd_qset *d;
-	int i;
-
-	if (down_interruptible(&dev->sem))
-		return -ERESTARTSYS;
-	seq_printf(s, "\nDevice %i: qset %i, q %i, sz %li\n",
-			(int) (dev - mbcd_devices), dev->qset,
-			dev->quantum, dev->size);
-	for (d = dev->data; d; d = d->next) { /* scan the list */
-		seq_printf(s, "  item at %p, qset at %p\n", d, d->data);
-		if (d->data && !d->next) /* dump only the last item */
-			for (i = 0; i < dev->qset; i++) {
-				if (d->data[i])
-					seq_printf(s, "    % 4i: %8p\n",
-							i, d->data[i]);
-			}
-	}
-	up(&dev->sem);
+	seq_printf(s, "MBCD Write counts %p, %p\n", write_counts);
 	return 0;
 }
 
@@ -305,6 +287,8 @@ ssize_t mbcd_read(struct file *filp, char __user *buf, size_t count,
 ssize_t mbcd_write(struct file *filp, const char __user *buf, size_t count,
                 loff_t *f_pos)
 {
+
+	write_counts++;
 	struct mbcd_dev *dev = filp->private_data;
 	struct mbcd_qset *dptr;
 	int quantum = dev->quantum, qset = dev->qset;
