@@ -24,9 +24,9 @@ mbcd.c: the actual device driver featuring all necessary methods to enable inser
 
 mbcd.h: header-file for mbcd.c defining the used structures.
 
-producer.c: the producer-userland-application. sends messages to the device.
+producer.c: the producer-userland-application. Sends messages to the device.
 
-consumer.c: the consumer-userland-application. reads messages from the device.
+consumer.c: the consumer-userland-application. Reads messages from the device.
 
 file.c, file.h: provides functionality for dealing with files.
 
@@ -38,10 +38,25 @@ mbcd_load.sh: inserts the module and creates the device /dev/mbcd.
 
 
 
+HOW TO BUILD:
+
+Run "make" to build everything. Run "make producer" or "make consumer" for only building the userland applications.
 
 
 
+HOW TO RUN:
 
+After building the binaries by using "make" run "mbcd_load.sh" as root to insert the module mbcd.ko and create the device /dev/mbcd.
+
+Now run (again as root) the "producer p", with p specifying the period in ms for writes  to the device.
+
+Run (as root) "consumer p", with p specifying the period in ms for reading from the device.
+
+If arguement p is not specified a default of 100ms is being used.
+
+
+--
+Have a nice day! 
 
 
 
