@@ -90,7 +90,7 @@ static void mbcd_seq_stop(struct seq_file *s, void *v)
 
 static int mbcd_seq_show(struct seq_file *s, void *v)
 {
-	seq_printf(s, "MBCD Write counts %p, %p\n", write_counts);
+	seq_printf(s, "MBCD Write counts %p \n", write_counts);
 	return 0;
 }
 
