@@ -18,7 +18,7 @@ We feature:
 
 
 
-We have implemented this by using ANSI-C and only standard Linux-C-functions. What you find here is:
+We have implemented this by using ANSI-C and only standard Linux-C-functions. The implementation of the module is strongly based on the book "Linux Device Drivers 3" and the associated examples. What you find here is:
 
 + mbcd.c: the actual device driver featuring all necessary methods to enable inserting and removing the module and providing read/write-access to the "in-memory"-device.
 
