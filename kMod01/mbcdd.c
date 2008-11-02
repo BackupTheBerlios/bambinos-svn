@@ -15,7 +15,7 @@ static int __init mbcd_init(void)
 	int result_get_major;
 
 	/* get major device number */
-	result_get_major = alloc_chrdev_region(&device_nr, 0, device_count, "mbcd");
+	result_get_major = alloc_chrdev_region(&device_nr, 0, device_count, "mbcdd");
 
     printk(KERN_ALERT "mbcdd: Insert Module \n");
     return 0;
