@@ -1,7 +1,7 @@
 #!/bin/sh
-# $Id: mbcd_load,v 1.4 2004/11/03 06:19:49 rubini Exp $
-module="mbcd"
-device="mbcd"
+# $Id: mbcdd_load,v 1.4 2004/11/03 06:19:49 rubini Exp $
+module="mbcdd"
+device="mbcdd"
 mode="777"
 
 # Group: since distributions do it differently, look for wheel or use staff
@@ -24,7 +24,7 @@ major=$(awk "\$2==\"$module\" {print \$1}" /proc/devices)
 echo "Major Number: $major"
 
 # Remove stale nodes and replace them, then give gid and perms
-# Usually the script is shorter, it's mbcd that has several devices in it.
+# Usually the script is shorter, it's mbcdd that has several devices in it.
 
 rm -f /dev/${device}
 mknod /dev/${device} c $major 0
