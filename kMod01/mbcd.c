@@ -24,29 +24,8 @@ MODULE_DESCRIPTION("A message buffering char device driver.");
 //for proc filesystem, function to read
 int mbcd_read_procmem(char *buf, char **start, off_t offset, int count,
 		int *eof, void *data) {
-	int i, j, len = 0;
-	int limit = count - 80; /* Don't print more than this */
-
-	for (i = 0; i < mbcd_nr_devs && len <= limit; i++) {
-		struct mbcd_dev *d = &mbcd_devices[i];
-		struct mbcd_qset *qs = d->data;
-		if (down_interruptible(&d->sem))
-			return -ERESTARTSYS;
-		len += sprintf(buf + len, "\nDevice %i: qset %i, q %i, sz %li\n", i,
-				d->qset, d->quantum, d->size);
-		for (; qs && len <= limit; qs = qs->next) { /* scan the list */
-			len += sprintf(buf + len, "  item at %p, qset at %p\n", qs,
-					qs->data);
-			if (qs->data && !qs->next) /* dump only the last item */
-				for (j = 0; j < d->qset; j++) {
-					if (qs->data[j])
-						len += sprintf(buf + len, "    % 4i: %8p\n", j,
-								qs->data[j]);
-				}
-		}
-		up(&mbcd_devices[i].sem);
-	}
-	*eof = 1;
+	int len = 0;
+	len += sprintf(buf+len,"Read counts: %d ", read_counts);
 	return len;
 }
 
@@ -68,23 +47,9 @@ static void mbcd_seq_stop(struct seq_file *s, void *v) {
 }
 
 static int mbcd_seq_show(struct seq_file *s, void *v) {
-	struct mbcd_dev *dev = (struct mbcd_dev *) v;
-	struct mbcd_qset *d;
-	int i;
 
-	if (down_interruptible(&dev->sem))
-		return -ERESTARTSYS;
-	seq_printf(s, "\nDevice %i: qset %i, q %i, sz %li\n", (int) (dev
-			- mbcd_devices), dev->qset, dev->quantum, dev->size);
-	for (d = dev->data; d; d = d->next) { /* scan the list */
-		seq_printf(s, "  item at %p, qset at %p\n", d, d->data);
-		if (d->data && !d->next) /* dump only the last item */
-			for (i = 0; i < dev->qset; i++) {
-				if (d->data[i])
-					seq_printf(s, "    % 4i: %8p\n", i, d->data[i]);
-			}
-	}
-	up(&dev->sem);
+	seq_printf(s, "Write counts %d \n", write_counts);
+
 	return 0;
 }
 
