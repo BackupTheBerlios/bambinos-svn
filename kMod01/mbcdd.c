@@ -19,30 +19,54 @@ int mbcdd_open(struct inode *inode, struct file *filep) {
 
 	struct mbcdd_dev *dev;
 	dev = container_of(inode->i_cdev, struct mbcdd_dev, cdev);
+	// i_cdev enthaelt die cdev struktur die wir erstellt haben; Kernel gibt das in inode an
+	// unser Device weiter
+	//
 
-	// TODO easy access for the future ???
+	//
+	mbcdd_put_msg();
+
 	filep->private_data = dev;
+//	  if ( (filep->f_flags & O_ACCMODE) = = O_WRONLY) {
+//	      scull_trim(dev); /* ignore errors */
+//	  }
+//	  return 0;          /* success */
+//	}
 
 
-}
-
-int mbcdd_release() {
-
-}
-
-int mbcdd_write() {
 
 }
 
-int mbcdd_read() {
+int mbcdd_release(struct inode *inode, struct file *filp) {
+
+
+		return 0;
+
+}
+
+ssize_t mbcdd_write(struct file *filp, const char __user *buf, size_t count,
+		loff_t *f_pos) {
+
+		mbcdd_put_msg();
+
+		return 0;
+
+}
+
+ssize_t mbcdd_read(struct file *filp, char __user *buf, size_t count,
+		loff_t *f_pos) {
+
+		mbcdd_get_msg();
+
+		return 0;
 
 }
 
 static struct file_operations gbl_mbcdd_fops = {
 		.open = mbcdd_open,
-		//		.release = mbcdd_release,
-		//		.write = mbcdd_write,
-		//		.read = mbcdd_read,
+		.release = mbcdd_release,
+		.write = mbcdd_write,
+		.read = mbcdd_read,
 
 		};
 
@@ -62,6 +86,7 @@ static int __init  mbcd_init(void) {
 
 }
 
+
 void mbcdd_setup_cdev() {
 
 	int err;
@@ -77,10 +102,13 @@ void mbcdd_setup_cdev() {
 		printk(KERN_NOTICE "mbcdd: Error adding device \n");
 	}
 
+	return 0;
+
 }
 
 static void __exit  mbcd_exit(void) {
 	unregister_chrdev_region(gbl_device_nr, gbl_device_count);
+	printk(KERN_NOTICE "mbcdd: Unregister module \n");
 }
 
 module_init(mbcd_init);

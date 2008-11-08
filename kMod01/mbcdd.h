@@ -14,9 +14,14 @@
 #define MINOR_COUNT 0
 
 
-
-
 void mbcdd_setup_cdev();
+
+
+extern int mbcdd_put_msg();
+extern int mbcdd_get_msg();
+
+
+
 
 
 
