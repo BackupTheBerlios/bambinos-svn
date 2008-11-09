@@ -22,17 +22,36 @@ extern int mbcdd_get_msg();
 
 
 
+struct slot{
+
+	void **data;
+	struct slot *next;
+};
 
 
 
+typedef struct mbcdd_dev{
 
-struct mbcdd_dev{
-
-	int slots;
+	struct slot *first_slot;
 	int slot_size;
-
 	struct cdev cdev;
 
+};
+
+
+/* Illustration of mbcdd_dev_wrapper:
+ *
+ * When user process x calls open, a new struct mbcdd_dev_wrapper will be
+ * allocated.
+ * Afterwards a new message will be requested from our message handler device.
+ * The message will be stored in this struct and the struct will be held in the process'
+ * filepointer. (filep->private_data)
+ * When process x calls the read function, than we know the process' according message.
+ */
+
+struct mbcdd_dev_wrapper {
+	struct mbcdd_dev *dev;
+	struct message *msg;
 };
 
 

@@ -11,29 +11,33 @@ MODULE_DESCRIPTION("A message buffering char device driver, mainly implemented f
 
 static dev_t gbl_device_nr;
 static int gbl_device_count = 1;
-static struct mbcdd_dev gbl_mbcdd_dev;
+
 //static struct mbcdd_fops gbl_mbcdd_flops;
 
 
 int mbcdd_open(struct inode *inode, struct file *filep) {
 
-	struct mbcdd_dev *dev;
+	mbcdd_dev *dev;
+	struct mbcdd_dev_wrapper dev_wrapper;
+
 	dev = container_of(inode->i_cdev, struct mbcdd_dev, cdev);
 	// i_cdev enthaelt die cdev struktur die wir erstellt haben; Kernel gibt das in inode an
 	// unser Device weiter
-	//
 
-	//
-	mbcdd_put_msg();
+	dev_wrapper->dev=dev;
+	filep->private_data = &dev_wrapper;
+	if ( (filep->f_flags & O_ACCMODE) == O_WRONLY) {
+		// fopen for write
+		dev_wrapper.msg=mbcdd_new_msg();
+		printk(KERN_NOTICE "mbcd call message handler open file function \n");
 
-	filep->private_data = dev;
-//	  if ( (filep->f_flags & O_ACCMODE) = = O_WRONLY) {
-//	      scull_trim(dev); /* ignore errors */
-//	  }
-//	  return 0;          /* success */
-//	}
+	} else {
 
+		//TODO read
 
+	}
+
+	return 0;
 
 }
 
@@ -47,6 +51,12 @@ int mbcdd_release(struct inode *inode, struct file *filp) {
 ssize_t mbcdd_write(struct file *filp, const char __user *buf, size_t count,
 		loff_t *f_pos) {
 
+
+
+		copy_from_user(dptr->data[s_pos] + q_pos, buf, count);
+
+		struct mbcdd_dev *dev = filp->private_data;
+
 		mbcdd_put_msg();
 
 		return 0;
@@ -55,6 +65,11 @@ ssize_t mbcdd_write(struct file *filp, const char __user *buf, size_t count,
 
 ssize_t mbcdd_read(struct file *filp, char __user *buf, size_t count,
 		loff_t *f_pos) {
+
+
+
+
+
 
 		mbcdd_get_msg();
 
@@ -73,31 +88,33 @@ static struct file_operations gbl_mbcdd_fops = {
 static int __init  mbcd_init(void) {
 	int result_get_major;
 
+	mbcdd_dev mbcdd_dev;
+
 	/* get major device number */
 	result_get_major = alloc_chrdev_region(&gbl_device_nr, 0, gbl_device_count,
 			"mbcdd");
 
-	printk(KERN_ALERT "mbcdd: Insert module \n");
+	printk(KERN_NOTICE "mbcdd: Insert module \n");
 
 	// setup device
-	mbcdd_setup_cdev();
+	mbcdd_setup_cdev(&mbcdd_dev);
 
 	return 0;
 
 }
 
 
-void mbcdd_setup_cdev() {
+void mbcdd_setup_cdev(struct mbcdd_dev *dev) {
 
 	int err;
 
 	// initalize device to kernel
-	cdev_init(&gbl_mbcdd_dev.cdev, &gbl_mbcdd_fops);
-	gbl_mbcdd_dev.cdev.owner = THIS_MODULE;
-	gbl_mbcdd_dev.cdev.ops = &gbl_mbcdd_fops;
+	cdev_init(&dev->cdev, &fops);
+	dev->cdev.owner = THIS_MODULE;
+	dev->cdev.ops = &gbl_mbcdd_fops;
 
 	// add device to kernel
-	err = cdev_add(&(gbl_mbcdd_dev.cdev),MINOR_FIRST,MINOR_COUNT);
+	err = cdev_add(&(dev->cdev),MINOR_FIRST,MINOR_COUNT);
 	if (err) {
 		printk(KERN_NOTICE "mbcdd: Error adding device \n");
 	}
