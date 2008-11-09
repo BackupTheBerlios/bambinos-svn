@@ -5,7 +5,9 @@
 #include <linux/list.h>
 
 
+#include "mbcdd_msg_hdl.h"
 #include "mbcdd.h"
+
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("R. Gratz, M. Kasinger");
@@ -58,7 +60,7 @@ static int __init  mbcd_init(void) {
 
 	printk(KERN_ALERT "mbcdd_msg_hdl: Insert module \n");
 
-	//test_list();
+	test_list();
 
 	return 0;
 
