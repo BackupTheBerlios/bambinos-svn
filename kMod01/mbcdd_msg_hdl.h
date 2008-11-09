@@ -2,10 +2,13 @@
 #define MBCDD_MSG_HDL_H_
 
 struct message {
+	int id;
 	//char data[256];
 	int data;
 	struct list_head list;
 };
+
+typedef struct message message_t;
 
 struct message *mbcdd_new_msg(void);
 
