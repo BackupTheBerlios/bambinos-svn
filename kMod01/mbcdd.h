@@ -21,15 +21,6 @@ extern int mbcdd_put_msg();
 extern int mbcdd_get_msg();
 
 
-
-struct slot{
-
-	void **data;
-	struct slot *next;
-};
-
-
-
 typedef struct mbcdd_dev{
 
 	struct slot *first_slot;
@@ -51,7 +42,7 @@ typedef struct mbcdd_dev{
 
 struct mbcdd_dev_wrapper {
 	struct mbcdd_dev *dev;
-	struct message *msg;
+	struct message_t *msg;
 };
 
 

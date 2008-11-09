@@ -4,6 +4,7 @@
 #include <linux/cdev.h>
 
 #include "mbcdd.h"
+#include "mbcdd_msg_hdl.h"
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("R. Gratz, M. Kasinger");
@@ -17,14 +18,14 @@ static int gbl_device_count = 1;
 
 int mbcdd_open(struct inode *inode, struct file *filep) {
 
-	mbcdd_dev *dev;
+	struct mbcdd_dev *dev;
 	struct mbcdd_dev_wrapper dev_wrapper;
 
 	dev = container_of(inode->i_cdev, struct mbcdd_dev, cdev);
 	// i_cdev enthaelt die cdev struktur die wir erstellt haben; Kernel gibt das in inode an
 	// unser Device weiter
 
-	dev_wrapper->dev=dev;
+	dev_wrapper.dev=dev;
 	filep->private_data = &dev_wrapper;
 	if ( (filep->f_flags & O_ACCMODE) == O_WRONLY) {
 		// fopen for write
@@ -52,43 +53,50 @@ ssize_t mbcdd_write(struct file *filp, const char __user *buf, size_t count,
 		loff_t *f_pos) {
 
 
+		struct mbcdd_dev_wrapper *dev_wrapper = &filp->private_data;
 
-		copy_from_user(dptr->data[s_pos] + q_pos, buf, count);
+		//TODO wait for Kasi
+		void *to=mbcdd_new_data_slot(dev_wrapper->msg);
 
-		struct mbcdd_dev *dev = filp->private_data;
+		count=DATA_SLOT_SIZE;
 
-		mbcdd_put_msg();
+
+		copy_from_user(to, buf, count);
+
+
+
+
 
 		return 0;
 
 }
-
-ssize_t mbcdd_read(struct file *filp, char __user *buf, size_t count,
-		loff_t *f_pos) {
-
-
-
-
-
-
-		mbcdd_get_msg();
-
-		return 0;
-
-}
+//
+//ssize_t mbcdd_read(struct file *filp, char __user *buf, size_t count,
+//		loff_t *f_pos) {
+//
+//
+//
+//
+//
+//
+//		mbcdd_get_msg();
+//
+//		return 0;
+//
+//}
 
 static struct file_operations gbl_mbcdd_fops = {
 		.open = mbcdd_open,
 		.release = mbcdd_release,
 		.write = mbcdd_write,
-		.read = mbcdd_read,
+		//.read = mbcdd_read,
 
 		};
 
 static int __init  mbcd_init(void) {
 	int result_get_major;
 
-	mbcdd_dev mbcdd_dev;
+	struct mbcdd_dev dev;
 
 	/* get major device number */
 	result_get_major = alloc_chrdev_region(&gbl_device_nr, 0, gbl_device_count,
@@ -97,7 +105,7 @@ static int __init  mbcd_init(void) {
 	printk(KERN_NOTICE "mbcdd: Insert module \n");
 
 	// setup device
-	mbcdd_setup_cdev(&mbcdd_dev);
+	mbcdd_setup_cdev(&dev);
 
 	return 0;
 
@@ -109,7 +117,7 @@ void mbcdd_setup_cdev(struct mbcdd_dev *dev) {
 	int err;
 
 	// initalize device to kernel
-	cdev_init(&dev->cdev, &fops);
+	cdev_init(&dev->cdev, &gbl_mbcdd_fops);
 	dev->cdev.owner = THIS_MODULE;
 	dev->cdev.ops = &gbl_mbcdd_fops;
 
