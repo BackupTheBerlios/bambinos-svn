@@ -14,7 +14,7 @@ MODULE_AUTHOR("R. Gratz, M. Kasinger");
 MODULE_DESCRIPTION("A message handler device driver, for the mbcdd device");
 
 
-static spinlock_t s1;
+static spinlock_t msg_lock = SPIN_LOCK_UNLOCKED;
 
 
 //static LIST_HEAD(messages);
@@ -29,19 +29,19 @@ static void test_list(void) {
 
 	// build list
 	for (i = 0; i < 3; i++) {
-		//msg = kmalloc(sizeof(struct message), GFP_KERNEL);
+		msg = kmalloc(sizeof(struct message), GFP_KERNEL);
 
-		//spin_lock(&s1);
+		spin_lock(&msg_lock);
 
 		//sprintf(msg->data, "message %i", i);
 		//printk(KERN_ALERT "adding: %s \n", msg->data);
-		//msg->data = i;
-		//printk(KERN_ALERT "adding: %i \n", msg->data);
+		msg->data = i;
+		printk(KERN_ALERT "adding: %i \n", msg->data);
 		//list_add(&msg->list, &messages);
-		printk(KERN_ALERT "adding: %i \n", i);
+		//printk(KERN_ALERT "adding: %i \n", i);
 
 
-		//spin_unlock(&s1);
+		spin_unlock(&msg_lock);
 	}
 
 	//travel list
