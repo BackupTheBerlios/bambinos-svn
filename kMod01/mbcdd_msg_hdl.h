@@ -15,7 +15,7 @@ struct message *mbcdd_new_msg(void);
 // TODO return value ... pointer to a new slot
 void * mbcdd_new_data_slot(message_t *msg);
 
-#define size_t DATA_SLOT_SIZE 20;
+#define DATA_SLOT_SIZE 20;
 
 
 int mbcdd_put_msg(void);

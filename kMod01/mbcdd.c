@@ -2,9 +2,11 @@
 #include <linux/module.h>
 #include <linux/fs.h>
 #include <linux/cdev.h>
+#include <linux/uaccess.h>
 
 #include "mbcdd.h"
 #include "mbcdd_msg_hdl.h"
+
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("R. Gratz, M. Kasinger");
@@ -49,11 +51,12 @@ int mbcdd_release(struct inode *inode, struct file *filp) {
 
 }
 
+
 ssize_t mbcdd_write(struct file *filp, const char __user *buf, size_t count,
 		loff_t *f_pos) {
 
 
-		struct mbcdd_dev_wrapper *dev_wrapper = &filp->private_data;
+		struct mbcdd_dev_wrapper *dev_wrapper = filp->private_data;
 
 		//TODO wait for Kasi
 		void *to=mbcdd_new_data_slot(dev_wrapper->msg);
@@ -112,7 +115,7 @@ static int __init  mbcd_init(void) {
 }
 
 
-void mbcdd_setup_cdev(struct mbcdd_dev *dev) {
+int mbcdd_setup_cdev(struct mbcdd_dev *dev) {
 
 	int err;
 

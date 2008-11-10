@@ -14,12 +14,6 @@
 #define MINOR_COUNT 0
 
 
-void mbcdd_setup_cdev();
-
-
-extern int mbcdd_put_msg();
-extern int mbcdd_get_msg();
-
 
 typedef struct mbcdd_dev{
 
@@ -27,7 +21,15 @@ typedef struct mbcdd_dev{
 	int slot_size;
 	struct cdev cdev;
 
-};
+}mbcdd_dev_t;
+
+
+void mbcdd_setup_cdev(struct mbcdd_dev *dev);
+
+
+extern int mbcdd_put_msg(void);
+extern int mbcdd_get_msg(void);
+
 
 
 /* Illustration of mbcdd_dev_wrapper:
@@ -42,7 +44,7 @@ typedef struct mbcdd_dev{
 
 struct mbcdd_dev_wrapper {
 	struct mbcdd_dev *dev;
-	struct message_t *msg;
+	struct message *msg;
 };
 
 
