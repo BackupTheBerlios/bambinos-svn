@@ -16,7 +16,7 @@ static int gbl_device_count = 1;
 spinlock_t mr_lock = SPIN_LOCK_UNLOCKED;
 unsigned long flags;
 int mbcdd_major = 0; // TODO check if necas.
-struct mbcdd_dev gbl_mbcdd_dev;
+struct mbcdd_dev *gbl_mbcdd_dev;
 
 //static struct mbcdd_fops gbl_mbcdd_flops;
 
@@ -103,27 +103,9 @@ static struct file_operations gbl_mbcdd_fops = {
 
 		};
 
-static int __init  mbcd_init(void) {
-	int result_get_major;
-
-	dev_t dev = 0;
-
-	/* get major device number */
-	result_get_major = alloc_chrdev_region(&dev, 0, gbl_device_count,
-			"mbcdd");
-	mbcdd_major = MAJOR(dev);
-
-	printk(KERN_NOTICE "mbcdd: Insert module, major: %d , %d \n",result_get_major, mbcdd_major );
-
-	// setup device
-	mbcdd_setup_cdev(&gbl_mbcdd_dev);
-
-	return 0;
-
-}
 
 
-static mbcdd_setup_cdev(struct mbcdd_dev *dev) {
+static void mbcdd_setup_cdev(struct mbcdd_dev *dev) {
 
 	int err;
 
@@ -139,6 +121,31 @@ static mbcdd_setup_cdev(struct mbcdd_dev *dev) {
 	}
 
 }
+
+static int __init  mbcd_init(void) {
+	int result_get_major;
+
+	dev_t dev = 0;
+
+	/* get major device number */
+	result_get_major = alloc_chrdev_region(&dev, 0, gbl_device_count,
+			"mbcdd");
+	mbcdd_major = MAJOR(dev);
+
+	gbl_mbcdd_dev = kmalloc(sizeof(struct mbcdd_dev), GFP_KERNEL);
+	memset(gbl_mbcdd_dev, 0, sizeof(struct mbcdd_dev));
+
+
+	printk(KERN_NOTICE "mbcdd: Insert module, major: %d , %d \n",result_get_major, mbcdd_major );
+
+	// setup device
+	mbcdd_setup_cdev(gbl_mbcdd_dev);
+
+	return 0;
+
+}
+
+
 
 static void __exit  mbcd_exit(void) {
 	dev_t devno = MKDEV(mbcdd_major, 0);

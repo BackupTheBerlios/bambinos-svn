@@ -24,8 +24,6 @@ typedef struct mbcdd_dev{
 }mbcdd_dev_t;
 
 
-static mbcdd_setup_cdev(struct mbcdd_dev *dev);
-
 
 extern int mbcdd_put_msg(void);
 extern int mbcdd_get_msg(void);
