@@ -4,14 +4,14 @@
 #include <linux/fs.h>
 #include <linux/cdev.h>
 #include <asm/uaccess.h>
-#include "mbcd.h"
+#include "mbcdd.h"
 
 #include <linux/proc_fs.h>
 #include <linux/seq_file.h>
 
-int mbcd_major = 0;
-int mbcd_minor = 0;
-int mbcd_nr_devs = 1;
+int mbcdd_major = 0;
+int mbcdd_minor = 0;
+int mbcdd_nr_devs = 1;
 
 
 MODULE_LICENSE("GPL");
@@ -19,21 +19,38 @@ MODULE_AUTHOR("R. Gratz, M. Kasinger");
 MODULE_DESCRIPTION("A message buffering char device driver.");
 
 
-int mbcd_open(struct inode *inode, struct file *filp) {
-	struct mbcd_dev *dev; /* device information */
+int mbcdd_open(struct inode *inode, struct file *filep) {
+	struct mbcdd_dev *dev;
+	struct mbcdd_dev_wrapper dev_wrapper;
 
+	dev = container_of(inode->i_cdev, mbcdd_dev_t, cdev);
+	// i_cdev enthaelt die cdev struktur die wir erstellt haben; Kernel gibt das in inode an
+	// unser Device weiter
 
+	dev_wrapper.dev=dev;
+	filep->private_data = &dev_wrapper;
+	if ( (filep->f_flags & O_ACCMODE) == O_WRONLY) {
+		// fopen for write
+		dev_wrapper.msg=mbcdd_new_msg();
+		printk(KERN_NOTICE "mbcd call message handler open file function \n");
 
-	return 0; /* success */
+	} else {
+
+		//TODO read
+
+	}
+
+	return 0;
+
 }
 
-int mbcd_release(struct inode *inode, struct file *filp) {
+int mbcdd_release(struct inode *inode, struct file *filp) {
 	return 0;
 }
 
 
 
-ssize_t mbcd_read(struct file *filp, char __user *buf, size_t count,
+ssize_t mbcdd_read(struct file *filp, char __user *buf, size_t count,
 		loff_t *f_pos) {
 
 
@@ -45,7 +62,7 @@ ssize_t mbcd_read(struct file *filp, char __user *buf, size_t count,
 	return count;
 }
 
-ssize_t mbcd_write(struct file *filp, const char __user *buf, size_t count,
+ssize_t mbcdd_write(struct file *filp, const char __user *buf, size_t count,
 		loff_t *f_pos) {
 
 	struct mbcdd_dev_wrapper *dev_wrapper = filp->private_data;
@@ -69,55 +86,55 @@ ssize_t mbcd_write(struct file *filp, const char __user *buf, size_t count,
 			return count;
 }
 
-struct file_operations mbcd_fops = { .owner = THIS_MODULE, .read = mbcd_read,
-		.write = mbcd_write, .open = mbcd_open, .release = mbcd_release, };
+struct file_operations mbcdd_fops = { .owner = THIS_MODULE, .read = mbcdd_read,
+		.write = mbcdd_write, .open = mbcdd_open, .release = mbcdd_release, };
 
-void mbcd_exit(void) {
+void mbcdd_exit(void) {
 
-	dev_t devno = MKDEV(mbcd_major, mbcd_minor);
-	kfree(mbcd_devices);
-	unregister_chrdev_region(devno, mbcd_nr_devs);
-	printk(KERN_NOTICE "mbcd: Device de-registered!");
+	dev_t devno = MKDEV(mbcdd_major, mbcdd_minor);
+	kfree(mbcdd_devices);
+	unregister_chrdev_region(devno, mbcdd_nr_devs);
+	printk(KERN_NOTICE "mbcdd: Device de-registered!");
 
 }
 
 /*
  * Set up the char_dev structure for this device.
  */
-static void mbcd_setup_cdev(struct mbcd_dev *dev) {
-	int err, devno = MKDEV(mbcd_major, mbcd_minor);
+static void mbcdd_setup_cdev(struct mbcdd_dev *dev) {
+	int err, devno = MKDEV(mbcdd_major, mbcdd_minor);
 
-	cdev_init(&dev->cdev, &mbcd_fops);
+	cdev_init(&dev->cdev, &mbcdd_fops);
 	dev->cdev.owner = THIS_MODULE;
-	dev->cdev.ops = &mbcd_fops;
+	dev->cdev.ops = &mbcdd_fops;
 	err = cdev_add(&dev->cdev, devno, 1);
 
 
 	if(err)
-		printk(KERN_ALERT "Error %d adding mbcd", err);
+		printk(KERN_ALERT "Error %d adding mbcdd", err);
 }
 
-int __init  mbcd_init(void) {
+int __init  mbcdd_init(void) {
 
 	int result;
 	dev_t dev = 0;
 
 	// nur dynamisch
-	result = alloc_chrdev_region(&dev, mbcd_minor, mbcd_nr_devs, "mbcd");
-	mbcd_major = MAJOR(dev);
+	result = alloc_chrdev_region(&dev, mbcdd_minor, mbcdd_nr_devs, "mbcdd");
+	mbcdd_major = MAJOR(dev);
 
-	mbcd_devices = kmalloc(sizeof(struct mbcd_dev), GFP_KERNEL);
-	memset(mbcd_devices, 0, sizeof(struct mbcd_dev));
+	mbcdd_devices = kmalloc(sizeof(struct mbcdd_dev), GFP_KERNEL);
+	memset(mbcdd_devices, 0, sizeof(struct mbcdd_dev));
 
-	mbcd_setup_cdev(mbcd_devices);
+	mbcdd_setup_cdev(mbcdd_devices);
 
-	dev = MKDEV(mbcd_major, mbcd_minor);
+	dev = MKDEV(mbcdd_major, mbcdd_minor);
 
-	printk(KERN_ALERT "mbcd: Device registered, major  %d", mbcd_major);
+	printk(KERN_ALERT "mbcdd: Device registered, major  %d", mbcdd_major);
 
 	return 0;
 
 }
 
-module_init(mbcd_init);
-module_exit(mbcd_exit);
+module_init(mbcdd_init);
+module_exit(mbcdd_exit);
