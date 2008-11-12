@@ -17,6 +17,8 @@ MODULE_DESCRIPTION("A message handler device driver, for the mbcdd device");
 
 
 static spinlock_t msg_lock = SPIN_LOCK_UNLOCKED;
+static unsigned long msg_lock_flags;
+
 static LIST_HEAD(msg_root);
 
 
@@ -27,6 +29,26 @@ static LIST_HEAD(msg_root);
 static int new_msg_id(void) {
 	static int id = 0; //NOTE: static
 	return id++;
+}
+
+
+/**
+ * for testin'...
+ */
+static void mbcdd_print_msg_list(void) {
+	int i;
+	message_t *msg;
+	struct list_head *p;
+
+	printk(KERN_NOTICE "mbcdd_msg_hdl: list messages\n");
+
+	//travel list
+	i=0;
+	list_for_each(p, &msg_root) {
+		msg = list_entry(p, struct message, list);
+		printk(KERN_ALERT " - message with ID %i \n", i, msg->id);
+		i++;
+	}
 }
 
 
@@ -42,7 +64,8 @@ static void test_list(void) {
 	for (i = 0; i < 3; i++) {
 		msg = kmalloc(sizeof(message_t), GFP_KERNEL);
 
-		spin_lock(&msg_lock);
+		spin_lock_irqsave(&msg_lock, msg_lock_flags);
+
 
 		//sprintf(msg->data, "message %i", i);
 		//printk(KERN_ALERT "adding: %s \n", msg->data);
@@ -50,19 +73,19 @@ static void test_list(void) {
 		msg->id = new_msg_id();
 
 		msg->data = i;
-		printk(KERN_ALERT "adding: %i \n", msg->data);
+		printk(KERN_NOTICE "adding: %i \n", msg->data);
 		list_add(&msg->list, &msg_root);
 		//printk(KERN_ALERT "adding: %i \n", i);
 
 
-		spin_unlock(&msg_lock);
+		spin_unlock_irqrestore(&msg_lock, msg_lock_flags);
 	}
 
 	//travel list
 	i=0;
 	list_for_each(p, &msg_root) {
 		msg = list_entry(p, struct message, list);
-		printk(KERN_ALERT "list element %i: %i \n", i, msg->id);
+		printk(KERN_NOTICE "list element %i: %i \n", i, msg->id);
 		i++;
 	}
 
@@ -85,18 +108,41 @@ message_t *mbcdd_new_msg(void){
 	msg = kmalloc(sizeof(message_t), GFP_KERNEL);
 
 	//add the message to the list using spinlock
-	spin_lock(&msg_lock);
+	spin_lock_irqsave(&msg_lock, msg_lock_flags);
 
 		msg->id = new_msg_id();
 		list_add(&msg->list, &msg_root);
+		printk(KERN_NOTICE "added message with ID %i \n", msg->id);
 
-	spin_unlock(&msg_lock);
+	spin_unlock_irqrestore(&msg_lock, msg_lock_flags);
 
 	return msg;
 
 }
 
+/**
+ * get a pointer to the latest message
+ */
+message_t *mbcdd_get_msg(void){
+	message_t *msg;
 
+	struct list_head *p, *n;
+
+	printk(KERN_NOTICE "mbcdd_msg_hdl: get message\n");
+
+	msg = list_entry(&msg_root, struct message, list);
+
+	list_for_each_safe(p, n, &msg_root) { //simple but a bit dirty
+		msg = list_entry(p, struct message, list);
+		break;
+	}
+
+	printk(KERN_NOTICE "got message with ID %i \n", msg->id);
+
+	return msg;
+}
+
+/*
 int mbcdd_put_msg(void){
 
 	printk(KERN_ALERT "mbcdd_msg_hdl: put message \n");
@@ -112,24 +158,32 @@ int mbcdd_get_msg(void){
 	return 0;
 
 }
+*/
 
 EXPORT_SYMBOL(mbcdd_new_msg);
-EXPORT_SYMBOL(mbcdd_put_msg);
 EXPORT_SYMBOL(mbcdd_get_msg);
 
 
 
-void test_new_msg(void) {
+void test_msg(void) {
 
+	mbcdd_new_msg();
+	mbcdd_new_msg();
+
+	mbcdd_print_msg_list();
+
+	mbcdd_get_msg();
 
 }
+
 
 
 static int __init  mbcd_init(void) {
 
 	printk(KERN_ALERT "mbcdd_msg_hdl: Insert module \n");
 
-	test_new_msg();
+	test_msg();
+	//test_list();
 
 	return 0;
 
