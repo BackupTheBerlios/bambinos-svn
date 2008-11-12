@@ -14,6 +14,9 @@ MODULE_DESCRIPTION("A message buffering char device driver, mainly implemented f
 
 static dev_t gbl_device_nr;
 static int gbl_device_count = 1;
+spinlock_t mr_lock = SPIN_LOCK_UNLOCKED;
+unsigned long flags;
+
 
 //static struct mbcdd_fops gbl_mbcdd_flops;
 
@@ -23,7 +26,7 @@ int mbcdd_open(struct inode *inode, struct file *filep) {
 	struct mbcdd_dev *dev;
 	struct mbcdd_dev_wrapper dev_wrapper;
 
-	dev = container_of(inode->i_cdev, struct mbcdd_dev, cdev);
+	dev = container_of(inode->i_cdev, mbcdd_dev, cdev);
 	// i_cdev enthaelt die cdev struktur die wir erstellt haben; Kernel gibt das in inode an
 	// unser Device weiter
 
@@ -60,12 +63,16 @@ ssize_t mbcdd_write(struct file *filp, const char __user *buf, size_t count,
 
 		//TODO wait for Kasi
 		void *to=mbcdd_new_data_slot(dev_wrapper->msg);
-
 		count=DATA_SLOT_SIZE;
+
+		spin_lock_irqsave(&mr_lock, flags);
+		// critical region
 
 
 		copy_from_user(to, buf, count);
 
+
+		spin_unlock_irqrestore(&mr_lock, flags);
 
 
 
