@@ -43,7 +43,7 @@ struct mbcdd_dev *mbcdd_devices;
 struct mbcdd_dev_wrapper {
 	struct mbcdd_dev *dev;
 	struct message *msg;
-	struct completion hold_readers;
+	struct completion *hold_readers;
 };
 
 

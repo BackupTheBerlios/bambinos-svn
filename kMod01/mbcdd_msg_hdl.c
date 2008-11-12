@@ -71,9 +71,6 @@ static void test_list(void) {
 		//printk(KERN_ALERT "adding: %s \n", msg->data);
 
 		msg->id = new_msg_id();
-
-		msg->data = i;
-		printk(KERN_NOTICE "adding: %i \n", msg->data);
 		list_add(&msg->list, &msg_root);
 		//printk(KERN_ALERT "adding: %i \n", i);
 
@@ -107,6 +104,10 @@ message_t *mbcdd_new_msg(void){
 	//allocate memory for the new message
 	msg = kmalloc(sizeof(message_t), GFP_KERNEL);
 
+	//init slot_list
+	INIT_LIST_HEAD(&msg->slot_root);
+
+
 	//add the message to the list using spinlock
 	spin_lock_irqsave(&msg_lock, msg_lock_flags);
 
@@ -130,8 +131,6 @@ message_t *mbcdd_get_msg(void){
 
 	printk(KERN_NOTICE "mbcdd_msg_hdl: get message\n");
 
-	msg = list_entry(&msg_root, struct message, list);
-
 	list_for_each_safe(p, n, &msg_root) { //simple but a bit dirty
 		msg = list_entry(p, struct message, list);
 		break;
@@ -140,6 +139,42 @@ message_t *mbcdd_get_msg(void){
 	printk(KERN_NOTICE "got message with ID %i \n", msg->id);
 
 	return msg;
+}
+
+
+/**
+ * allocate memory for the data of a message_slot
+ */
+static void init_message_slot(message_slot_t *slot) {
+	//slot->data = kmalloc(sizeof(char[DATA_SLOT_SIZE]), GFP_KERNEL);
+	memset(slot->data, 0, DATA_SLOT_SIZE);
+	return;
+}
+
+/**
+ * create a new message slot and get a pointer to the message slot-data
+ */
+void *mbcdd_new_data_slot(message_t *msg) {
+
+	printk(KERN_NOTICE "mbcdd_msg_hdl: new message data slot\n");
+
+	//allocate memory for the new message slot
+	msg->slot = kmalloc(sizeof(message_slot_t), GFP_KERNEL);
+	init_message_slot(msg->slot);
+
+	//add the message to the list using spinlock
+	spin_lock_irqsave(&msg_lock, msg_lock_flags);
+
+		list_add(&msg->slot->list, &msg->slot_root);
+		printk(KERN_NOTICE "added slot to message with ID %i \n", msg->id);
+
+	spin_unlock_irqrestore(&msg_lock, msg_lock_flags);
+
+	return &msg->slot->data;
+}
+
+void *mbcdd_get_data_slot(message_t *msg) {
+	return;
 }
 
 /*
@@ -162,6 +197,8 @@ int mbcdd_get_msg(void){
 
 EXPORT_SYMBOL(mbcdd_new_msg);
 EXPORT_SYMBOL(mbcdd_get_msg);
+EXPORT_SYMBOL(mbcdd_new_data_slot);
+EXPORT_SYMBOL(mbcdd_get_data_slot);
 
 
 

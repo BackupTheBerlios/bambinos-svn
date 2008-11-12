@@ -4,11 +4,13 @@
 #include <linux/fs.h>
 #include <linux/cdev.h>
 #include <asm/uaccess.h>
-#include "mbcdd.h"
-#include "mbcdd_msg_hdl.h"
-
 #include <linux/proc_fs.h>
 #include <linux/seq_file.h>
+#include <linux/completion.h>
+
+
+#include "mbcdd.h"
+#include "mbcdd_msg_hdl.h"
 
 int mbcdd_major = 0;
 int mbcdd_minor = 0;

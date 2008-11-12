@@ -1,16 +1,27 @@
 #ifndef MBCDD_MSG_HDL_H_
 #define MBCDD_MSG_HDL_H_
 
-struct message {
-	int id;
-	//char data[256];
-	int data;
+
+#define DATA_SLOT_SIZE 20
+
+
+struct message_slot {
+	char data[DATA_SLOT_SIZE];
 	struct list_head list;
 };
 
-#define DATA_BLOCK_SIZE 20;
+typedef struct message_slot message_slot_t;
+
+
+struct message {
+	int id;
+	message_slot_t *slot;
+	struct list_head list;
+	struct list_head slot_root;
+};
 
 typedef struct message message_t;
+
 
 
 message_t *mbcdd_new_msg(void);
@@ -19,7 +30,8 @@ message_t *mbcdd_get_msg(void);
 
 
 // TODO return value ... pointer to a new slot
-void *mbcdd_new_data_block(message_t *msg);
+void *mbcdd_new_data_slot(message_t *msg);
+void *mbcdd_get_data_slot(message_t *msg);
 
 
 //int mbcdd_put_msg(void);
