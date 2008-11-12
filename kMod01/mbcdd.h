@@ -43,6 +43,7 @@ extern int mbcdd_get_msg(void);
 struct mbcdd_dev_wrapper {
 	struct mbcdd_dev *dev;
 	struct message *msg;
+	struct completion hold_readers;
 };
 
 

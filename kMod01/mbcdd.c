@@ -14,6 +14,10 @@ int mbcdd_major = 0;
 int mbcdd_minor = 0;
 int mbcdd_nr_devs = 1;
 
+spinlock_t write_lock,read_lock = SPIN_LOCK_UNLOCKED;
+unsigned long flags;
+
+
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("R. Gratz, M. Kasinger");
@@ -36,12 +40,17 @@ int mbcdd_open(struct inode *inode, struct file *filep) {
 	filep->private_data = &dev_wrapper;
 	if ( (filep->f_flags & O_ACCMODE) == O_WRONLY) {
 		// fopen for write
-		dev_wrapper->msg =mbcdd_new_msg();
+		dev_wrapper->msg = mbcdd_new_msg();
 		printk(KERN_NOTICE "mbcd call message handler open file function \n");
+
+	} else if (((filep->f_flags & O_ACCMODE) == O_RDONLY)) {
+
+		dev_wrapper->msg = mbcdd_get_msg();
+		init_completion(&(dev_wrapper->hold_readers));
 
 	} else {
 
-		//TODO read
+		return 1;
 
 	}
 
@@ -50,6 +59,8 @@ int mbcdd_open(struct inode *inode, struct file *filep) {
 }
 
 int mbcdd_release(struct inode *inode, struct file *filp) {
+
+	//TODO clean dev_wrapper's
 	return 0;
 }
 
@@ -58,41 +69,68 @@ int mbcdd_release(struct inode *inode, struct file *filp) {
 ssize_t mbcdd_read(struct file *filp, char __user *buf, size_t count,
 		loff_t *f_pos) {
 
+	int retval=-1;
+	struct mbcdd_dev_wrapper *dev_wrapper = filp->private_data;
 
+	void *to=mbcdd_get_data_slot(dev_wrapper->msg);
+
+	// TODO wir brauchen irgendeinen speziellen Rueckgabewert.
+	// Wenn dieser Wert dann
+
+	wait_for_completion(&(dev_wrapper->hold_readers));
+
+
+	spin_lock_irqsave(&read_lock, flags);
+
+	// critical region
+	retval= copy_to_user(buf, to, count);
+
+	spin_unlock_irqrestore(&read_lock, flags);
+
+	if (retval = 0){
+			retval = -EFAULT;
+	}
+	retval=count;
 
 	printk(KERN_NOTICE "mbcdd: Reading \n");
 
-	//mbcdd_get_msg();
+	complete(&(dev_wrapper->hold_readers));
 
-	return count;
+	return retval;
 }
+
+
 
 ssize_t mbcdd_write(struct file *filp, const char __user *buf, size_t count,
 		loff_t *f_pos) {
 
-	struct mbcdd_dev_wrapper *dev_wrapper = filp->private_data;
+			struct mbcdd_dev_wrapper *dev_wrapper = filp->private_data;
 
 			//TODO wait for Kasi
-	//		void *to=mbcdd_new_data_slot(dev_wrapper->msg);
-	//		count=DATA_SLOT_SIZE;
-	//
-	//		spin_lock_irqsave(&mr_lock, flags);
-	//		// critical region
-	//
-	//
-	//		copy_from_user(to, buf, count);
-	//
-	//
-	//		spin_unlock_irqrestore(&mr_lock, flags);
+			void *to=mbcdd_new_data_slot(dev_wrapper->msg);
+			count=DATA_SLOT_SIZE;
 
+			spin_lock_irqsave(&write_lock, flags);
+
+			// critical region
+			copy_from_user(to, buf, count);
+
+			spin_unlock_irqrestore(&write_lock, flags);
 
 			printk(KERN_NOTICE "mbcdd: Writing \n");
 
 			return count;
+
 }
 
-struct file_operations mbcdd_fops = { .owner = THIS_MODULE, .read = mbcdd_read,
-		.write = mbcdd_write, .open = mbcdd_open, .release = mbcdd_release, };
+struct file_operations mbcdd_fops = {
+		.owner = THIS_MODULE,
+		.read = mbcdd_read,
+		.write = mbcdd_write,
+		.open = mbcdd_open,
+		.release = mbcdd_release,
+		};
+
 
 void mbcdd_exit(void) {
 
@@ -102,6 +140,7 @@ void mbcdd_exit(void) {
 	printk(KERN_NOTICE "mbcdd: Device de-registered! \n");
 
 }
+
 
 /*
  * Set up the char_dev structure for this device.
