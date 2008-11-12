@@ -10,7 +10,7 @@ struct message {
 
 typedef struct message message_t;
 
-struct message *mbcdd_new_msg(void);
+message_t *mbcdd_new_msg(void);
 
 // TODO return value ... pointer to a new slot
 void * mbcdd_new_data_slot(message_t *msg);

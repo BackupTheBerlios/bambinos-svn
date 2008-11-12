@@ -79,7 +79,7 @@ message_t *mbcdd_new_msg(void){
 	message_t *msg;
 
 
-	printk(KERN_ALERT "mbcdd_msg_hdl: new message\n");
+	printk(KERN_NOTICE "mbcdd_msg_hdl: new message\n");
 
 	//allocate memory for the new message
 	msg = kmalloc(sizeof(message_t), GFP_KERNEL);

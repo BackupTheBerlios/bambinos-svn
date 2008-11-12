@@ -5,6 +5,7 @@
 #include <linux/cdev.h>
 #include <asm/uaccess.h>
 #include "mbcdd.h"
+#include "mbcdd_msg_hdl.h"
 
 #include <linux/proc_fs.h>
 #include <linux/seq_file.h>
@@ -21,17 +22,21 @@ MODULE_DESCRIPTION("A message buffering char device driver.");
 
 int mbcdd_open(struct inode *inode, struct file *filep) {
 	struct mbcdd_dev *dev;
-	struct mbcdd_dev_wrapper dev_wrapper;
+	struct mbcdd_dev_wrapper *dev_wrapper;
+
+
+	dev_wrapper = kmalloc(sizeof(struct mbcdd_dev_wrapper), GFP_KERNEL);
+	memset(dev_wrapper, 0, sizeof(struct mbcdd_dev_wrapper));
 
 	dev = container_of(inode->i_cdev, mbcdd_dev_t, cdev);
 	// i_cdev enthaelt die cdev struktur die wir erstellt haben; Kernel gibt das in inode an
 	// unser Device weiter
 
-	dev_wrapper.dev=dev;
+	dev_wrapper->dev=dev;
 	filep->private_data = &dev_wrapper;
 	if ( (filep->f_flags & O_ACCMODE) == O_WRONLY) {
 		// fopen for write
-		dev_wrapper.msg=mbcdd_new_msg();
+		dev_wrapper->msg =mbcdd_new_msg();
 		printk(KERN_NOTICE "mbcd call message handler open file function \n");
 
 	} else {
@@ -94,7 +99,7 @@ void mbcdd_exit(void) {
 	dev_t devno = MKDEV(mbcdd_major, mbcdd_minor);
 	kfree(mbcdd_devices);
 	unregister_chrdev_region(devno, mbcdd_nr_devs);
-	printk(KERN_NOTICE "mbcdd: Device de-registered!");
+	printk(KERN_NOTICE "mbcdd: Device de-registered! \n");
 
 }
 
@@ -111,7 +116,7 @@ static void mbcdd_setup_cdev(struct mbcdd_dev *dev) {
 
 
 	if(err)
-		printk(KERN_ALERT "Error %d adding mbcdd", err);
+		printk(KERN_ALERT "Error %d adding mbcdd \n", err);
 }
 
 int __init  mbcdd_init(void) {
@@ -130,7 +135,7 @@ int __init  mbcdd_init(void) {
 
 	dev = MKDEV(mbcdd_major, mbcdd_minor);
 
-	printk(KERN_ALERT "mbcdd: Device registered, major  %d", mbcdd_major);
+	printk(KERN_ALERT "mbcdd: Device registered, major  %d \n", mbcdd_major);
 
 	return 0;
 
