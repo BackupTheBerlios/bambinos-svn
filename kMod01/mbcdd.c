@@ -156,7 +156,7 @@ static void mbcdd_setup_cdev(struct mbcdd_dev *dev) {
 		printk(KERN_ALERT "Error %d adding mbcdd \n", err);
 }
 
-int__init   mbcdd_init(void) {
+int mbcdd_init(void) {
 
 	int result;
 	dev_t dev = 0;
@@ -177,7 +177,5 @@ int__init   mbcdd_init(void) {
 	return 0;
 
 }
-module_init(mbcdd_init)
-;
-module_exit(mbcdd_exit)
-;
+module_init(mbcdd_init);
+module_exit(mbcdd_exit);
