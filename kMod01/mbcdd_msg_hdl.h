@@ -19,6 +19,8 @@ struct message {
 	message_slot_t *slot;
 	struct list_head list;
 	struct list_head slot_root;
+	struct list_head *slot_current;
+
 };
 
 typedef struct message message_t;

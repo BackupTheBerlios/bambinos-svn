@@ -110,6 +110,7 @@ message_t *mbcdd_new_msg(void){
 
 	//init slot_list
 	INIT_LIST_HEAD(&msg->slot_root);
+	msg->slot_current = &(msg->slot_root);
 
 
 	//add the message to the list using spinlock
@@ -135,8 +136,12 @@ message_t *mbcdd_get_msg(void){
 
 	printk(KERN_NOTICE "mbcdd_msg_hdl: get message\n");
 
+	//TODO: check this
 	list_for_each_safe(p, n, &msg_root) { //simple but a bit dirty
 		msg = list_entry(p, struct message, list);
+
+		//reset the current-pointer (neccessary in case of a previously aborted read)
+		msg->slot_current = &(msg->slot_root);
 		break;
 	}
 
@@ -164,8 +169,7 @@ void *mbcdd_new_data_slot(message_t *msg) {
 	//add the message to the list using spinlock
 	spin_lock_irqsave(&msg_lock, msg_lock_flags);
 
-		list_add(&msg->slot->list, &msg->slot_root);
-		//list_add(&msg->slot_root, &msg->slot->list);
+		list_add_tail(&msg->slot->list, &msg->slot_root);
 		printk(KERN_NOTICE "added slot with ID %i to message with ID %i \n", msg->slot->id, msg->id);
 
 	spin_unlock_irqrestore(&msg_lock, msg_lock_flags);
@@ -176,19 +180,30 @@ void *mbcdd_new_data_slot(message_t *msg) {
 }
 
 
+/**
+ * get a pointer to the data of the next unread data slot of a message.
+ *
+ */
 void *mbcdd_get_data_slot(message_t *msg) {
+	void *data;
 	struct list_head *loop, *tmp;
 	message_slot_t *slot = NULL;
 
 	printk(KERN_NOTICE "mbcdd_msg_hdl: get message data slot\n");
 
-	list_for_each_prev_safe(loop, tmp, &msg->slot_root) { //simple but a bit dirty
-		slot = list_entry(loop, message_slot_t, list);
+
+	if (msg->slot_current->next != &msg->slot_root) {
+		slot = list_entry(msg->slot_current->next, message_slot_t, list);
+		data = &slot->data;
 		printk(KERN_NOTICE "got data slot with ID %i of message with ID %i \n", slot->id, msg->id);
-		break;
+		msg->slot_current = msg->slot_current->next;
+	}else {
+		data = NULL;
+		printk(KERN_NOTICE "no more data slot in message with ID %i \n", msg->id);
+
 	}
 
-	return &slot->data;
+	return data;
 }
 
 
@@ -210,13 +225,16 @@ void test_msg(void) {
 
 	p = mbcdd_new_data_slot(msg);
 	p = mbcdd_new_data_slot(msg);
+	//p = mbcdd_new_data_slot(msg);
 ////	*p = 'a';
 
+	mbcdd_get_data_slot(msg);
+	mbcdd_get_data_slot(msg);
 	mbcdd_get_data_slot(msg);
 
 	mbcdd_print_msg_list();
 
-	mbcdd_get_msg();
+//	mbcdd_get_msg();
 
 }
 
