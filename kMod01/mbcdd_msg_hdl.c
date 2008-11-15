@@ -19,6 +19,8 @@ MODULE_DESCRIPTION("A message handler device driver, for the mbcdd device");
 static spinlock_t msg_lock = SPIN_LOCK_UNLOCKED;
 static unsigned long msg_lock_flags;
 
+static struct list_head *msg_read_current;
+
 static LIST_HEAD(msg_root);
 
 
@@ -43,6 +45,7 @@ static void mbcdd_print_msg_list(void) {
 	printk(KERN_NOTICE "mbcdd_msg_hdl: list messages\n");
 
 	//travel the message-list
+	//TODO:
 	list_for_each(p, &msg_root) {
 		msg = list_entry(p, message_t, list);
 		printk(KERN_ALERT "  - message with ID %i \n", msg->id);
@@ -54,45 +57,6 @@ static void mbcdd_print_msg_list(void) {
 
 	}
 }
-
-
-static void test_list(void) {
-
-	int i;
-	message_t *msg;
-	struct list_head *p;
-
-	//INIT_LIST_HEAD(&messages);
-
-	// build list
-	for (i = 0; i < 3; i++) {
-		msg = kmalloc(sizeof(message_t), GFP_KERNEL);
-
-		spin_lock_irqsave(&msg_lock, msg_lock_flags);
-
-
-		//sprintf(msg->data, "message %i", i);
-		//printk(KERN_ALERT "adding: %s \n", msg->data);
-
-		msg->id = new_msg_id();
-		list_add(&msg->list, &msg_root);
-		//printk(KERN_ALERT "adding: %i \n", i);
-
-
-		spin_unlock_irqrestore(&msg_lock, msg_lock_flags);
-	}
-
-	//travel list
-	i=0;
-	list_for_each(p, &msg_root) {
-		msg = list_entry(p, struct message, list);
-		printk(KERN_NOTICE "list element %i: %i \n", i, msg->id);
-		i++;
-	}
-
-}
-
-
 
 /**
  * allocate space for a new message, add it to the list
@@ -127,7 +91,7 @@ message_t *mbcdd_new_msg(void){
 }
 
 /**
- * get a pointer to the latest message
+ * get a pointer to the latest unread message
  */
 message_t *mbcdd_get_msg(void){
 	message_t *msg = NULL;
@@ -136,16 +100,36 @@ message_t *mbcdd_get_msg(void){
 
 	printk(KERN_NOTICE "mbcdd_msg_hdl: get message\n");
 
+
 	//TODO: check this
-	list_for_each_safe(p, n, &msg_root) { //simple but a bit dirty
-		msg = list_entry(p, struct message, list);
+//	list_for_each_safe(p, n, &msg_root) {
+//		msg = list_entry(p, struct message, list);
+//
+//		//reset the current-pointer (neccessary in case of a previously aborted read)
+//		msg->slot_current = &(msg->slot_root);
+//		break;
+//	}
 
-		//reset the current-pointer (neccessary in case of a previously aborted read)
-		msg->slot_current = &(msg->slot_root);
-		break;
-	}
 
-	printk(KERN_NOTICE "got message with ID %i \n", msg->id);
+	spin_lock_irqsave(&msg_lock, msg_lock_flags);
+
+		if (msg_read_current->next != &msg_root) {
+
+			msg = list_entry(msg_read_current->next, message_t, list);
+
+			//reset the current-slot-pointer (neccessary in case of a previously aborted read)
+			msg->slot_current = &(msg->slot_root);
+
+			printk(KERN_NOTICE "got message with ID %i \n", msg->id);
+
+			//hop to the next message
+			msg_read_current = msg_read_current->next;
+
+		}else {
+			printk(KERN_NOTICE "no more data slot in message with ID %i \n", msg->id);
+		}
+
+	spin_unlock_irqrestore(&msg_lock, msg_lock_flags);
 
 	return msg;
 }
@@ -169,6 +153,7 @@ void *mbcdd_new_data_slot(message_t *msg) {
 	//add the message to the list using spinlock
 	spin_lock_irqsave(&msg->slot_lock, msg->slot_lock_flags);
 
+		//TODO: add erst nach schreibbestätigung
 		list_add_tail(&msg->slot->list, &msg->slot_root);
 		printk(KERN_NOTICE "added slot with ID %i to message with ID %i \n", msg->slot->id, msg->id);
 
@@ -198,7 +183,7 @@ void *mbcdd_get_data_slot(message_t *msg) {
 			data = &slot->data;
 			printk(KERN_NOTICE "got data slot with ID %i of message with ID %i \n", slot->id, msg->id);
 
-			//hop the the next slot
+			//hop to the next slot
 			msg->slot_current = msg->slot_current->next;
 		}else {
 			data = NULL;
@@ -212,8 +197,15 @@ void *mbcdd_get_data_slot(message_t *msg) {
 }
 
 
+void mbcdd_del_msg(message_t *msg) {
+	//TODO:
+	return;
+}
+
+
 EXPORT_SYMBOL(mbcdd_new_msg);
 EXPORT_SYMBOL(mbcdd_get_msg);
+EXPORT_SYMBOL(mbcdd_del_msg);
 EXPORT_SYMBOL(mbcdd_new_data_slot);
 EXPORT_SYMBOL(mbcdd_get_data_slot);
 
@@ -227,6 +219,7 @@ void test_msg(void) {
 
 	msg = mbcdd_new_msg();
 	mbcdd_new_msg();
+	mbcdd_new_msg();
 
 	p = mbcdd_new_data_slot(msg);
 	p = mbcdd_new_data_slot(msg);
@@ -239,18 +232,23 @@ void test_msg(void) {
 
 	mbcdd_print_msg_list();
 
+	mbcdd_get_msg();
+	mbcdd_get_msg();
+//	mbcdd_get_msg();
 //	mbcdd_get_msg();
 
 }
 
 
 
-static int __init  mbcd_init(void) {
+static int __init  mbcdd_msg_init(void) {
 
 	printk(KERN_ALERT "mbcdd_msg_hdl: Insert module \n");
 
+	msg_read_current =  &msg_root;
+
 	test_msg();
-	//test_list();
+
 
 	return 0;
 
@@ -258,7 +256,7 @@ static int __init  mbcd_init(void) {
 
 
 
-static void __exit  mbcd_exit(void) {
+static void __exit  mbcdd_msg_exit(void) {
 
 	struct list_head *loopvar_outer, *tmp_outer, *loopvar_inner, *tmp_inner;
 	message_t *msg;
@@ -292,6 +290,6 @@ static void __exit  mbcd_exit(void) {
 
 }
 
-module_init(mbcd_init);
-module_exit(mbcd_exit);
+module_init(mbcdd_msg_init);
+module_exit(mbcdd_msg_exit);
 
