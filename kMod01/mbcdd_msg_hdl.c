@@ -145,30 +145,35 @@ message_t *mbcdd_get_msg(void){
 /**
  * allocate memory for the data of a message_slot
  */
-static void init_message_slot(message_slot_t *slot) {
-	//slot->data = kmalloc(sizeof(char[DATA_SLOT_SIZE]), GFP_KERNEL);
-	memset(slot->data, 0, DATA_SLOT_SIZE);
-	return;
-}
+//static void init_message_slot(message_slot_t *slot) {
+//	//slot->data = kmalloc(sizeof(char[DATA_SLOT_SIZE]), GFP_KERNEL);
+//	memset(slot->data, 0, DATA_SLOT_SIZE);
+//	return;
+//}
 
 /**
  * create a new message slot and get a pointer to the message slot-data
  */
 void *mbcdd_new_data_slot(message_t *msg) {
 
+	static int msg_data_slot_id = 0;
+
 	printk(KERN_NOTICE "mbcdd_msg_hdl: new message data slot\n");
 
-	//allocate memory for the new message slot
+	//allocate memory for the new message data slot
 	msg->slot = kmalloc(sizeof(message_slot_t), GFP_KERNEL);
-	init_message_slot(msg->slot);
+	memset(msg->slot->data, 0, DATA_SLOT_SIZE);
+
 
 	//add the message to the list using spinlock
 	spin_lock_irqsave(&msg_lock, msg_lock_flags);
 
 		list_add(&msg->slot->list, &msg->slot_root);
-		printk(KERN_NOTICE "added slot to message with ID %i \n", msg->id);
+		printk(KERN_NOTICE "added slot with ID %i to message with ID %i \n", msg_data_slot_id, msg->id);
 
 	spin_unlock_irqrestore(&msg_lock, msg_lock_flags);
+
+	msg_data_slot_id ++;
 
 	return &msg->slot->data;
 }
@@ -204,8 +209,15 @@ EXPORT_SYMBOL(mbcdd_get_data_slot);
 
 void test_msg(void) {
 
-	mbcdd_new_msg();
-	mbcdd_new_msg();
+	message_t *msg;
+	char *p;
+
+
+	msg = mbcdd_new_msg();
+	//mbcdd_new_msg();
+
+	p = mbcdd_new_data_slot(msg);
+	*p = 'a';
 
 	mbcdd_print_msg_list();
 
@@ -236,10 +248,13 @@ static void __exit  mbcd_exit(void) {
 	printk(KERN_NOTICE "mbcdd_msg_hdl: Unregister module \n");
 
 	//do some housekeeping and clean the list
-	spin_lock(&msg_lock);
+	spin_lock_irqsave(&msg_lock, msg_lock_flags);
 
 		list_for_each_safe(loopvar, tmp, &msg_root) {
 			 i = list_entry(loopvar, message_t, list)->id;
+
+			 //TODO: remove message data slots
+
 			 printk(KERN_NOTICE "mbcdd_msg_hdl: Deleting message with ID %i\n", i);
 			 //delete list element
 			 list_del(loopvar);
@@ -247,7 +262,7 @@ static void __exit  mbcd_exit(void) {
 			 kfree(list_entry(loopvar, message_t, list));
 		}
 
-	spin_unlock(&msg_lock);
+	spin_lock_irqsave(&msg_lock, msg_lock_flags);
 
 }
 
