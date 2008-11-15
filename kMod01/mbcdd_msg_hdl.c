@@ -126,7 +126,7 @@ message_t *mbcdd_get_msg(void){
 			msg_read_current = msg_read_current->next;
 
 		}else {
-			printk(KERN_NOTICE "no more data slot in message with ID %i \n", msg->id);
+			printk(KERN_NOTICE "no more message :-( \n");
 		}
 
 	spin_unlock_irqrestore(&msg_lock, msg_lock_flags);
@@ -234,8 +234,8 @@ void test_msg(void) {
 
 	mbcdd_get_msg();
 	mbcdd_get_msg();
-//	mbcdd_get_msg();
-//	mbcdd_get_msg();
+	mbcdd_get_msg();
+	mbcdd_get_msg();
 
 }
 
