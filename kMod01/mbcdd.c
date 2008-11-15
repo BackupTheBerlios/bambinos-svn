@@ -34,27 +34,34 @@ int mbcdd_open(struct inode *inode, struct file *filep) {
 	dev_wrapper = kmalloc(sizeof(struct mbcdd_dev_wrapper), GFP_KERNEL);
 	memset(dev_wrapper, 0, sizeof(struct mbcdd_dev_wrapper));
 
-	dev = container_of(inode->i_cdev, mbcdd_dev_t, cdev);
+	dev = container_of(inode->i_cdev, struct mbcdd_dev, cdev);
 	// i_cdev enthaelt die cdev struktur die wir erstellt haben; Kernel gibt das in inode an
 	// unser Device weiter
 
 	dev_wrapper->dev=dev;
-	filep->private_data = &dev_wrapper;
+
+
+
 	if ( (filep->f_flags & O_ACCMODE) == O_WRONLY) {
 		// fopen for write
 		dev_wrapper->msg = mbcdd_new_msg();
-		printk(KERN_NOTICE "mbcd call message handler open file function \n");
 
 	} else if (((filep->f_flags & O_ACCMODE) == O_RDONLY)) {
 
 		dev_wrapper->msg = mbcdd_get_msg();
-		init_completion(&(dev_wrapper->hold_readers));
+		init_completion(dev_wrapper->hold_readers);
+
 
 	} else {
 
 		return 1;
 
 	}
+
+	filep->private_data = dev_wrapper;
+
+	//filep->private_data = &dev_wrapper;
+	printk(KERN_NOTICE "mbcd open p1 id %d  p %p \n",dev_wrapper->msg->id, dev_wrapper->msg  );
 
 	return 0;
 
@@ -79,7 +86,7 @@ ssize_t mbcdd_read(struct file *filp, char __user *buf, size_t count,
 	// TODO wir brauchen irgendeinen speziellen Rueckgabewert.
 	// Wenn dieser Wert dann
 
-	wait_for_completion(&(dev_wrapper->hold_readers));
+	wait_for_completion(dev_wrapper->hold_readers);
 
 
 	spin_lock_irqsave(&read_lock, flags);
@@ -89,33 +96,36 @@ ssize_t mbcdd_read(struct file *filp, char __user *buf, size_t count,
 
 	spin_unlock_irqrestore(&read_lock, flags);
 
-	if (retval = 0){
+	if (retval == 0){
 			retval = -EFAULT;
 	}
 	retval=count;
 
 	printk(KERN_NOTICE "mbcdd: Reading \n");
 
-	complete(&(dev_wrapper->hold_readers));
+	complete(dev_wrapper->hold_readers);
 
 	return retval;
 }
 
 
 
-ssize_t mbcdd_write(struct file *filp, const char __user *buf, size_t count,
+ssize_t mbcdd_write(struct file *filep, const char __user *buf, size_t count,
 		loff_t *f_pos) {
 
-			struct mbcdd_dev_wrapper *dev_wrapper = filp->private_data;
-
-			//TODO wait for Kasi
-			void *to=mbcdd_new_data_slot(dev_wrapper->msg);
+			struct mbcdd_dev_wrapper *dev_wrapper = filep->private_data;
+			void *to;
 			count=DATA_SLOT_SIZE;
 
+			printk(KERN_NOTICE "mbcd writing p1 %p , msg id %d \n", dev_wrapper->msg, dev_wrapper->msg->id );
+
+			to=mbcdd_new_data_slot(dev_wrapper->msg);
+
+			//TODO wait for Kasi
 			spin_lock_irqsave(&write_lock, flags);
 
 			// critical region
-			copy_from_user(to, buf, count);
+			count=copy_from_user(to, buf, count);
 
 			spin_unlock_irqrestore(&write_lock, flags);
 
