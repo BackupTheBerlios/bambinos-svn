@@ -125,7 +125,7 @@ message_t *mbcdd_new_msg(void){
  * get a pointer to the latest message
  */
 message_t *mbcdd_get_msg(void){
-	message_t *msg;
+	message_t *msg = NULL;
 
 	struct list_head *p, *n;
 
@@ -141,15 +141,6 @@ message_t *mbcdd_get_msg(void){
 	return msg;
 }
 
-
-/**
- * allocate memory for the data of a message_slot
- */
-//static void init_message_slot(message_slot_t *slot) {
-//	//slot->data = kmalloc(sizeof(char[DATA_SLOT_SIZE]), GFP_KERNEL);
-//	memset(slot->data, 0, DATA_SLOT_SIZE);
-//	return;
-//}
 
 /**
  * create a new message slot and get a pointer to the message slot-data
@@ -179,8 +170,17 @@ void *mbcdd_new_data_slot(message_t *msg) {
 	return &msg->slot->data;
 }
 
+
 void *mbcdd_get_data_slot(message_t *msg) {
-	return;
+	struct list_head *loop, *tmp;
+	message_slot_t *slot = NULL;
+
+	list_for_each_safe(loop, tmp, &msg->slot_root) { //simple but a bit dirty
+		slot = list_entry(loop, message_slot_t, list);
+		break;
+	}
+
+	return &slot->data;
 }
 
 /*
@@ -256,7 +256,6 @@ static void __exit  mbcd_exit(void) {
 			msg = list_entry(loopvar_outer, message_t, list);
 			i = msg->id;
 
-			//TODO: remove message data slots
 			list_for_each_safe(loopvar_inner, tmp_inner, &msg->slot_root) {
 				j = list_entry(loopvar_inner, message_slot_t, list)->id;
 
