@@ -46,7 +46,7 @@ static void mbcdd_print_msg_list(void) {
 	i=0;
 	list_for_each(p, &msg_root) {
 		msg = list_entry(p, struct message, list);
-		printk(KERN_ALERT " - message with ID %i \n", i, msg->id);
+		printk(KERN_ALERT " - message with ID %i \n", msg->id);
 		i++;
 	}
 }
@@ -162,6 +162,7 @@ void *mbcdd_new_data_slot(message_t *msg) {
 
 	//allocate memory for the new message data slot
 	msg->slot = kmalloc(sizeof(message_slot_t), GFP_KERNEL);
+	msg->slot->id = msg_data_slot_id;
 	memset(msg->slot->data, 0, DATA_SLOT_SIZE);
 
 
@@ -169,7 +170,7 @@ void *mbcdd_new_data_slot(message_t *msg) {
 	spin_lock_irqsave(&msg_lock, msg_lock_flags);
 
 		list_add(&msg->slot->list, &msg->slot_root);
-		printk(KERN_NOTICE "added slot with ID %i to message with ID %i \n", msg_data_slot_id, msg->id);
+		printk(KERN_NOTICE "added slot with ID %i to message with ID %i \n", msg->slot->id, msg->id);
 
 	spin_unlock_irqrestore(&msg_lock, msg_lock_flags);
 
@@ -242,27 +243,36 @@ static int __init  mbcd_init(void) {
 
 static void __exit  mbcd_exit(void) {
 
-	struct list_head *loopvar, *tmp;
-	int i = 0;
+	struct list_head *loopvar_outer, *tmp_outer, *loopvar_inner, *tmp_inner;
+	message_t *msg;
+	int i = 0, j = 0;
 
 	printk(KERN_NOTICE "mbcdd_msg_hdl: Unregister module \n");
 
 	//do some housekeeping and clean the list
 	spin_lock_irqsave(&msg_lock, msg_lock_flags);
 
-		list_for_each_safe(loopvar, tmp, &msg_root) {
-			 i = list_entry(loopvar, message_t, list)->id;
+		list_for_each_safe(loopvar_outer, tmp_outer, &msg_root) {
+			msg = list_entry(loopvar_outer, message_t, list);
+			i = msg->id;
 
-			 //TODO: remove message data slots
+			//TODO: remove message data slots
+			list_for_each_safe(loopvar_inner, tmp_inner, &msg->slot_root) {
+				j = list_entry(loopvar_inner, message_slot_t, list)->id;
 
-			 printk(KERN_NOTICE "mbcdd_msg_hdl: Deleting message with ID %i\n", i);
-			 //delete list element
-			 list_del(loopvar);
-			 //free willy
-			 kfree(list_entry(loopvar, message_t, list));
+				printk(KERN_NOTICE "deleting data slot with ID %i from message with ID %i\n", j, i);
+				list_del(loopvar_inner);
+				//free willy
+				kfree(list_entry(loopvar_inner, message_slot_t, list));
+			}
+
+			printk(KERN_NOTICE "deleting message with ID %i\n", i);
+			//delete list element
+			list_del(loopvar_outer);
+			kfree(list_entry(loopvar_outer, message_t, list));
 		}
 
-	spin_lock_irqsave(&msg_lock, msg_lock_flags);
+	spin_unlock_irqrestore(&msg_lock, msg_lock_flags);
 
 }
 

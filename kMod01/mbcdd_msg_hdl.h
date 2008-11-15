@@ -6,6 +6,7 @@
 
 
 struct message_slot {
+	int id;
 	char data[DATA_SLOT_SIZE];
 	struct list_head list;
 };
