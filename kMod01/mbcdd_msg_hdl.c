@@ -96,20 +96,7 @@ message_t *mbcdd_new_msg(void){
 message_t *mbcdd_get_msg(void){
 	message_t *msg = NULL;
 
-	struct list_head *p, *n;
-
 	printk(KERN_NOTICE "mbcdd_msg_hdl: get message\n");
-
-
-	//TODO: check this
-//	list_for_each_safe(p, n, &msg_root) {
-//		msg = list_entry(p, struct message, list);
-//
-//		//reset the current-pointer (neccessary in case of a previously aborted read)
-//		msg->slot_current = &(msg->slot_root);
-//		break;
-//	}
-
 
 	spin_lock_irqsave(&msg_lock, msg_lock_flags);
 
