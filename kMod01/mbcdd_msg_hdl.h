@@ -17,10 +17,14 @@ typedef struct message_slot message_slot_t;
 struct message {
 	int id;
 	message_slot_t *slot;
-	struct list_head list;
+	spinlock_t slot_lock;
+	unsigned long slot_lock_flags;
+
+
 	struct list_head slot_root;
 	struct list_head *slot_current;
 
+	struct list_head list;
 };
 
 typedef struct message message_t;

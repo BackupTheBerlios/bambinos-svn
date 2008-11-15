@@ -111,7 +111,7 @@ message_t *mbcdd_new_msg(void){
 	//init slot_list
 	INIT_LIST_HEAD(&msg->slot_root);
 	msg->slot_current = &(msg->slot_root);
-
+	msg->slot_lock = SPIN_LOCK_UNLOCKED;
 
 	//add the message to the list using spinlock
 	spin_lock_irqsave(&msg_lock, msg_lock_flags);
@@ -167,12 +167,12 @@ void *mbcdd_new_data_slot(message_t *msg) {
 
 
 	//add the message to the list using spinlock
-	spin_lock_irqsave(&msg_lock, msg_lock_flags);
+	spin_lock_irqsave(&msg->slot_lock, msg->slot_lock_flags);
 
 		list_add_tail(&msg->slot->list, &msg->slot_root);
 		printk(KERN_NOTICE "added slot with ID %i to message with ID %i \n", msg->slot->id, msg->id);
 
-	spin_unlock_irqrestore(&msg_lock, msg_lock_flags);
+	spin_unlock_irqrestore(&msg->slot_lock, msg->slot_lock_flags);
 
 	msg_data_slot_id ++;
 
@@ -186,22 +186,27 @@ void *mbcdd_new_data_slot(message_t *msg) {
  */
 void *mbcdd_get_data_slot(message_t *msg) {
 	void *data;
-	struct list_head *loop, *tmp;
 	message_slot_t *slot = NULL;
 
 	printk(KERN_NOTICE "mbcdd_msg_hdl: get message data slot\n");
 
+	spin_lock_irqsave(&msg->slot_lock, msg->slot_lock_flags);
 
-	if (msg->slot_current->next != &msg->slot_root) {
-		slot = list_entry(msg->slot_current->next, message_slot_t, list);
-		data = &slot->data;
-		printk(KERN_NOTICE "got data slot with ID %i of message with ID %i \n", slot->id, msg->id);
-		msg->slot_current = msg->slot_current->next;
-	}else {
-		data = NULL;
-		printk(KERN_NOTICE "no more data slot in message with ID %i \n", msg->id);
+		if (msg->slot_current->next != &msg->slot_root) {
 
-	}
+			slot = list_entry(msg->slot_current->next, message_slot_t, list);
+			data = &slot->data;
+			printk(KERN_NOTICE "got data slot with ID %i of message with ID %i \n", slot->id, msg->id);
+
+			//hop the the next slot
+			msg->slot_current = msg->slot_current->next;
+		}else {
+			data = NULL;
+			printk(KERN_NOTICE "no more data slot in message with ID %i \n", msg->id);
+
+		}
+
+	spin_unlock_irqrestore(&msg->slot_lock, msg->slot_lock_flags);
 
 	return data;
 }
