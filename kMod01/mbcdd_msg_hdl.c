@@ -196,6 +196,18 @@ void *mbcdd_new_data_slot(message_t *msg) {
 	return &msg->slot->data;
 }
 
+void *mbcdd_new_data(void){
+	//TODO:
+	return NULL;
+}
+
+void mbcdd_add_data_slot(message_t *msg){
+	//TODO:
+	return;
+}
+
+
+
 
 /**
  * get a pointer to the data of the next unread data slot of a message.
