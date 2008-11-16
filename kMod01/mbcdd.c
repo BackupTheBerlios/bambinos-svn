@@ -28,21 +28,24 @@ int mbcdd_open(struct inode *inode, struct file *filep) {
 	struct mbcdd_dev *dev;
 	struct mbcdd_dev_wrapper *dev_wrapper;
 
-	dev_wrapper = kmalloc(sizeof(struct mbcdd_dev_wrapper), GFP_KERNEL);
-	memset(dev_wrapper, 0, sizeof(struct mbcdd_dev_wrapper));
 
-	dev = container_of(inode->i_cdev, struct mbcdd_dev, cdev);
-	// i_cdev enthaelt die cdev struktur die wir erstellt haben; Kernel gibt das in inode an
-	// unser Device weiter
-
-	dev_wrapper->dev = dev;
 
 	if ((filep->f_flags & O_ACCMODE) == O_WRONLY) {
 		// fopen for write
+		dev_wrapper = kmalloc(sizeof(struct mbcdd_dev_wrapper), GFP_KERNEL);
+		memset(dev_wrapper, 0, sizeof(struct mbcdd_dev_wrapper));
+		dev = container_of(inode->i_cdev, struct mbcdd_dev, cdev);
+		// i_cdev enthaelt die cdev struktur die wir erstellt haben; Kernel gibt das in inode an
+		// unser Device weiter
+
+		dev_wrapper->dev = dev;
+
+
 		dev_wrapper->msg = mbcdd_new_msg();
 
 	} else if (((filep->f_flags & O_ACCMODE) == O_RDONLY)) {
 
+		dev_wrapper = filep->private_data;
 		dev_wrapper->msg = mbcdd_get_msg();
 
 		printk(KERN_NOTICE "mbcd open ro msg id %d, fin writer = %d  \n",
