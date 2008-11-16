@@ -19,8 +19,6 @@ MODULE_DESCRIPTION("A message handler device driver, for the mbcdd device");
 static spinlock_t msg_lock = SPIN_LOCK_UNLOCKED;
 static unsigned long msg_lock_flags;
 
-static struct list_head *msg_read_current;
-
 static LIST_HEAD(msg_root);
 
 //TODO: check *msg for null-values
@@ -78,6 +76,9 @@ message_t *mbcdd_new_msg(void){
 	msg->slot_current = &(msg->slot_root);
 	msg->slot_lock = SPIN_LOCK_UNLOCKED;
 
+	msg->busy_reader = 0;
+	msg->fin_writer= 0;
+
 	//add the message to the list using spinlock
 	spin_lock_irqsave(&msg_lock, msg_lock_flags);
 
@@ -101,20 +102,16 @@ message_t *mbcdd_get_msg(void){
 
 	spin_lock_irqsave(&msg_lock, msg_lock_flags);
 
-		if (msg_read_current->next != &msg_root) {
+		if (list_empty(&msg_root)) {
 
-			msg = list_entry(msg_read_current->next, message_t, list);
-
-			//reset the current-slot-pointer (neccessary in case of a previously aborted read)
-			msg->slot_current = &(msg->slot_root);
-
-			printk(KERN_NOTICE "got message with ID %i \n", msg->id);
-
-			//hop to the next message
-			msg_read_current = msg_read_current->next;
+			printk(KERN_NOTICE "no more message :-( \n");
 
 		}else {
-			printk(KERN_NOTICE "no more message :-( \n");
+
+			msg = list_entry(msg_root.next, message_t, list);
+			printk(KERN_NOTICE "got message with ID %i \n", msg->id);
+			list_del(&msg->list);
+
 		}
 
 	spin_unlock_irqrestore(&msg_lock, msg_lock_flags);
@@ -141,7 +138,7 @@ void mbcdd_del_msg(message_t *msg) {
 			slot = list_entry(loop, message_slot_t, list);
 
 			printk(KERN_NOTICE "deleting data slot with ID %i from message with ID %i\n", slot->id, msg->id);
-			list_del(loop);
+			//TODO: check list_del(loop);
 			//free willy
 			kfree(slot);
 		}
@@ -248,18 +245,20 @@ void test_msg(void) {
 	//p = mbcdd_new_data_slot(msg);
 ////	*p = 'a';
 
+
+
+	mbcdd_get_data_slot(msg);
+	mbcdd_get_data_slot(msg);
+	mbcdd_get_data_slot(msg);
+//
 	mbcdd_del_msg(msg);
 
-//	mbcdd_get_data_slot(msg);
-//	mbcdd_get_data_slot(msg);
-//	mbcdd_get_data_slot(msg);
-//
 	mbcdd_print_msg_list();
 //
-//	mbcdd_get_msg();
-//	mbcdd_get_msg();
-//	mbcdd_get_msg();
-//	mbcdd_get_msg();
+	mbcdd_get_msg();
+	mbcdd_get_msg();
+	mbcdd_get_msg();
+	mbcdd_get_msg();
 
 }
 
@@ -268,8 +267,6 @@ void test_msg(void) {
 static int __init  mbcdd_msg_init(void) {
 
 	printk(KERN_ALERT "mbcdd_msg_hdl: insert module \n");
-
-	msg_read_current =  &msg_root;
 
 	test_msg();
 
