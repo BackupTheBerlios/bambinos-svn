@@ -1,28 +1,51 @@
+=================================================
+
 PS Vertiefung Betriebssysteme Winter 2008/09
 
+ASSIGNMENT 2 
 
-Team:
-Rupert Gratz
-Markus Kasinger
+Team: Gratz, Kasinger 
 
-
-We feature:
-
-+ a message buffering char device driver mbcd that buffers messages in the memory. Interaction is possible by using the device /dev/mbcd.
-
-+ a producer process writing messages to the device
-
-+ a consumer process reading messages from the device
-
-+ a read- and write-counter-file in the proc file system
+=================================================
 
 
+What we have implemented:
+-------------------------
 
-We have implemented this by using ANSI-C and only standard Linux-C-functions. The implementation of the module is strongly based on the book "Linux Device Drivers 3" and the associated examples. What you find here is:
+	* All requests of Assignment 2
+	
 
-+ mbcd.c: the actual device driver featuring all necessary methods to enable inserting and removing the module and providing read/write-access to the "in-memory"-device.
 
-+ mbcd.h: header-file for mbcd.c defining the used structures.
+How we have implemented this:
+-----------------------------
+
+As demanded in the project description we have implemented 2 devices.
+Our intention in designing the interfaces was to create a message management device only, 
+with no more logical behavior.
+This means the message management device is responsible for:
+	* allocating resources needed for the messages and slots
+	* list handling of messages and slots
+	* freeing memory of messages and according slots. 
+	
+Our device driver is responsible for:
+	* concurrency behavior for multiple processes
+	* Logical behavior (flow control)
+	* completion mechanism on message level
+	
+
+
+
+
+What you find here is:
+----------------------
+
++ mbcdd.c: the actual device driver featuring all necessary methods to enable inserting and removing the module and providing read/write-access to the "in-memory"-device.
+
++ mbcdd.h: header-file for mbcd.c defining the used structures.
+
++ mbcdd_msg_hdl.c: implements the message management.
+
++ mbcdd_msg_hdl.h: defines the message management interface.  
 
 + producer.c: the producer-userland-application. Sends messages to the device.
 
@@ -39,12 +62,14 @@ We have implemented this by using ANSI-C and only standard Linux-C-functions. Th
 
 
 HOW TO BUILD:
+-------------
 
 Run "make" to build everything. Run "make producer" or "make consumer" for only building the specific userland applications.
 
 
 
 HOW TO RUN:
+-----------
 
 After building the binaries by using "make" run "mbcd_load.sh" as root to insert the module mbcd.ko and create the device /dev/mbcd.
 
