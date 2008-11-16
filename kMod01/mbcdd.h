@@ -45,8 +45,6 @@ struct mbcdd_dev_wrapper {
 	struct message *msg;
 	struct completion hold_readers;
 
-	int busy_reader;
-	int fin_writer;
 };
 
 

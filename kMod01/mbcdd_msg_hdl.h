@@ -25,6 +25,10 @@ struct message {
 	struct list_head *slot_current;
 
 	struct list_head list;
+
+	int busy_reader;
+	int fin_writer;
+
 };
 
 typedef struct message message_t;

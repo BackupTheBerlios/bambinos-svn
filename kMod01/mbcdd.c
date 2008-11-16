@@ -25,36 +25,33 @@ MODULE_AUTHOR("R. Gratz, M. Kasinger");
 MODULE_DESCRIPTION("A message buffering char device driver.");
 
 int mbcdd_open(struct inode *inode, struct file *filep) {
+
 	struct mbcdd_dev *dev;
 	struct mbcdd_dev_wrapper *dev_wrapper;
 
+	dev = container_of(inode->i_cdev, struct mbcdd_dev, cdev);
+	// i_cdev enthaelt die cdev struktur die wir erstellt haben; Kernel gibt das in inode an
+	// unser Device weiter
 
+	dev_wrapper = kmalloc(sizeof(struct mbcdd_dev_wrapper), GFP_KERNEL);
+	memset(dev_wrapper, 0, sizeof(struct mbcdd_dev_wrapper));
+
+	dev_wrapper->dev = dev;
 
 	if ((filep->f_flags & O_ACCMODE) == O_WRONLY) {
 		// fopen for write
-		dev_wrapper = kmalloc(sizeof(struct mbcdd_dev_wrapper), GFP_KERNEL);
-		memset(dev_wrapper, 0, sizeof(struct mbcdd_dev_wrapper));
-		dev = container_of(inode->i_cdev, struct mbcdd_dev, cdev);
-		// i_cdev enthaelt die cdev struktur die wir erstellt haben; Kernel gibt das in inode an
-		// unser Device weiter
-
-		dev_wrapper->dev = dev;
-
 
 		dev_wrapper->msg = mbcdd_new_msg();
 
+
 	} else if (((filep->f_flags & O_ACCMODE) == O_RDONLY)) {
 
-		dev_wrapper = filep->private_data;
-		printk(KERN_NOTICE "mbcd open ro fin writer = %d  \n", dev_wrapper->fin_writer);
-
-
 		dev_wrapper->msg = mbcdd_get_msg();
-
-		printk(KERN_NOTICE "mbcd open ro msg id %d  \n", dev_wrapper->fin_writer);
+		printk(KERN_NOTICE "mbcd open ro msg id %d  \n",
+				dev_wrapper->msg->fin_writer);
 		// wenn reader nicht fertig ist, dann completion mechanismus
 		// initialiserien
-		if (dev_wrapper->fin_writer == 0)
+		if (dev_wrapper->msg->fin_writer == 0)
 			init_completion(&dev_wrapper->hold_readers);
 
 	} else {
@@ -80,9 +77,9 @@ int mbcdd_release(struct inode *inode, struct file *filep) {
 	if ((filep->f_flags & O_ACCMODE) == O_WRONLY) {
 
 		// set writer finish flag
-		dev_wrapper->fin_writer = 1;
+		dev_wrapper->msg->fin_writer = 1;
 		// wenn reader darauf liest, benachrichtigung an sleepers
-		if (dev_wrapper->busy_reader == 1) {
+		if (dev_wrapper->msg->busy_reader == 1) {
 			complete(&dev_wrapper->hold_readers);
 		}
 
@@ -92,8 +89,11 @@ int mbcdd_release(struct inode *inode, struct file *filep) {
 
 	}
 
+	// dev wrappers cycle is short, from file open until file close
+	kfree(dev_wrapper);
+
 	printk(KERN_NOTICE "mbcd release %d, fin writer %d  \n",
-			dev_wrapper->msg->id, dev_wrapper->fin_writer);
+			dev_wrapper->msg->id, dev_wrapper->msg->fin_writer);
 
 	return 0;
 }
@@ -112,7 +112,7 @@ ssize_t mbcdd_read(struct file *filp, char __user *buf, size_t count,
 	if (to == NULL) {
 		// wenn writer finish flag ist gesetzt, dann gibts
 		// keine weiteren slots mehr, dann wars schon der letzte
-		if (dev_wrapper->fin_writer == 1) {
+		if (dev_wrapper->msg->fin_writer == 1) {
 			return 0;
 
 		} else {
@@ -171,7 +171,7 @@ ssize_t mbcdd_write(struct file *filep, const char __user *buf, size_t count,
 
 	spin_unlock_irqrestore(&write_lock, flags);
 
-	if (dev_wrapper->busy_reader == 1) {
+	if (dev_wrapper->msg->busy_reader == 1) {
 		// wake up readers
 		complete(&dev_wrapper->hold_readers);
 	}
