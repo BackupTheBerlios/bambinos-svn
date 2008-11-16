@@ -3,6 +3,7 @@
 #include <linux/fs.h>
 #include <linux/cdev.h>
 #include <linux/list.h>
+#include <asm-generic/errno-base.h>
 
 
 #include "mbcdd_msg_hdl.h"
@@ -63,33 +64,33 @@ static void mbcdd_print_msg_list(void) {
  */
 message_t *mbcdd_new_msg(void){
 
-	message_t *msg;
+	message_t *msg = NULL;
 
 
 	printk(KERN_NOTICE "mbcdd_msg_hdl: new message\n");
 
 	//allocate memory for the new message
 	msg = kmalloc(sizeof(message_t), GFP_KERNEL);
+	if (msg != NULL) {
+		//init slot_list
+		INIT_LIST_HEAD(&msg->slot_root);
+		msg->slot_current = &(msg->slot_root);
+		msg->slot_lock = SPIN_LOCK_UNLOCKED;
 
-	//init slot_list
-	INIT_LIST_HEAD(&msg->slot_root);
-	msg->slot_current = &(msg->slot_root);
-	msg->slot_lock = SPIN_LOCK_UNLOCKED;
+		msg->busy_reader = 0;
+		msg->fin_writer= 0;
 
-	msg->busy_reader = 0;
-	msg->fin_writer= 0;
+		//add the message to the list using spinlock
+		spin_lock_irqsave(&msg_lock, msg_lock_flags);
 
-	//add the message to the list using spinlock
-	spin_lock_irqsave(&msg_lock, msg_lock_flags);
+			msg->id = new_msg_id();
+			list_add(&msg->list, &msg_root);
+			printk(KERN_NOTICE "added message with ID %i \n", msg->id);
 
-		msg->id = new_msg_id();
-		list_add(&msg->list, &msg_root);
-		printk(KERN_NOTICE "added message with ID %i \n", msg->id);
-
-	spin_unlock_irqrestore(&msg_lock, msg_lock_flags);
+		spin_unlock_irqrestore(&msg_lock, msg_lock_flags);
+	}
 
 	return msg;
-
 }
 
 /**
@@ -171,39 +172,50 @@ void mbcdd_del_msg(message_t *msg) {
  * allocate memory for new data and return the allocated size
  */
 int mbcdd_new_data(void *p){
+	int result;
 
 	p = kmalloc(DATA_SLOT_SIZE, GFP_KERNEL);
-	memset(p, 0, DATA_SLOT_SIZE);
+	if (p == NULL) {
+		result = -ENOMEM;
+	}else {
+		memset(p, 0, DATA_SLOT_SIZE);
+		result = DATA_SLOT_SIZE;
+	}
 
-	return DATA_SLOT_SIZE;
+	return result;
 }
 
 
 /**
  * create a new message slot and add the given data
  */
-void mbcdd_add_data_slot(message_t *msg, void *data){
+int mbcdd_add_data_slot(message_t *msg, void *data){
 
 	message_slot_t *slot;
 	static int msg_data_slot_id = 0;
+	int result = 0;
 
 
 	slot = kmalloc(sizeof(message_slot_t), GFP_KERNEL);
-	slot->id = msg_data_slot_id;
-	slot->data = data;
+	if (slot == NULL) {
+		result = -ENOMEM;
+	}else {
+		slot->id = msg_data_slot_id;
+		slot->data = data;
 
-	//add the message to the list using spinlock
-	spin_lock_irqsave(&msg->slot_lock, msg->slot_lock_flags);
+		//add the message to the list using spinlock
+		spin_lock_irqsave(&msg->slot_lock, msg->slot_lock_flags);
 
-		list_add_tail(&slot->list, &msg->slot_root);
-		printk(KERN_NOTICE "added slot with ID %i to message with ID %i \n", slot->id, msg->id);
+			list_add_tail(&slot->list, &msg->slot_root);
+			printk(KERN_NOTICE "added slot with ID %i to message with ID %i \n", slot->id, msg->id);
 
-	spin_unlock_irqrestore(&msg->slot_lock, msg->slot_lock_flags);
+		spin_unlock_irqrestore(&msg->slot_lock, msg->slot_lock_flags);
 
 
-	msg_data_slot_id ++;
+		msg_data_slot_id ++;
+	}
 
-	return;
+	return result;
 }
 
 
