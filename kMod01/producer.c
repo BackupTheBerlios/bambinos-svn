@@ -1,38 +1,32 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <string.h>
 
 
 int main(int argc, char *argv[]) {
 
 	FILE *fh;
-	char *m;
+
 	char msg[20];
 
 	struct timespec tm, tm2;
 	int nr_msg, sleep_ms;
 	int i, count;
 
-	m = "message";
-	sprintf(msg, "message");
+	memset(&msg,' ',sizeof(msg));
+	sprintf(msg, "write messages ");
 	nr_msg = 10;
 	sleep_ms = 100;
 
 	if (argc>1) {
-		//m = argv[1];
-		strcpy(msg, argv[1]);
-	}else {
-		printf("NOTE: no message specified, using '%s' as default.\n", msg);
-	}
-
-	if (argc>2) {
-		nr_msg = atoi(argv[2]);
+		nr_msg = atoi(argv[1]);
 	}else {
 		printf("NOTE: number of messages not specified, using %i as default.\n", nr_msg);
 	}
 
-	if (argc>3) {
-		sleep_ms = atoi(argv[3]);
+	if (argc>2) {
+		sleep_ms = atoi(argv[2]);
 	}else {
 		printf("NOTE: no period specified, using %i ms as default.\n", sleep_ms);
 	}

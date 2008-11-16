@@ -11,14 +11,11 @@
 #include "mbcdd.h"
 #include "mbcdd_msg_hdl.h"
 
-
 #define DEBUG
-
 
 int mbcdd_major = 0;
 int mbcdd_minor = 0;
 int mbcdd_nr_devs = 1;
-
 
 spinlock_t write_lock = SPIN_LOCK_UNLOCKED;
 spinlock_t read_lock = SPIN_LOCK_UNLOCKED;
@@ -46,23 +43,24 @@ int mbcdd_open(struct inode *inode, struct file *filep) {
 		// fopen for write
 		dev_wrapper->msg = mbcdd_new_msg();
 
-		// Soll dann Kasi initialisieren
-		dev_wrapper->msg->fin_writer = 0;
-		dev_wrapper->msg->busy_reader = 0;
-
 	} else if (((filep->f_flags & O_ACCMODE) == O_RDONLY)) {
 
 		dev_wrapper->msg = mbcdd_get_msg();
 
-		if (dev_wrapper->msg == NULL){
+		if (dev_wrapper->msg == NULL) {
 			return -ENOENT;
 		}
 
 		dev_wrapper->msg->busy_reader = 1;
 		// wenn reader nicht fertig ist, dann completion mechanismus
 		// initialiserien
-		if (dev_wrapper->msg->fin_writer == 0)
+		if (dev_wrapper->msg->fin_writer == 0) {
+#ifdef DEBUG
+			printk(KERN_NOTICE "mbcd open init completion id %d \n",
+					dev_wrapper->msg->id);
+#endif
 			init_completion(&dev_wrapper->hold_readers);
+		}
 
 	} else {
 
@@ -89,10 +87,11 @@ int mbcdd_release(struct inode *inode, struct file *filep) {
 	if ((filep->f_flags & O_ACCMODE) == O_WRONLY) {
 
 		// set writer finish flag
-		dev_wrapper->msg->fin_writer = 1;
-		// wenn reader darauf liest, benachrichtigung an sleepers
-		if (dev_wrapper->msg->busy_reader == 1) {
-			complete(&dev_wrapper->hold_readers);
+		if (dev_wrapper->msg->busy_reader == 0){
+			dev_wrapper->msg->fin_writer = 1;
+#ifdef DEBUG
+			printk(KERN_NOTICE "mbcd set fin flag = 1 for msg %d \n", dev_wrapper->msg->id);
+#endif
 		}
 
 	} else if (((filep->f_flags & O_ACCMODE) == O_RDONLY)) {
@@ -126,15 +125,17 @@ ssize_t mbcdd_read(struct file *filp, char __user *buf, size_t count,
 		// wenn writer finish flag  gesetzt ist , dann gibts
 		// keine weiteren slots mehr -> dann wars schon der letzte
 		if (dev_wrapper->msg->fin_writer == 1) {
+			printk("mbcdd: NO DATA, RETURN IS NULL");
 			return 0;
 
 		} else {
-			printk("mbcdd: Reader waits for writer, in msg %d", dev_wrapper->msg->id );
-			wait_for_completion_timeout(&dev_wrapper->hold_readers, 3000);
+			printk("mbcdd: Reader waits for writer, in msg %d \n ",
+					dev_wrapper->msg->id);
+			wait_for_completion(&dev_wrapper->hold_readers);
+
+			printk("mbcdd: Reader continues, in msg %d \n",
+								dev_wrapper->msg->id);
 			to = mbcdd_get_data_slot(dev_wrapper->msg);
-			if (to == NULL) {
-				return -EBUSY;
-			}
 		}
 
 	}
@@ -160,7 +161,6 @@ ssize_t mbcdd_read(struct file *filp, char __user *buf, size_t count,
 
 ssize_t mbcdd_write(struct file *filep, const char __user *buf, size_t count,
 		loff_t *f_pos) {
-
 
 	ssize_t retval;
 	struct mbcdd_dev_wrapper *dev_wrapper;
@@ -192,11 +192,18 @@ ssize_t mbcdd_write(struct file *filep, const char __user *buf, size_t count,
 	spin_unlock_irqrestore(&write_lock, flags);
 
 	// Wenn slot beschrieben ist, dann einhaengen in die message
-	mbcdd_add_data_slot(dev_wrapper->msg,to);
+	mbcdd_add_data_slot(dev_wrapper->msg, to);
+
+#ifdef DEBUG
+	printk(KERN_NOTICE "mbcdd: Writing - ADD slot to message");
+#endif
+
 
 	if (dev_wrapper->msg->busy_reader == 1) {
 		// wake up readers
-		complete(&dev_wrapper->hold_readers);
+		printk(KERN_NOTICE "mbcd complete writers on msg %d",
+				dev_wrapper->msg->id);
+		complete_all(&dev_wrapper->hold_readers);
 	}
 
 #ifdef DEBUG
@@ -233,7 +240,6 @@ static void mbcdd_setup_cdev(struct mbcdd_dev *dev) {
 	if (err)
 		printk(KERN_NOTICE "Error %d adding mbcdd \n", err);
 }
-
 
 int mbcdd_init(void) {
 
