@@ -9,13 +9,11 @@ Team: Kasinger, Gratz
 ============================================================================================================
 
 
-
 What we have implemented:
 -------------------------
 
 	* All requests of Assignment 2
 	
-
 
 
 How we have implemented this:
@@ -68,9 +66,15 @@ void mbcdd_del_msg(message_t *msg);
 
 ==============================================================================================================================
 
-HOWTO BUILD:
 
-launch make
+HOWTO build and use it:
+-----------------------
+
+$>make
+$>sudo sh mbcd_load.sh
+
+$>./producer
+$>./consumer
 
 
 
