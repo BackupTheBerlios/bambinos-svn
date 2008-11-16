@@ -73,7 +73,12 @@ HOW TO RUN:
 
 After building the binaries by using "make" run "mbcd_load.sh" as root to insert the module mbcd.ko and create the device /dev/mbcd.
 
-Now run (again as root) the "producer p", with p specifying the period in ms for writes  to the device.
+To write to the device run (again as root):
+
+producer [m] [n] [p], 
+
+to produce the message m n times with a period of p ms. If you ommit the optional parameters m, n, p default values are being used.
+
 
 Run (as root) "consumer p", with p specifying the period in ms for reading from the device.
 
