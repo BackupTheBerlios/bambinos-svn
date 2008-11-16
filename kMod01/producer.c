@@ -42,7 +42,7 @@ int main(int argc, char *argv[]) {
 
 	while(i < nr_msg) {
 
-		printf("writing message %i: %s\n", i, m);
+		printf("write #%i: %s\n", i, m);
 		fwrite(m, 1, sizeof(m), fh);
 
 		nanosleep(&tm, &tm2);
