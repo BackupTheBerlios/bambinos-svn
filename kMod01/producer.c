@@ -37,7 +37,7 @@ int main(int argc, char *argv[]) {
    	tm.tv_sec = 0;
    	tm.tv_nsec = 1000000 * sleep_ms;
 
-	fh = fowrite("/dev/mbcd");
+	fh = fowrite("/dev/mbcdd");
 	i = 0;
 
 	while(i < nr_msg) {
