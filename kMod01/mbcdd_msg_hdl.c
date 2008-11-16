@@ -168,21 +168,23 @@ void mbcdd_del_msg(message_t *msg) {
 }
 
 
+
 /**
- * allocate memory for new data and return the allocated size
+ * allocate memory for new data and return a pointer, set result with the data_slot_size
  */
-int mbcdd_new_data(void *p){
-	int result;
+void *mbcdd_new_data(int *result){
+	void *p;
+	//int result;
 
 	p = kmalloc(DATA_SLOT_SIZE, GFP_KERNEL);
 	if (p == NULL) {
-		result = -ENOMEM;
+		*result = -ENOMEM;
 	}else {
 		memset(p, 0, DATA_SLOT_SIZE);
-		result = DATA_SLOT_SIZE;
+		*result = DATA_SLOT_SIZE;
 	}
 
-	return result;
+	return p;
 }
 
 
@@ -267,8 +269,9 @@ void test_msg(void) {
 
 	message_t *msg;
 	char *p = NULL;
-	void *q = NULL;
 
+	void *q = NULL;
+	int i = 0;
 
 
 	msg = mbcdd_new_msg();
@@ -280,9 +283,12 @@ void test_msg(void) {
 //	p = mbcdd_new_data_slot(msg);
 	//p = mbcdd_new_data_slot(msg);
 ////	*p = 'a';
-
-	mbcdd_new_data(q);
-	mbcdd_add_data_slot(msg, q);
+	printk(KERN_NOTICE "pointer: %p \n", p);
+	p = mbcdd_new_data(&i);
+	printk(KERN_NOTICE "pointer: %p \n", p);
+	printk(KERN_NOTICE "result: %i \n", i);
+	//*p = 'a';
+	//mbcdd_add_data_slot(msg, q);
 
 	mbcdd_get_data_slot(msg);
 	mbcdd_get_data_slot(msg);
