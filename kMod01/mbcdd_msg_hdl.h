@@ -44,8 +44,6 @@ message_t *mbcdd_get_msg(void);
 
 void mbcdd_del_msg(message_t *msg);
 
-void *mbcdd_new_data_slot(message_t *msg);
-
 int mbcdd_new_data(void *p);
 
 void mbcdd_add_data_slot(message_t *msg, void *data);

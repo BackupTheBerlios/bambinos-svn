@@ -168,36 +168,6 @@ void mbcdd_del_msg(message_t *msg) {
 
 
 /**
- * create a new message slot and get a pointer to the message slot-data
- */
-void *mbcdd_new_data_slot(message_t *msg) {
-
-	static int msg_data_slot_id = 0;
-
-	printk(KERN_NOTICE "mbcdd_msg_hdl: new message data slot\n");
-
-	//allocate memory for the new message data slot
-	msg->slot = kmalloc(sizeof(message_slot_t), GFP_KERNEL);
-	msg->slot->id = msg_data_slot_id;
-	memset(msg->slot->data, 0, DATA_SLOT_SIZE);
-
-
-	//add the message to the list using spinlock
-	spin_lock_irqsave(&msg->slot_lock, msg->slot_lock_flags);
-
-		//TODO: add erst nach schreibbestätigung
-		list_add_tail(&msg->slot->list, &msg->slot_root);
-		printk(KERN_NOTICE "added slot with ID %i to message with ID %i \n", msg->slot->id, msg->id);
-
-	spin_unlock_irqrestore(&msg->slot_lock, msg->slot_lock_flags);
-
-	msg_data_slot_id ++;
-
-	return &msg->slot->data;
-}
-
-
-/**
  * allocate memory for new data and return the allocated size
  */
 int mbcdd_new_data(void *p){
