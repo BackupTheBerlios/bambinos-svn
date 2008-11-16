@@ -35,6 +35,52 @@ Our device driver is responsible for:
 	* completion mechanism on message level
 	
 	
+
+Our Interface, see mbcdd_msg_hdl.h:
+-----------------------------------
+
+Write process:
+--------------
+
+Get new message 
+message_t *mbcdd_new_msg(void);
+
+Get data slot, device driver writes data to the buffer returned here.
+void *mbcdd_new_data(message_t *msg);
+
+Add the written data slot the according message
+void mbcdd_add_data_slot(message_t *msg, void *);
+
+
+
+Read process:
+-------------
+
+Get previously added message
+message_t *mbcdd_get_msg(void);
+
+Get data slots
+void *mbcdd_get_data_slot(message_t *msg);
+
+When reader is finished, message management driver can delete the message and all slots
+void mbcdd_del_msg(message_t *msg);
+
+
+==============================================================================================================================
+
+HOWTO BUILD:
+
+launch make
+
+
+
+
+
+
+
+
+	
+	
 	
 
 	
