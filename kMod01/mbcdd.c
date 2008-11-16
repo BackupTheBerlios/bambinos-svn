@@ -19,6 +19,7 @@ int mbcdd_major = 0;
 int mbcdd_minor = 0;
 int mbcdd_nr_devs = 1;
 
+
 spinlock_t write_lock = SPIN_LOCK_UNLOCKED;
 spinlock_t read_lock = SPIN_LOCK_UNLOCKED;
 
@@ -56,9 +57,6 @@ int mbcdd_open(struct inode *inode, struct file *filep) {
 		if (dev_wrapper->msg == NULL){
 			return -ENOENT;
 		}
-
-		printk(KERN_NOTICE "mbcd open ro msg id %d  \n",
-				dev_wrapper->msg->fin_writer);
 
 		dev_wrapper->msg->busy_reader = 1;
 		// wenn reader nicht fertig ist, dann completion mechanismus
@@ -131,6 +129,7 @@ ssize_t mbcdd_read(struct file *filp, char __user *buf, size_t count,
 			return 0;
 
 		} else {
+			printk("mbcdd: Reader waits for writer, in msg %d", dev_wrapper->msg->id );
 			wait_for_completion_timeout(&dev_wrapper->hold_readers, 3000);
 			to = mbcdd_get_data_slot(dev_wrapper->msg);
 			if (to == NULL) {
@@ -162,21 +161,23 @@ ssize_t mbcdd_read(struct file *filp, char __user *buf, size_t count,
 ssize_t mbcdd_write(struct file *filep, const char __user *buf, size_t count,
 		loff_t *f_pos) {
 
-	void *to;
+
 	ssize_t retval;
 	struct mbcdd_dev_wrapper *dev_wrapper;
-
+	void *to;
 
 	retval = -ENOMEM;
 	dev_wrapper = filep->private_data;
+	//count=DATA_SLOT_SIZE;
 
 #ifdef DEBUG
 	printk(KERN_NOTICE "mbcd writing p1 %p , msg id %d \n", dev_wrapper->msg,
 			dev_wrapper->msg->id);
 #endif
 
-	// Get (request) a pointer to a new data slot
-	count = mbcdd_new_data(to);
+	// Get (request) a pointer to a new data slot, pointer is a output variable
+	// count is the size to write into the buffer
+	to = mbcdd_new_data(&count);
 
 	spin_lock_irqsave(&write_lock, flags);
 	// critical region
