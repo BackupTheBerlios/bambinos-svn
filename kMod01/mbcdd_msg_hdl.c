@@ -23,7 +23,9 @@ static struct list_head *msg_read_current;
 
 static LIST_HEAD(msg_root);
 
+//TODO: check *msg for null-values
 
+//TODO: check kmalloc for null
 
 /*
  * retrieve unique message identifier
@@ -45,7 +47,6 @@ static void mbcdd_print_msg_list(void) {
 	printk(KERN_NOTICE "mbcdd_msg_hdl: list messages\n");
 
 	//travel the message-list
-	//TODO:
 	list_for_each(p, &msg_root) {
 		msg = list_entry(p, message_t, list);
 		printk(KERN_ALERT "  - message with ID %i \n", msg->id);
@@ -123,6 +124,44 @@ message_t *mbcdd_get_msg(void){
 
 
 /**
+ * remove all data slots of a message and the message itself
+ */
+void mbcdd_del_msg(message_t *msg) {
+
+	struct list_head *loop, *tmp;
+	message_slot_t *slot;
+
+	printk(KERN_NOTICE "mbcdd_msg_hdl: delete message \n");
+
+
+	//lock the slots
+	spin_lock_irqsave(&msg->slot_lock, msg->slot_lock_flags);
+
+		list_for_each_safe(loop, tmp, &msg->slot_root) {
+			slot = list_entry(loop, message_slot_t, list);
+
+			printk(KERN_NOTICE "deleting data slot with ID %i from message with ID %i\n", slot->id, msg->id);
+			list_del(loop);
+			//free willy
+			kfree(slot);
+		}
+
+	spin_unlock_irqrestore(&msg->slot_lock, msg->slot_lock_flags);
+
+	//lock the messages
+	spin_lock_irqsave(&msg_lock, msg_lock_flags);
+
+		printk(KERN_NOTICE "deleting message with ID %i\n", msg->id);
+		list_del(&msg->list);
+		kfree(msg);
+
+	spin_unlock_irqrestore(&msg_lock, msg_lock_flags);
+
+	return;
+}
+
+
+/**
  * create a new message slot and get a pointer to the message slot-data
  */
 void *mbcdd_new_data_slot(message_t *msg) {
@@ -184,11 +223,6 @@ void *mbcdd_get_data_slot(message_t *msg) {
 }
 
 
-void mbcdd_del_msg(message_t *msg) {
-	//TODO:
-	return;
-}
-
 
 EXPORT_SYMBOL(mbcdd_new_msg);
 EXPORT_SYMBOL(mbcdd_get_msg);
@@ -205,6 +239,7 @@ void test_msg(void) {
 
 
 	msg = mbcdd_new_msg();
+
 	mbcdd_new_msg();
 	mbcdd_new_msg();
 
@@ -213,16 +248,18 @@ void test_msg(void) {
 	//p = mbcdd_new_data_slot(msg);
 ////	*p = 'a';
 
-	mbcdd_get_data_slot(msg);
-	mbcdd_get_data_slot(msg);
-	mbcdd_get_data_slot(msg);
+	mbcdd_del_msg(msg);
 
+//	mbcdd_get_data_slot(msg);
+//	mbcdd_get_data_slot(msg);
+//	mbcdd_get_data_slot(msg);
+//
 	mbcdd_print_msg_list();
-
-	mbcdd_get_msg();
-	mbcdd_get_msg();
-	mbcdd_get_msg();
-	mbcdd_get_msg();
+//
+//	mbcdd_get_msg();
+//	mbcdd_get_msg();
+//	mbcdd_get_msg();
+//	mbcdd_get_msg();
 
 }
 
@@ -230,7 +267,7 @@ void test_msg(void) {
 
 static int __init  mbcdd_msg_init(void) {
 
-	printk(KERN_ALERT "mbcdd_msg_hdl: Insert module \n");
+	printk(KERN_ALERT "mbcdd_msg_hdl: insert module \n");
 
 	msg_read_current =  &msg_root;
 
@@ -249,7 +286,7 @@ static void __exit  mbcdd_msg_exit(void) {
 	message_t *msg;
 	int i = 0, j = 0;
 
-	printk(KERN_NOTICE "mbcdd_msg_hdl: Unregister module \n");
+	printk(KERN_NOTICE "mbcdd_msg_hdl: unregister module \n");
 
 	//do some housekeeping and clean the list
 	spin_lock_irqsave(&msg_lock, msg_lock_flags);
