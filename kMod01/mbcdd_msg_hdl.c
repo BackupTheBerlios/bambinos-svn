@@ -254,7 +254,7 @@ void *mbcdd_get_data_slot(message_t *msg) {
 		if (msg->slot_current->next != &msg->slot_root) {
 
 			slot = list_entry(msg->slot_current->next, message_slot_t, list);
-			data = &slot->data;
+			data = slot->data;
 			printk(KERN_NOTICE "got data slot with ID %i of message with ID %i \n", slot->id, msg->id);
 
 			//hop to the next slot
@@ -285,8 +285,8 @@ EXPORT_SYMBOL(mbcdd_get_data_slot);
 void test_msg(void) {
 
 	message_t *msg;
-	char *p;
-	void *q;
+	char *p = NULL;
+	void *q = NULL;
 
 
 
@@ -300,24 +300,24 @@ void test_msg(void) {
 	//p = mbcdd_new_data_slot(msg);
 ////	*p = 'a';
 
-//	mbcdd_new_data(*q);
-//	mbcdd_add_data_slot(msg, *q);
+	mbcdd_new_data(q);
+	mbcdd_add_data_slot(msg, q);
 
-//	mbcdd_get_data_slot(msg);
-//	mbcdd_get_data_slot(msg);
+	mbcdd_get_data_slot(msg);
+	mbcdd_get_data_slot(msg);
 //	mbcdd_get_data_slot(msg);
 //
 
 
 	mbcdd_print_msg_list();
 //
-	msg = mbcdd_get_msg();
-
-	mbcdd_del_msg(msg);
-
-	mbcdd_get_msg();
-	mbcdd_get_msg();
-	mbcdd_get_msg();
+//	msg = mbcdd_get_msg();
+//
+//	mbcdd_del_msg(msg);
+//
+//	mbcdd_get_msg();
+//	mbcdd_get_msg();
+//	mbcdd_get_msg();
 
 }
 
