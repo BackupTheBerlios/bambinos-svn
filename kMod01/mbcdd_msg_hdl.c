@@ -22,9 +22,6 @@ static unsigned long msg_lock_flags;
 
 static LIST_HEAD(msg_root);
 
-//TODO: check *msg for null-values
-
-//TODO: check kmalloc for null
 
 /*
  * retrieve unique message identifier
