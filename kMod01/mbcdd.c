@@ -52,7 +52,7 @@ int mbcdd_open(struct inode *inode, struct file *filep) {
 	} else if (((filep->f_flags & O_ACCMODE) == O_RDONLY)) {
 
 		dev_wrapper->msg = mbcdd_get_msg();
-		//TODO KASI
+
 		if (dev_wrapper->msg == NULL){
 			return -ENOENT;
 		}
@@ -162,11 +162,11 @@ ssize_t mbcdd_read(struct file *filp, char __user *buf, size_t count,
 ssize_t mbcdd_write(struct file *filep, const char __user *buf, size_t count,
 		loff_t *f_pos) {
 
-	struct message *to;
+	void *to;
 	ssize_t retval;
 	struct mbcdd_dev_wrapper *dev_wrapper;
 
-	count = DATA_SLOT_SIZE;
+
 	retval = -ENOMEM;
 	dev_wrapper = filep->private_data;
 
@@ -176,7 +176,7 @@ ssize_t mbcdd_write(struct file *filep, const char __user *buf, size_t count,
 #endif
 
 	// Get (request) a pointer to a new data slot
-	to = mbcdd_new_data_slot(dev_wrapper->msg);
+	count = mbcdd_new_data(to);
 
 	spin_lock_irqsave(&write_lock, flags);
 	// critical region
@@ -189,6 +189,9 @@ ssize_t mbcdd_write(struct file *filep, const char __user *buf, size_t count,
 	}
 
 	spin_unlock_irqrestore(&write_lock, flags);
+
+	// Wenn slot beschrieben ist, dann einhaengen in die message
+	mbcdd_add_data_slot(dev_wrapper->msg,to);
 
 	if (dev_wrapper->msg->busy_reader == 1) {
 		// wake up readers
