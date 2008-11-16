@@ -311,8 +311,7 @@ static int __init  mbcdd_msg_init(void) {
 
 	printk(KERN_ALERT "mbcdd_msg_hdl: insert module \n");
 
-	test_msg();
-
+	//test_msg();
 
 	return 0;
 
