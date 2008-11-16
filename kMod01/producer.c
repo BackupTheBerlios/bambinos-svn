@@ -7,19 +7,22 @@ int main(int argc, char *argv[]) {
 
 	FILE *fh;
 	char *m;
+	char msg[20];
 
 	struct timespec tm, tm2;
 	int nr_msg, sleep_ms;
 	int i, count;
 
 	m = "message";
-	nr_msg = 666;
+	sprintf(msg, "message");
+	nr_msg = 10;
 	sleep_ms = 100;
 
 	if (argc>1) {
-		m = argv[1];
+		//m = argv[1];
+		strcpy(msg, argv[1]);
 	}else {
-		printf("NOTE: no message specified, using '%s' as default.\n", m);
+		printf("NOTE: no message specified, using '%s' as default.\n", msg);
 	}
 
 	if (argc>2) {
@@ -42,8 +45,9 @@ int main(int argc, char *argv[]) {
 
 	while(i < nr_msg) {
 
-		printf("write #%i: %s\n", i, m);
-		fwrite(m, 1, sizeof(m), fh);
+		printf("write #%i: %s\n", i, msg);
+		//fwrite(m, 1, sizeof(m), fh);
+		fwrite(msg, 1, sizeof(msg), fh);
 
 		nanosleep(&tm, &tm2);
 		i++;
