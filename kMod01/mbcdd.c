@@ -11,6 +11,10 @@
 #include "mbcdd.h"
 #include "mbcdd_msg_hdl.h"
 
+
+#define DEBUG
+
+
 int mbcdd_major = 0;
 int mbcdd_minor = 0;
 int mbcdd_nr_devs = 1;
@@ -41,17 +45,22 @@ int mbcdd_open(struct inode *inode, struct file *filep) {
 		// fopen for write
 		dev_wrapper->msg = mbcdd_new_msg();
 
-		dev_wrapper->msg->fin_writer=0;
-		dev_wrapper->msg->busy_reader=0;
-
+		// Soll dann Kasi initialisieren
+		dev_wrapper->msg->fin_writer = 0;
+		dev_wrapper->msg->busy_reader = 0;
 
 	} else if (((filep->f_flags & O_ACCMODE) == O_RDONLY)) {
 
 		dev_wrapper->msg = mbcdd_get_msg();
+		//TODO KASI
+		if (dev_wrapper->msg == NULL){
+			return -ENOENT;
+		}
+
 		printk(KERN_NOTICE "mbcd open ro msg id %d  \n",
 				dev_wrapper->msg->fin_writer);
 
-		dev_wrapper->msg->busy_reader=1;
+		dev_wrapper->msg->busy_reader = 1;
 		// wenn reader nicht fertig ist, dann completion mechanismus
 		// initialiserien
 		if (dev_wrapper->msg->fin_writer == 0)
@@ -65,8 +74,10 @@ int mbcdd_open(struct inode *inode, struct file *filep) {
 
 	filep->private_data = dev_wrapper;
 
+#ifdef DEBUG
 	printk(KERN_NOTICE "mbcd open id %d  p %p \n", dev_wrapper->msg->id,
 			dev_wrapper->msg);
+#endif
 
 	return 0;
 
@@ -95,9 +106,10 @@ int mbcdd_release(struct inode *inode, struct file *filep) {
 	// dev wrappers cycle is short, from file open until file close
 	kfree(dev_wrapper);
 
+#ifdef DEBUG
 	printk(KERN_NOTICE "mbcd release %d, fin writer %d  \n",
 			dev_wrapper->msg->id, dev_wrapper->msg->fin_writer);
-
+#endif
 	return 0;
 }
 
@@ -113,8 +125,8 @@ ssize_t mbcdd_read(struct file *filp, char __user *buf, size_t count,
 	to = mbcdd_get_data_slot(dev_wrapper->msg);
 
 	if (to == NULL) {
-		// wenn writer finish flag ist gesetzt, dann gibts
-		// keine weiteren slots mehr, dann wars schon der letzte
+		// wenn writer finish flag  gesetzt ist , dann gibts
+		// keine weiteren slots mehr -> dann wars schon der letzte
 		if (dev_wrapper->msg->fin_writer == 1) {
 			return 0;
 
@@ -140,7 +152,9 @@ ssize_t mbcdd_read(struct file *filp, char __user *buf, size_t count,
 	}
 	retval = count;
 
+#ifdef DEBUG
 	printk(KERN_NOTICE "mbcdd: Reading \n");
+#endif
 
 	return retval;
 }
@@ -156,10 +170,12 @@ ssize_t mbcdd_write(struct file *filep, const char __user *buf, size_t count,
 	retval = -ENOMEM;
 	dev_wrapper = filep->private_data;
 
+#ifdef DEBUG
 	printk(KERN_NOTICE "mbcd writing p1 %p , msg id %d \n", dev_wrapper->msg,
 			dev_wrapper->msg->id);
+#endif
 
-	// Get a pointer to a new data slot
+	// Get (request) a pointer to a new data slot
 	to = mbcdd_new_data_slot(dev_wrapper->msg);
 
 	spin_lock_irqsave(&write_lock, flags);
@@ -179,7 +195,9 @@ ssize_t mbcdd_write(struct file *filep, const char __user *buf, size_t count,
 		complete(&dev_wrapper->hold_readers);
 	}
 
+#ifdef DEBUG
 	printk(KERN_NOTICE "mbcdd: Writing of %d data \n", retval);
+#endif
 
 	return retval;
 
@@ -211,6 +229,7 @@ static void mbcdd_setup_cdev(struct mbcdd_dev *dev) {
 	if (err)
 		printk(KERN_NOTICE "Error %d adding mbcdd \n", err);
 }
+
 
 int mbcdd_init(void) {
 
