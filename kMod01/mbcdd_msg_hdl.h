@@ -48,7 +48,5 @@ void *mbcdd_new_data(int *result);
 
 int mbcdd_add_data_slot(message_t *msg, void *data);
 
-void *mbcdd_get_data_slot(message_t *msg);
-
 
 #endif /*MBCDD_MSG_HDL_H_*/
