@@ -45,6 +45,8 @@ int mbcdd_open(struct inode *inode, struct file *filep) {
 
 		dev_wrapper->msg = mbcdd_get_msg();
 
+		printk(KERN_NOTICE "mbcd open ro msg id %d, fin writer = %d  \n",
+				dev_wrapper->msg->id, dev_wrapper->fin_writer);
 		// wenn reader nicht fertig ist, dann completion mechanismus
 		// initialiserien
 		if (dev_wrapper->fin_writer == 0)
@@ -85,6 +87,9 @@ int mbcdd_release(struct inode *inode, struct file *filep) {
 
 	}
 
+	printk(KERN_NOTICE "mbcd release %d, fin writer %d  \n",
+			dev_wrapper->msg->id, dev_wrapper->fin_writer);
+
 	return 0;
 }
 
@@ -96,7 +101,7 @@ ssize_t mbcdd_read(struct file *filp, char __user *buf, size_t count,
 	struct mbcdd_dev_wrapper *dev_wrapper;
 
 	count = DATA_SLOT_SIZE;
-	dev_wrapper= filp->private_data;
+	dev_wrapper = filp->private_data;
 	to = mbcdd_get_data_slot(dev_wrapper->msg);
 
 	if (to == NULL) {
@@ -161,7 +166,7 @@ ssize_t mbcdd_write(struct file *filep, const char __user *buf, size_t count,
 
 	spin_unlock_irqrestore(&write_lock, flags);
 
-	if(dev_wrapper->busy_reader == 1){
+	if (dev_wrapper->busy_reader == 1) {
 		// wake up readers
 		complete(&dev_wrapper->hold_readers);
 	}
@@ -196,7 +201,7 @@ static void mbcdd_setup_cdev(struct mbcdd_dev *dev) {
 	err = cdev_add(&dev->cdev, devno, 1);
 
 	if (err)
-		printk(KERN_ALERT "Error %d adding mbcdd \n", err);
+		printk(KERN_NOTICE "Error %d adding mbcdd \n", err);
 }
 
 int mbcdd_init(void) {
@@ -215,7 +220,7 @@ int mbcdd_init(void) {
 
 	dev = MKDEV(mbcdd_major, mbcdd_minor);
 
-	printk(KERN_ALERT "mbcdd: Device registered, major  %d \n", mbcdd_major);
+	printk(KERN_NOTICE "mbcdd: Device registered, major  %d \n", mbcdd_major);
 
 	return 0;
 
