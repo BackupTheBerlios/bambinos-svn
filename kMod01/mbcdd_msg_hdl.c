@@ -276,6 +276,8 @@ EXPORT_SYMBOL(mbcdd_new_msg);
 EXPORT_SYMBOL(mbcdd_get_msg);
 EXPORT_SYMBOL(mbcdd_del_msg);
 EXPORT_SYMBOL(mbcdd_new_data_slot);
+EXPORT_SYMBOL(mbcdd_new_data);
+EXPORT_SYMBOL(mbcdd_add_data_slot);
 EXPORT_SYMBOL(mbcdd_get_data_slot);
 
 
@@ -298,8 +300,8 @@ void test_msg(void) {
 	//p = mbcdd_new_data_slot(msg);
 ////	*p = 'a';
 
-	//q = mbcdd_new_data();
-
+//	mbcdd_new_data(*q);
+//	mbcdd_add_data_slot(msg, *q);
 
 //	mbcdd_get_data_slot(msg);
 //	mbcdd_get_data_slot(msg);
