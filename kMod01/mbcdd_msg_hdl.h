@@ -9,7 +9,8 @@
 
 struct message_slot {
 	int id;
-	char data[DATA_SLOT_SIZE];
+	//char data[DATA_SLOT_SIZE];
+	void *data;
 	struct list_head list;
 };
 
@@ -45,9 +46,9 @@ void mbcdd_del_msg(message_t *msg);
 
 void *mbcdd_new_data_slot(message_t *msg);
 
-void *mbcdd_new_data(void);
+int mbcdd_new_data(void *p);
 
-void mbcdd_add_data_slot(message_t *msg);
+void mbcdd_add_data_slot(message_t *msg, void *data);
 
 void *mbcdd_get_data_slot(message_t *msg);
 

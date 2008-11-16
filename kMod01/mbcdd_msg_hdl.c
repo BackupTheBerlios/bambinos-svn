@@ -196,13 +196,43 @@ void *mbcdd_new_data_slot(message_t *msg) {
 	return &msg->slot->data;
 }
 
-void *mbcdd_new_data(void){
-	//TODO:
-	return NULL;
+
+/**
+ * allocate memory for new data and return the allocated size
+ */
+int mbcdd_new_data(void *p){
+
+	p = kmalloc(DATA_SLOT_SIZE, GFP_KERNEL);
+	memset(p, 0, DATA_SLOT_SIZE);
+
+	return DATA_SLOT_SIZE;
 }
 
-void mbcdd_add_data_slot(message_t *msg){
-	//TODO:
+
+/**
+ * create a new message slot and add the given data
+ */
+void mbcdd_add_data_slot(message_t *msg, void *data){
+
+	message_slot_t *slot;
+	static int msg_data_slot_id = 0;
+
+
+	slot = kmalloc(sizeof(message_slot_t), GFP_KERNEL);
+	slot->id = msg_data_slot_id;
+	slot->data = data;
+
+	//add the message to the list using spinlock
+	spin_lock_irqsave(&msg->slot_lock, msg->slot_lock_flags);
+
+		list_add_tail(&slot->list, &msg->slot_root);
+		printk(KERN_NOTICE "added slot with ID %i to message with ID %i \n", slot->id, msg->id);
+
+	spin_unlock_irqrestore(&msg->slot_lock, msg->slot_lock_flags);
+
+
+	msg_data_slot_id ++;
+
 	return;
 }
 
@@ -254,6 +284,8 @@ void test_msg(void) {
 
 	message_t *msg;
 	char *p;
+	void *q;
+
 
 
 	msg = mbcdd_new_msg();
@@ -261,11 +293,12 @@ void test_msg(void) {
 	mbcdd_new_msg();
 	mbcdd_new_msg();
 
-	p = mbcdd_new_data_slot(msg);
-	p = mbcdd_new_data_slot(msg);
+//	p = mbcdd_new_data_slot(msg);
+//	p = mbcdd_new_data_slot(msg);
 	//p = mbcdd_new_data_slot(msg);
 ////	*p = 'a';
 
+	//q = mbcdd_new_data();
 
 
 //	mbcdd_get_data_slot(msg);
