@@ -39,14 +39,19 @@ int mbcdd_open(struct inode *inode, struct file *filep) {
 
 	if ((filep->f_flags & O_ACCMODE) == O_WRONLY) {
 		// fopen for write
-
 		dev_wrapper->msg = mbcdd_new_msg();
+
+		dev_wrapper->msg->fin_writer=0;
+		dev_wrapper->msg->busy_reader=0;
+
 
 	} else if (((filep->f_flags & O_ACCMODE) == O_RDONLY)) {
 
 		dev_wrapper->msg = mbcdd_get_msg();
 		printk(KERN_NOTICE "mbcd open ro msg id %d  \n",
 				dev_wrapper->msg->fin_writer);
+
+		dev_wrapper->msg->busy_reader=1;
 		// wenn reader nicht fertig ist, dann completion mechanismus
 		// initialiserien
 		if (dev_wrapper->msg->fin_writer == 0)
@@ -117,7 +122,7 @@ ssize_t mbcdd_read(struct file *filp, char __user *buf, size_t count,
 			wait_for_completion_timeout(&dev_wrapper->hold_readers, 3000);
 			to = mbcdd_get_data_slot(dev_wrapper->msg);
 			if (to == NULL) {
-				return 0; // TODO
+				return -EBUSY;
 			}
 		}
 
@@ -143,7 +148,7 @@ ssize_t mbcdd_read(struct file *filp, char __user *buf, size_t count,
 ssize_t mbcdd_write(struct file *filep, const char __user *buf, size_t count,
 		loff_t *f_pos) {
 
-	void *to;
+	struct message *to;
 	ssize_t retval;
 	struct mbcdd_dev_wrapper *dev_wrapper;
 
