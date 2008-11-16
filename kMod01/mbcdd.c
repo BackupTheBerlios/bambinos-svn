@@ -15,7 +15,9 @@ int mbcdd_major = 0;
 int mbcdd_minor = 0;
 int mbcdd_nr_devs = 1;
 
-spinlock_t write_lock, read_lock = SPIN_LOCK_UNLOCKED;
+spinlock_t write_lock = SPIN_LOCK_UNLOCKED;
+spinlock_t read_lock = SPIN_LOCK_UNLOCKED;
+
 unsigned long flags;
 
 MODULE_LICENSE("GPL");
@@ -42,7 +44,11 @@ int mbcdd_open(struct inode *inode, struct file *filep) {
 	} else if (((filep->f_flags & O_ACCMODE) == O_RDONLY)) {
 
 		dev_wrapper->msg = mbcdd_get_msg();
-		init_completion(dev_wrapper->hold_readers);
+
+		// wenn reader nicht fertig ist, dann completion mechanismus
+		// initialiserien
+		if (dev_wrapper->fin_writer == 0)
+			init_completion(&dev_wrapper->hold_readers);
 
 	} else {
 
@@ -52,17 +58,33 @@ int mbcdd_open(struct inode *inode, struct file *filep) {
 
 	filep->private_data = dev_wrapper;
 
-	//filep->private_data = &dev_wrapper;
-	printk(KERN_NOTICE "mbcd open p1 id %d  p %p \n", dev_wrapper->msg->id,
+	printk(KERN_NOTICE "mbcd open id %d  p %p \n", dev_wrapper->msg->id,
 			dev_wrapper->msg);
 
 	return 0;
 
 }
 
-int mbcdd_release(struct inode *inode, struct file *filp) {
+int mbcdd_release(struct inode *inode, struct file *filep) {
 
-	//TODO clean dev_wrapper's
+	struct mbcdd_dev_wrapper *dev_wrapper;
+	dev_wrapper = filep->private_data;
+
+	if ((filep->f_flags & O_ACCMODE) == O_WRONLY) {
+
+		// set writer finish flag
+		dev_wrapper->fin_writer = 1;
+		// wenn reader darauf liest, benachrichtigung an sleepers
+		if (dev_wrapper->busy_reader == 1) {
+			complete(&dev_wrapper->hold_readers);
+		}
+
+	} else if (((filep->f_flags & O_ACCMODE) == O_RDONLY)) {
+
+		mbcdd_del_msg(dev_wrapper->msg);
+
+	}
+
 	return 0;
 }
 
@@ -70,14 +92,28 @@ ssize_t mbcdd_read(struct file *filp, char __user *buf, size_t count,
 		loff_t *f_pos) {
 
 	int retval = -1;
-	struct mbcdd_dev_wrapper *dev_wrapper = filp->private_data;
+	message_slot_t *to;
+	struct mbcdd_dev_wrapper *dev_wrapper;
 
-	void *to = mbcdd_get_data_slot(dev_wrapper->msg);
+	count = DATA_SLOT_SIZE;
+	dev_wrapper= filp->private_data;
+	to = mbcdd_get_data_slot(dev_wrapper->msg);
 
-	// TODO wir brauchen irgendeinen speziellen Rueckgabewert.
-	// Wenn dieser Wert dann
+	if (to == NULL) {
+		// wenn writer finish flag ist gesetzt, dann gibts
+		// keine weiteren slots mehr, dann wars schon der letzte
+		if (dev_wrapper->fin_writer == 1) {
+			return 0;
 
-	wait_for_completion(dev_wrapper->hold_readers);
+		} else {
+			wait_for_completion_timeout(&dev_wrapper->hold_readers, 3000);
+			to = mbcdd_get_data_slot(dev_wrapper->msg);
+			if (to == NULL) {
+				return 0; // TODO
+			}
+		}
+
+	}
 
 	spin_lock_irqsave(&read_lock, flags);
 
@@ -93,8 +129,6 @@ ssize_t mbcdd_read(struct file *filp, char __user *buf, size_t count,
 
 	printk(KERN_NOTICE "mbcdd: Reading \n");
 
-	complete(dev_wrapper->hold_readers);
-
 	return retval;
 }
 
@@ -102,9 +136,12 @@ ssize_t mbcdd_write(struct file *filep, const char __user *buf, size_t count,
 		loff_t *f_pos) {
 
 	void *to;
+	ssize_t retval;
+	struct mbcdd_dev_wrapper *dev_wrapper;
+
 	count = DATA_SLOT_SIZE;
-	ssize_t data_copied, retval = -ENOMEM;
-	struct mbcdd_dev_wrapper *dev_wrapper = filep->private_data;
+	retval = -ENOMEM;
+	dev_wrapper = filep->private_data;
 
 	printk(KERN_NOTICE "mbcd writing p1 %p , msg id %d \n", dev_wrapper->msg,
 			dev_wrapper->msg->id);
@@ -114,17 +151,23 @@ ssize_t mbcdd_write(struct file *filep, const char __user *buf, size_t count,
 
 	spin_lock_irqsave(&write_lock, flags);
 	// critical region
-	data_copied=copy_from_user(to, buf, count);
-	if (data_copied) {
+
+	if (copy_from_user(to, buf, count)) {
 		retval = -EFAULT;
-	}else{
+	} else {
 		// if copy_from_user was ok, return the written size
-		retval=count;
+		retval = count;
 	}
 
 	spin_unlock_irqrestore(&write_lock, flags);
 
-	printk(KERN_NOTICE "mbcdd: Writing of %d %d data \n", retval, data_copied);
+	if(dev_wrapper->busy_reader == 1){
+		// wake up readers
+		complete(&dev_wrapper->hold_readers);
+	}
+
+	printk(KERN_NOTICE "mbcdd: Writing of %d data \n", retval);
+
 	return retval;
 
 }
@@ -177,5 +220,7 @@ int mbcdd_init(void) {
 	return 0;
 
 }
-module_init(mbcdd_init);
-module_exit(mbcdd_exit);
+module_init(mbcdd_init)
+;
+module_exit(mbcdd_exit)
+;

@@ -39,6 +39,7 @@ message_t *mbcdd_get_msg(void);
 // TODO return value ... pointer to a new slot
 void *mbcdd_new_data_slot(message_t *msg);
 void *mbcdd_get_data_slot(message_t *msg);
+void mbcdd_del_msg(message_t *msg);
 
 
 //int mbcdd_put_msg(void);

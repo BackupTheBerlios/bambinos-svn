@@ -7,7 +7,7 @@
 
 #ifndef MBCDD_H_
 #define MBCDD_H_
-
+#include <linux/completion.h>
 
 
 #define MINOR_FIRST 0
@@ -43,7 +43,10 @@ struct mbcdd_dev *mbcdd_devices;
 struct mbcdd_dev_wrapper {
 	struct mbcdd_dev *dev;
 	struct message *msg;
-	struct completion *hold_readers;
+	struct completion hold_readers;
+
+	int busy_reader;
+	int fin_writer;
 };
 
 
