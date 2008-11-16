@@ -138,7 +138,7 @@ void mbcdd_del_msg(message_t *msg) {
 			slot = list_entry(loop, message_slot_t, list);
 
 			printk(KERN_NOTICE "deleting data slot with ID %i from message with ID %i\n", slot->id, msg->id);
-			//TODO: check list_del(loop);
+			list_del(loop);
 			//free willy
 			kfree(slot);
 		}
@@ -149,7 +149,16 @@ void mbcdd_del_msg(message_t *msg) {
 	spin_lock_irqsave(&msg_lock, msg_lock_flags);
 
 		printk(KERN_NOTICE "deleting message with ID %i\n", msg->id);
-		list_del(&msg->list);
+
+		//check if message is still in the list
+		list_for_each_safe(loop, tmp, &msg_root) {
+			if (list_entry(loop, message_t, list) == msg) {
+				//remove the message from the list
+				list_del(&msg->list);
+				break;
+			}
+		}
+
 		kfree(msg);
 
 	spin_unlock_irqrestore(&msg_lock, msg_lock_flags);
@@ -247,15 +256,18 @@ void test_msg(void) {
 
 
 
-	mbcdd_get_data_slot(msg);
-	mbcdd_get_data_slot(msg);
-	mbcdd_get_data_slot(msg);
+//	mbcdd_get_data_slot(msg);
+//	mbcdd_get_data_slot(msg);
+//	mbcdd_get_data_slot(msg);
 //
-	mbcdd_del_msg(msg);
+
 
 	mbcdd_print_msg_list();
 //
-	mbcdd_get_msg();
+	msg = mbcdd_get_msg();
+
+	mbcdd_del_msg(msg);
+
 	mbcdd_get_msg();
 	mbcdd_get_msg();
 	mbcdd_get_msg();
