@@ -245,7 +245,6 @@ void *mbcdd_get_data_slot(message_t *msg) {
 EXPORT_SYMBOL(mbcdd_new_msg);
 EXPORT_SYMBOL(mbcdd_get_msg);
 EXPORT_SYMBOL(mbcdd_del_msg);
-EXPORT_SYMBOL(mbcdd_new_data_slot);
 EXPORT_SYMBOL(mbcdd_new_data);
 EXPORT_SYMBOL(mbcdd_add_data_slot);
 EXPORT_SYMBOL(mbcdd_get_data_slot);
