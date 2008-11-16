@@ -3,6 +3,8 @@
 
 
 #define DATA_SLOT_SIZE 20
+#define FLAG_BUSY_READER 1
+#define FLAG_FINISHED_WRITER 1
 
 
 struct message_slot {
