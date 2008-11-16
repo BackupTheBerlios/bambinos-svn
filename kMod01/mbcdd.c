@@ -46,10 +46,12 @@ int mbcdd_open(struct inode *inode, struct file *filep) {
 	} else if (((filep->f_flags & O_ACCMODE) == O_RDONLY)) {
 
 		dev_wrapper = filep->private_data;
+		printk(KERN_NOTICE "mbcd open ro fin writer = %d  \n", dev_wrapper->fin_writer);
+
+
 		dev_wrapper->msg = mbcdd_get_msg();
 
-		printk(KERN_NOTICE "mbcd open ro msg id %d, fin writer = %d  \n",
-				dev_wrapper->msg->id, dev_wrapper->fin_writer);
+		printk(KERN_NOTICE "mbcd open ro msg id %d  \n", dev_wrapper->fin_writer);
 		// wenn reader nicht fertig ist, dann completion mechanismus
 		// initialiserien
 		if (dev_wrapper->fin_writer == 0)
