@@ -1,0 +1,142 @@
+XCOMM $Xorg: minix.cf,v 1.3 2000/08/17 19:41:47 cpqbld Exp $
+XCOMM platform:  $XFree86: xc/config/cf/minix.cf,v 3.5 1999/07/10 07:24:33 dawes Exp $
+
+
+/*
+ * If you want to change any of these, do it in the BeforeVendorCF part
+ * of site.def
+ */
+#define OSName			Minix3
+#define OSVendor		Vrije Universiteit
+#define OSMajorVersion		3
+#define OSMinorVersion		0
+#define OSTeenyVersion		6
+
+#ifdef GccDevelTree
+/* Alternative X11 libraries compiled with gcc */
+
+#ifndef ProjectRoot
+#define ProjectRoot /usr/X11R6-gcc
+#endif
+
+#define UseGcc
+
+/* Try to restrict what gets built */
+#define BuildServer NO
+#define BuildFontServer NO
+#define BuildFonts NO
+#endif /* GccDevelTree */
+
+/* The default compiler is ACK */
+#if !defined(AcdAck) && !defined(UseGcc)
+#define AcdAck
+#endif
+
+#ifdef UseGcc
+#define ServerExtraDefines	-DGCCUSESGAS XFree86ServerDefines
+#define AsmDefines 		-DUSE_GAS
+#define GccGasOption		-DGCCUSESGAS /* For SuperProbe */
+/* #define CcCmd		acd -name gcc -stack 15m */
+#define CcCmd			gcc
+#define	DefaultCCOptions	
+#define ArCmd			gar clq
+/* #define ArAddCmd		ArCmd */
+/* #define DoRanlibCmd		NO */
+#define LdCmd			gld
+#endif
+
+#ifdef AcdAck
+#define ServerExtraDefines	XFree86ServerDefines
+#define AsmDefines 		-DACK_ASSEMBLER
+#define CcCmd			acd -name acc -stack 15m
+#define	DefaultCCOptions	-wo
+#define ArCmd			CcCmd -c.a -o
+#define ArAddCmd		ArCmd
+#define DoRanlibCmd		NO
+#define LdCmd			CcCmd
+#endif
+
+#ifndef CcCmd
+#error What compiler are we using today?
+#endif
+
+/* Defaults for Minix */
+
+#define ConnectionFlags		-DMNX3_TCPCONN
+#define StandardDefines		-D_MINIX -DMINIX3
+#define StandardIncludes
+
+#define AvoidNullMakeCommand	YES
+#define HasSockets		NO
+#define HasStreams		NO
+#define HasVFork		NO
+#define HasNdbm			YES
+#define	ExtraLibraries 
+#define NeedConstPrototypes	YES
+#define NeedVarargsPrototypes	YES
+#define NeedNestedPrototypes	YES
+/* #define UseCCMakeDepend		YES */	/* extremely slow */
+#define AsCmd			CcCmd -c
+#define CppCmd			/usr/lib/cpp
+#define LdCombineFlags		-r
+#define LexCmd			/usr/bin/flex -l
+#define YaccCmd			/usr/bin/yacc
+#define LexLib			/**/
+#define MkdirHierCmd		mkdir -p
+
+#define	SetTtyGroup		YES	/* for xterm */
+#define HasPutenv		YES	/* for xsm */
+#define HasSetenv               NO
+#define HasSnprintf		YES	
+#define HasMkstemp		YES	
+#define NeedDefaultDepLibs	NO	/* libraries may be moved */
+#define HasFchown		NO
+#define HasPerl5		NO
+#define Malloc0ReturnsNull	YES
+#define TermcapLibrary			/* termcap is in libc */
+
+#define BuildXF86DGA		YES	/* No shared memory */
+#define UseExpat		YES	/* Triggers bug in ACK */
+#define BuildGlxExt		NO	/* Bad assembler */
+#define BuildDPSLibraries	YES	/* Bad socket libraries */
+#define BuildXTrap		NO	/* Triggers bug in ACK */
+#define BuildScanpci		YES
+
+#ifndef AssembleObject
+#define AssembleObject(flags) $(RM) $@                                    @@\
+	$(CPP) AsmDefines $(DEFINES) $(INCLUDES) flags $*.S | \           @@\
+	    grep -v '^\#' > $*.i.s                                        @@\
+	$(AS) -o $*.o $*.i.s                                              @@\
+	$(RM) $*.i.s
+#endif
+
+#if 0
+#ifndef LexFileExplicit
+#define LexFileExplicit(file)						@@\
+file.c: file.l								@@\
+	ClearmakeOSName \
+	$(LEX) $(LFLAGS) file.l						@@\
+	$(MV) lex.yy.c file.c
+#else
+#endif
+#endif /* 0 */
+
+#ifndef HasDevRandom
+# define HasDevRandom YES
+# ifndef RandomDeviceName
+#  define RandomDeviceName /dev/urandom
+# endif
+#endif
+
+/* The construction in X11.tmpl doesn't work */
+#define RandomDefines -DDEV_RANDOM=\"/dev/urandom\"
+
+#ifndef ManKeywordsTarget
+# define ManKeywordsTarget(manpath)					@@\
+man_keywords::								@@\
+	makewhatis $(DESTDIR)manpath
+#endif
+
+#define RemoveFiles(l) echo l | xargs rm -f
+
+#include <xorg.cf>
