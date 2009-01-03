@@ -1,0 +1,32 @@
+#!/bin/sh
+# Post install script
+#
+# the main thing we need to do is setting the chmem value of the X server
+# to a reasonable value
+#
+# the pci driver reports the memory sizes of video cards. Give the X server
+# twice the amount of video memory.
+#
+X=/usr/X11R6/bin/X
+get_size()
+{
+	grep 'PCI: video memory for device' /usr/log/messages |
+	{
+		max=0
+		while read a
+		do
+			b=`expr X"$a" : '.* \(.*\) bytes'`
+			if [ "$b" -gt "$max" ]; then max="$b"; fi
+		done
+		echo $max
+	}
+}
+size=`get_size`
+if [ "$size" -lt 4000000 ]
+then
+	size=8000000
+else
+	size=`expr "$size" \* 2`
+fi
+echo "Setting size of $X to $size"
+chmem "=$size" "$X"
