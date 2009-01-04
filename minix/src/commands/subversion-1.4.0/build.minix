@@ -1,0 +1,5 @@
+#!/bin/sh
+PATH=$PATH:/usr/gnu/bin
+AR=/usr/gnu/bin/gar INSTALL=/bin/install MAKE=/usr/gnu/bin/gmake M4=/usr/gnu/bin/m4 CC=/usr/gnu/bin/gcc LD=/usr/gnu/bin/gld RANLIB=/usr/gnu/bin/ranlib CFLAGS="-L/usr/local/lib/gcc -L/usr/local/ssl/lib -I/usr/local/ssl/include -I/usr/local/include/apr-0 -D_MINIX=1 -D_POSIX_SOURCE=1" CONFIG_SHELL=/bin/bigsh SHELL=/bin/bigsh /bin/bigsh configure --prefix=/usr/local --libdir=/usr/local/lib/gcc --enable-dso=no --enable-shared=no
+gmake
+gmake install
