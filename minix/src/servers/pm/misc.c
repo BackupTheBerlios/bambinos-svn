@@ -299,7 +299,7 @@ PUBLIC int do_getsetscheduler()
 
 	/* We're SET, and it's allowed. Do it and tell kernel. */
 	rmp->mp_sched_policy = arg_policy;
-	return rmp->mp_sched_policy; // TODO sys_nice(rmp->mp_endpoint, arg_pri);
+	return rmp->mp_sched_policy; /* TODO sys_nice(rmp->mp_endpoint, arg_pri); */
 }
 
 
