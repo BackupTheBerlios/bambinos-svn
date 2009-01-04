@@ -64,7 +64,6 @@ U16_t parmoff, parmsize;	/* boot parameters offset and length */
   kinfo.proc_addr = (vir_bytes) proc;
   kinfo.kmem_base = vir2phys(0);
   kinfo.kmem_size = (phys_bytes) &end;	
-  kinfo.foobardisk_base = vir2phys(800000);
 
   /* Load average data initialization. */
   kloadinfo.proc_last_slot = 0;
