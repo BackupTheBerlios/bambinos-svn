@@ -1,3 +1,0 @@
-CFLAGS="-D_MINIX=1 -D_POSIX_SOURCE=1" RANLIB=true LD=true CC=cc bigsh configure --prefix=/usr/local --mandir=/usr/local/man
-make
-make install
