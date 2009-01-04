@@ -2,8 +2,8 @@
 #define PROC_H
 
 /* Here is the declaration of the process table.  It contains all process
- * data, including registers, flags, scheduling priority, memory map, 
- * accounting, message passing (IPC) information, and so on. 
+ * data, including registers, flags, scheduling priority, memory map,
+ * accounting, message passing (IPC) information, and so on.
  *
  * Many assembly code routines reference fields in it.  The offsets to these
  * fields are defined in the assembler include file sconst.h.  When changing
@@ -13,18 +13,18 @@
 #include "protect.h"
 #include "const.h"
 #include "priv.h"
- 
+
 struct proc {
   struct stackframe_s p_reg;	/* process' registers saved in stack frame */
 
 #if (CHIP == INTEL)
   reg_t p_ldt_sel;		/* selector in gdt with ldt base and limit */
   struct segdesc_s p_ldt[2+NR_REMOTE_SEGS]; /* CS, DS and remote segments */
-#endif 
+#endif
 
 #if (CHIP == M68000)
 /* M68000 specific registers and FPU details go here. */
-#endif 
+#endif
 
   proc_nr_t p_nr;		/* number of this process (for fast access) */
   struct priv *p_priv;		/* system privileges structure */
@@ -54,6 +54,8 @@ struct proc {
 
   int p_endpoint;		/* endpoint number, generation-aware */
 
+  char p_scheduler;		/* current scheduling policy*/
+
 #if DEBUG_SCHED_CHECK
   int p_ready, p_found;
 #endif
@@ -76,14 +78,14 @@ struct proc {
 #define MF_VM		0x08	/* process uses VM */
 
 /* Scheduling priorities for p_priority. Values must start at zero (highest
- * priority) and increment.  Priorities of the processes in the boot image 
- * can be set in table.c. IDLE must have a queue for itself, to prevent low 
- * priority user processes to run round-robin with IDLE. 
+ * priority) and increment.  Priorities of the processes in the boot image
+ * can be set in table.c. IDLE must have a queue for itself, to prevent low
+ * priority user processes to run round-robin with IDLE.
  */
 #define NR_SCHED_QUEUES   16	/* MUST equal minimum priority + 1 */
 #define TASK_Q		   0	/* highest, used for kernel tasks */
-#define MAX_USER_Q  	   0    /* highest priority for user processes */   
-#define USER_Q  	   7    /* default (should correspond to nice 0) */   
+#define MAX_USER_Q  	   0    /* highest priority for user processes */
+#define USER_Q  	   7    /* default (should correspond to nice 0) */
 #define MIN_USER_Q	  14	/* minimum priority for user processes */
 #define IDLE_Q		  15    /* lowest, only IDLE process goes here */
 
@@ -92,14 +94,14 @@ struct proc {
 #define BEG_USER_ADDR (&proc[NR_TASKS])
 #define END_PROC_ADDR (&proc[NR_TASKS + NR_PROCS])
 
-#define NIL_PROC          ((struct proc *) 0)		
-#define NIL_SYS_PROC      ((struct proc *) 1)		
+#define NIL_PROC          ((struct proc *) 0)
+#define NIL_SYS_PROC      ((struct proc *) 1)
 #define cproc_addr(n)     (&(proc + NR_TASKS)[(n)])
 #define proc_addr(n)      (pproc_addr + NR_TASKS)[(n)]
 #define proc_nr(p) 	  ((p)->p_nr)
 
 #define isokprocn(n)      ((unsigned) ((n) + NR_TASKS) < NR_PROCS + NR_TASKS)
-#define isemptyn(n)       isemptyp(proc_addr(n)) 
+#define isemptyn(n)       isemptyp(proc_addr(n))
 #define isemptyp(p)       ((p)->p_rts_flags == SLOT_FREE)
 #define iskernelp(p)	  iskerneln((p)->p_nr)
 #define iskerneln(n)	  ((n) < 0)
@@ -109,7 +111,7 @@ struct proc {
 /* The process table and pointers to process table slots. The pointers allow
  * faster access because now a process entry can be found by indexing the
  * pproc_addr array, while accessing an element i requires a multiplication
- * with sizeof(struct proc) to determine the address. 
+ * with sizeof(struct proc) to determine the address.
  */
 EXTERN struct proc proc[NR_TASKS + NR_PROCS];	/* process table */
 EXTERN struct proc *pproc_addr[NR_TASKS + NR_PROCS];

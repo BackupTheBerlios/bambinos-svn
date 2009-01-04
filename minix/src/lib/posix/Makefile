@@ -115,6 +115,7 @@ all-ack: ../obj-ack//libc.a
 ../obj-ack//libc.a: ../obj-ack//libc.a(getopt.o)
 ../obj-ack//libc.a: ../obj-ack//libc.a(gettimeofday.o)
 ../obj-ack//libc.a: ../obj-ack//libc.a(priority.o)
+../obj-ack//libc.a: ../obj-ack//libc.a(scheduler.o)
 ../obj-ack//libc.a: ../obj-ack//libc.a(usleep.o)
 
 ../obj-ack//libc.a:
@@ -313,6 +314,8 @@ all-ack: ../obj-ack//libc.a
 	cc -O -D_MINIX -D_POSIX_SOURCE -c -o ../obj-ack//./posix/gettimeofday.o gettimeofday.c
 ../obj-ack//libc.a(priority.o): priority.c
 	cc -O -D_MINIX -D_POSIX_SOURCE -c -o ../obj-ack//./posix/priority.o priority.c
+../obj-ack//libc.a(scheduler.o): scheduler.c
+	cc -O -D_MINIX -D_POSIX_SOURCE -c -o ../obj-ack//./posix/scheduler.o scheduler.c
 ../obj-ack//libc.a(usleep.o): usleep.c
 	cc -O -D_MINIX -D_POSIX_SOURCE -c -o ../obj-ack//./posix/usleep.o usleep.c
 
@@ -414,6 +417,7 @@ all-gnu: ../obj-gnu/libc.a
 ../obj-gnu/libc.a: ../obj-gnu/./posix/getopt.o
 ../obj-gnu/libc.a: ../obj-gnu/./posix/gettimeofday.o
 ../obj-gnu/libc.a: ../obj-gnu/./posix/priority.o
+../obj-gnu/libc.a: ../obj-gnu/./posix/scheduler.o
 ../obj-gnu/libc.a: ../obj-gnu/./posix/usleep.o
 
 ../obj-gnu/libc.a:
@@ -706,6 +710,10 @@ all-gnu: ../obj-gnu/libc.a
 
 ../obj-gnu/./posix/priority.o: priority.c
 	gcc -O -D_MINIX -D_POSIX_SOURCE -c -o ../obj-gnu/./posix/priority.o priority.c
+	
+../obj-gnu/./posix/scheduler.o: scheduler.c
+	gcc -O -D_MINIX -D_POSIX_SOURCE -c -o ../obj-gnu/./posix/scheduler.o scheduler.c
+	
 
 ../obj-gnu/./posix/usleep.o: usleep.c
 	gcc -O -D_MINIX -D_POSIX_SOURCE -c -o ../obj-gnu/./posix/usleep.o usleep.c

@@ -64,6 +64,7 @@ _PROTOTYPE( int do_svrctl, (void)					);
 _PROTOTYPE( int do_allocmem, (void)					);
 _PROTOTYPE( int do_freemem, (void)					);
 _PROTOTYPE( int do_getsetpriority, (void)					);
+_PROTOTYPE( int do_getsetscheduler, (void)					);
 _PROTOTYPE( ssize_t _read_pm, (int _fd, void *_buf, size_t _n, int s, int e));
 _PROTOTYPE( ssize_t _write_pm, (int _fd, void *_buf, size_t _n, int s, int e));
 
@@ -96,7 +97,7 @@ _PROTOTYPE( int do_times, (void)					);
 _PROTOTYPE( int do_gettimeofday, (void)					);
 
 /* timers.c */
-_PROTOTYPE( void pm_set_timer, (timer_t *tp, int delta, 
+_PROTOTYPE( void pm_set_timer, (timer_t *tp, int delta,
 	tmr_func_t watchdog, int arg));
 _PROTOTYPE( void pm_expire_timers, (clock_t now));
 _PROTOTYPE( void pm_cancel_timer, (timer_t *tp));

@@ -58,17 +58,17 @@ PUBLIC int do_freemem()
  *				do_procstat				     *
  *===========================================================================*/
 PUBLIC int do_procstat()
-{ 
-  /* For the moment, this is only used to return pending signals to 
-   * system processes that request the PM for their own status. 
+{
+  /* For the moment, this is only used to return pending signals to
+   * system processes that request the PM for their own status.
    *
    * Future use might include the FS requesting for process status of
-   * any user process. 
+   * any user process.
    */
   if (m_in.stat_nr == SELF) {
       mp->mp_reply.sig_set = mp->mp_sigpending;
       sigemptyset(&mp->mp_sigpending);
-  } 
+  }
   else {
       return(ENOSYS);
   }
@@ -100,7 +100,7 @@ PUBLIC int do_getsysinfo()
   	proc_addr = &mproc[0];
   	src_addr = (vir_bytes) &proc_addr;
   	len = sizeof(struct mproc *);
-  	break; 
+  	break;
   case SI_PROC_TAB:			/* copy entire process table */
         src_addr = (vir_bytes) mproc;
         len = sizeof(struct mproc) * NR_PROCS;
@@ -149,23 +149,23 @@ PUBLIC int do_getprocnr()
 		if ((rmp->mp_flags & IN_USE) && (rmp->mp_pid==m_in.pid)) {
   			mp->mp_reply.endpt = rmp->mp_endpoint;
   			return(OK);
-		} 
+		}
 	}
-  	return(ESRCH);			
+  	return(ESRCH);
   } else if (m_in.namelen > 0) {	/* lookup process by name */
   	key_len = MIN(m_in.namelen, PROC_NAME_LEN);
- 	if (OK != (s=sys_datacopy(who_e, (vir_bytes) m_in.addr, 
- 			SELF, (vir_bytes) search_key, key_len))) 
+ 	if (OK != (s=sys_datacopy(who_e, (vir_bytes) m_in.addr,
+ 			SELF, (vir_bytes) search_key, key_len)))
  		return(s);
  	search_key[key_len] = '\0';	/* terminate for safety */
   	for (rmp = &mproc[0]; rmp < &mproc[NR_PROCS]; rmp++) {
-		if (((rmp->mp_flags & (IN_USE | ZOMBIE)) == IN_USE) && 
+		if (((rmp->mp_flags & (IN_USE | ZOMBIE)) == IN_USE) &&
 			strncmp(rmp->mp_name, search_key, key_len)==0) {
   			mp->mp_reply.endpt = rmp->mp_endpoint;
   			return(OK);
-		} 
+		}
 	}
-  	return(ESRCH);			
+  	return(ESRCH);
   } else {			/* return own/parent process number */
   	mp->mp_reply.endpt = who_e;
 	mp->mp_reply.pendpt = mproc[mp->mp_parent].mp_endpoint;
@@ -179,7 +179,7 @@ PUBLIC int do_getprocnr()
  *===========================================================================*/
 PUBLIC int do_reboot()
 {
-  char monitor_code[256];		
+  char monitor_code[256];
   vir_bytes code_addr;
   int code_size;
   int abort_flag;
@@ -189,7 +189,7 @@ PUBLIC int do_reboot()
 
   /* See how the system should be aborted. */
   abort_flag = (unsigned) m_in.reboot_flag;
-  if (abort_flag >= RBT_INVALID) return(EINVAL); 
+  if (abort_flag >= RBT_INVALID) return(EINVAL);
   if (RBT_MONITOR == abort_flag) {
 	int r;
 	if(m_in.reboot_strlen >= sizeof(monitor_code))
@@ -204,14 +204,14 @@ PUBLIC int do_reboot()
 
   /* Order matters here. When FS is told to reboot, it exits all its
    * processes, and then would be confused if they're exited again by
-   * SIGKILL. So first kill, then reboot. 
+   * SIGKILL. So first kill, then reboot.
    */
 
   check_sig(-1, SIGKILL); 		/* kill all users except init */
   sys_nice(INIT_PROC_NR, PRIO_STOP);	/* stop init, but keep it around */
   tell_fs(REBOOT, 0, 0, 0);		/* tell FS to synchronize */
 
-  /* Ask the kernel to abort. All system services, including the PM, will 
+  /* Ask the kernel to abort. All system services, including the PM, will
    * get a HARD_STOP notification. Await the notification in the main loop.
    */
   sys_abort(abort_flag, PM_PROC_NR, code_addr, code_size);
@@ -257,11 +257,52 @@ PUBLIC int do_getsetpriority()
 	/* Only root is allowed to reduce the nice level. */
 	if (rmp->mp_nice > arg_pri && mp->mp_effuid != SUPER_USER)
 		return(EACCES);
-	
+
 	/* We're SET, and it's allowed. Do it and tell kernel. */
 	rmp->mp_nice = arg_pri;
 	return sys_nice(rmp->mp_endpoint, arg_pri);
 }
+
+/*===========================================================================*
+ *				do_getsetscheduler			     *
+ *===========================================================================*/
+PUBLIC int do_getsetscheduler()
+{
+	int arg_policy, arg_who, arg_pri;
+	int rmp_nr;
+	struct mproc *rmp;
+
+	arg_policy = m_in.m1_i1;
+	arg_who = m_in.m1_i2;
+	arg_pri = m_in.m1_i3;	/* for SETPRIORITY */
+
+	if (arg_who == 0)
+		rmp_nr = who_p;
+	else
+		if ((rmp_nr = proc_from_pid(arg_who)) < 0)
+			return(ESRCH);
+
+	rmp = &mproc[rmp_nr];
+
+	if (mp->mp_effuid != SUPER_USER &&
+	   mp->mp_effuid != rmp->mp_effuid && mp->mp_effuid != rmp->mp_realuid)
+		return EPERM;
+
+	/* If GET, that's it. */
+	if (call_nr == GETSCHEDULER) {
+		return(rmp->mp_sched_policy);
+	}
+
+	/* Only root is allowed to reduce the nice level. */
+	if (mp->mp_effuid != SUPER_USER)
+		return(EACCES);
+
+	/* We're SET, and it's allowed. Do it and tell kernel. */
+	rmp->mp_sched_policy = arg_policy;
+	return rmp->mp_sched_policy; // TODO sys_nice(rmp->mp_endpoint, arg_pri);
+}
+
+
 
 /*===========================================================================*
  *				do_svrctl				     *
@@ -294,8 +335,8 @@ PUBLIC int do_svrctl()
       size_t copy_len;
 
       /* Copy sysgetenv structure to PM. */
-      if (sys_datacopy(who_e, ptr, SELF, (vir_bytes) &sysgetenv, 
-              sizeof(sysgetenv)) != OK) return(EFAULT);  
+      if (sys_datacopy(who_e, ptr, SELF, (vir_bytes) &sysgetenv,
+              sizeof(sysgetenv)) != OK) return(EFAULT);
 
       /* Set a param override? */
       if (req == MMSETPARAM) {
@@ -307,7 +348,7 @@ PUBLIC int do_svrctl()
   	 || sysgetenv.vallen >=
   	 	 sizeof(local_param_overrides[local_params].value))
   		return EINVAL;
-  		
+
           if ((s = sys_datacopy(who_e, (vir_bytes) sysgetenv.key,
             SELF, (vir_bytes) local_param_overrides[local_params].name,
                sysgetenv.keylen)) != OK)
@@ -327,7 +368,7 @@ PUBLIC int do_svrctl()
       if (sysgetenv.keylen == 0) {	/* copy all parameters */
           val_start = monitor_params;
           val_len = sizeof(monitor_params);
-      } 
+      }
       else {				/* lookup value for key */
       	  int p;
           /* Try to get a copy of the requested key. */
@@ -356,8 +397,8 @@ PUBLIC int do_svrctl()
       	return E2BIG;
 
       /* Value found, make the actual copy (as far as possible). */
-      copy_len = MIN(val_len, sysgetenv.vallen); 
-      if ((s=sys_datacopy(SELF, (vir_bytes) val_start, 
+      copy_len = MIN(val_len, sysgetenv.vallen);
+      if ((s=sys_datacopy(SELF, (vir_bytes) val_start,
               who_e, (vir_bytes) sysgetenv.val, copy_len)) != OK)
           return(s);
 

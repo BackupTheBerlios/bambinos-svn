@@ -31,7 +31,7 @@ FORWARD _PROTOTYPE( void get_work, (void)				);
 FORWARD _PROTOTYPE( void pm_init, (void)				);
 FORWARD _PROTOTYPE( int get_nice_value, (int queue)			);
 FORWARD _PROTOTYPE( void get_mem_chunks, (struct memory *mem_chunks) 	);
-FORWARD _PROTOTYPE( void patch_mem_chunks, (struct memory *mem_chunks, 
+FORWARD _PROTOTYPE( void patch_mem_chunks, (struct memory *mem_chunks,
 	struct mem_map *map_ptr) 	);
 FORWARD _PROTOTYPE( void do_x86_vm, (struct memory mem_chunks[NR_MEMS])	);
 
@@ -62,7 +62,7 @@ PUBLIC int main()
 		sigset = m_in.NOTIFY_ARG;
 		if (sigismember(&sigset, SIGKSIG))  {
 			(void) ksig_pending();
-		} 
+		}
 		result = SUSPEND;		/* don't reply */
 	}
 	/* Else, if the system call number is valid, perform the call. */
@@ -114,7 +114,7 @@ PRIVATE void get_work()
   call_nr = m_in.m_type;	/* system call number */
 
   /* Process slot of caller. Misuse PM's own process slot if the kernel is
-   * calling. This can happen in case of synchronous alarms (CLOCK) or or 
+   * calling. This can happen in case of synchronous alarms (CLOCK) or or
    * event like pending kernel signals (SYSTEM).
    */
   mp = &mproc[who_p < 0 ? PM_PROC_NR : who_p];
@@ -152,7 +152,7 @@ int result;			/* result of call (usually OK or error #) */
  *===========================================================================*/
 PRIVATE void pm_init()
 {
-/* Initialize the process manager. 
+/* Initialize the process manager.
  * Memory use info is collected from the boot monitor, the kernel, and
  * all processes compiled into the system image. Initially this information
  * is put into an array mem_chunks. Elements of mem_chunks are struct memory,
@@ -161,7 +161,7 @@ PRIVATE void pm_init()
  * the contents are used to initialize the hole list. Space for the hole list
  * is reserved as an array with twice as many elements as the maximum number
  * of processes allowed. It is managed as a linked list, and elements of the
- * array are struct hole, which, in addition to storage for a base and size in 
+ * array are struct hole, which, in addition to storage for a base and size in
  * click units also contain space for a link, a pointer to another element.
 */
   int s;
@@ -194,8 +194,8 @@ PRIVATE void pm_init()
   for (sig_ptr = ign_sigs; sig_ptr < ign_sigs+sizeof(ign_sigs); sig_ptr++)
 	sigaddset(&ign_sset, *sig_ptr);
 
-  /* Obtain a copy of the boot monitor parameters and the kernel info struct.  
-   * Parse the list of free memory chunks. This list is what the boot monitor 
+  /* Obtain a copy of the boot monitor parameters and the kernel info struct.
+   * Parse the list of free memory chunks. This list is what the boot monitor
    * reported, but it must be corrected for the kernel and system processes.
    */
   if ((s=sys_getmonparams(monitor_params, sizeof(monitor_params))) != OK)
@@ -210,35 +210,36 @@ PRIVATE void pm_init()
   minix_clicks = (mem_map[S].mem_phys+mem_map[S].mem_len)-mem_map[T].mem_phys;
   patch_mem_chunks(mem_chunks, mem_map);
 
-  /* Initialize PM's process table. Request a copy of the system image table 
+  /* Initialize PM's process table. Request a copy of the system image table
    * that is defined at the kernel level to see which slots to fill in.
    */
-  if (OK != (s=sys_getimage(image))) 
+  if (OK != (s=sys_getimage(image)))
   	panic(__FILE__,"couldn't get image table: %d\n", s);
   procs_in_use = 0;				/* start populating table */
   printf("Building process table:");		/* show what's happening */
-  for (ip = &image[0]; ip < &image[NR_BOOT_PROCS]; ip++) {		
+  for (ip = &image[0]; ip < &image[NR_BOOT_PROCS]; ip++) {
   	if (ip->proc_nr >= 0) {			/* task have negative nrs */
   		procs_in_use += 1;		/* found user process */
 
 		/* Set process details found in the image table. */
-		rmp = &mproc[ip->proc_nr];	
-  		strncpy(rmp->mp_name, ip->proc_name, PROC_NAME_LEN); 
+		rmp = &mproc[ip->proc_nr];
+  		strncpy(rmp->mp_name, ip->proc_name, PROC_NAME_LEN);
 		rmp->mp_parent = RS_PROC_NR;
 		rmp->mp_nice = get_nice_value(ip->priority);
+		rmp->mp_sched_policy=SCHED_OTHER;
   		sigemptyset(&rmp->mp_sig2mess);
-  		sigemptyset(&rmp->mp_ignore);	
+  		sigemptyset(&rmp->mp_ignore);
   		sigemptyset(&rmp->mp_sigmask);
   		sigemptyset(&rmp->mp_catch);
 		if (ip->proc_nr == INIT_PROC_NR) {	/* user process */
   			rmp->mp_procgrp = rmp->mp_pid = INIT_PID;
-			rmp->mp_flags |= IN_USE; 
+			rmp->mp_flags |= IN_USE;
 		}
 		else {					/* system process */
   			rmp->mp_pid = get_free_pid();
-			rmp->mp_flags |= IN_USE | DONT_SWAP | PRIV_PROC; 
-  			for (sig_ptr = mess_sigs; 
-				sig_ptr < mess_sigs+sizeof(mess_sigs); 
+			rmp->mp_flags |= IN_USE | DONT_SWAP | PRIV_PROC;
+  			for (sig_ptr = mess_sigs;
+				sig_ptr < mess_sigs+sizeof(mess_sigs);
 				sig_ptr++)
 			sigaddset(&rmp->mp_sig2mess, *sig_ptr);
 		}
@@ -250,7 +251,7 @@ PRIVATE void pm_init()
 		if ((s=get_mem_map(ip->proc_nr, rmp->mp_seg)) != OK)
   			panic(__FILE__,"couldn't get process entry",s);
 		if (rmp->mp_seg[T].mem_len != 0) rmp->mp_flags |= SEPARATE;
-		minix_clicks += rmp->mp_seg[S].mem_phys + 
+		minix_clicks += rmp->mp_seg[S].mem_phys +
 			rmp->mp_seg[S].mem_len - rmp->mp_seg[T].mem_phys;
   		patch_mem_chunks(mem_chunks, rmp->mp_seg);
 
@@ -304,10 +305,10 @@ PRIVATE int get_nice_value(queue)
 int queue;				/* store mem chunks here */
 {
 /* Processes in the boot image have a priority assigned. The PM doesn't know
- * about priorities, but uses 'nice' values instead. The priority is between 
+ * about priorities, but uses 'nice' values instead. The priority is between
  * MIN_USER_Q and MAX_USER_Q. We have to scale between PRIO_MIN and PRIO_MAX.
- */ 
-  int nice_val = (queue - USER_Q) * (PRIO_MAX-PRIO_MIN+1) / 
+ */
+  int nice_val = (queue - USER_Q) * (PRIO_MAX-PRIO_MIN+1) /
       (MIN_USER_Q-MAX_USER_Q+1);
   if (nice_val > PRIO_MAX) nice_val = PRIO_MAX;	/* shouldn't happen */
   if (nice_val < PRIO_MIN) nice_val = PRIO_MIN;	/* shouldn't happen */
@@ -336,7 +337,7 @@ struct memory *mem_chunks;			/* store mem chunks here */
  * 8086, i.e. when running in 16-bit protected mode or real mode.
  */
   long base, size, limit;
-  char *s, *end;			/* use to parse boot variable */ 
+  char *s, *end;			/* use to parse boot variable */
   int i, done = 0;
   struct memory *memp;
 #if _WORD_SIZE == 2
@@ -351,30 +352,30 @@ struct memory *mem_chunks;			/* store mem chunks here */
 	memp = &mem_chunks[i];		/* next mem chunk is stored here */
 	memp->base = memp->size = 0;
   }
-  
-  /* The available memory is determined by MINIX' boot loader as a list of 
+
+  /* The available memory is determined by MINIX' boot loader as a list of
    * (base:size)-pairs in boothead.s. The 'memory' boot variable is set in
    * in boot.s.  The format is "b0:s0,b1:s1,b2:s2", where b0:s0 is low mem,
-   * b1:s1 is mem between 1M and 16M, b2:s2 is mem above 16M. Pairs b1:s1 
-   * and b2:s2 are combined if the memory is adjacent. 
+   * b1:s1 is mem between 1M and 16M, b2:s2 is mem above 16M. Pairs b1:s1
+   * and b2:s2 are combined if the memory is adjacent.
    */
   s = find_param("memory");		/* get memory boot variable */
   for (i = 0; i < NR_MEMS && !done; i++) {
 	memp = &mem_chunks[i];		/* next mem chunk is stored here */
 	base = size = 0;		/* initialize next base:size pair */
-	if (*s != 0) {			/* get fresh data, unless at end */	
+	if (*s != 0) {			/* get fresh data, unless at end */
 
-	    /* Read fresh base and expect colon as next char. */ 
+	    /* Read fresh base and expect colon as next char. */
 	    base = strtoul(s, &end, 0x10);		/* get number */
-	    if (end != s && *end == ':') s = ++end;	/* skip ':' */ 
+	    if (end != s && *end == ':') s = ++end;	/* skip ':' */
 	    else *s=0;			/* terminate, should not happen */
 
-	    /* Read fresh size and expect comma or assume end. */ 
+	    /* Read fresh size and expect comma or assume end. */
 	    size = strtoul(s, &end, 0x10);		/* get number */
 	    if (end != s && *end == ',') s = ++end;	/* skip ',' */
 	    else done = 1;
 	}
-	limit = base + size;	
+	limit = base + size;
 #if _WORD_SIZE == 2
 	max_address = machine.protected ? MAX_16BIT : MAX_REAL;
 	if (limit > max_address) limit = max_address;
@@ -395,10 +396,10 @@ struct memory *mem_chunks;			/* store mem chunks here */
 struct mem_map *map_ptr;			/* memory to remove */
 {
 /* Remove server memory from the free memory list. The boot monitor
- * promises to put processes at the start of memory chunks. The 
+ * promises to put processes at the start of memory chunks. The
  * tasks all use same base address, so only the first task changes
  * the memory lists. The servers and init have their own memory
- * spaces and their memory will be removed from the list. 
+ * spaces and their memory will be removed from the list.
  */
   struct memory *memp;
   for (memp = mem_chunks; memp < &mem_chunks[NR_MEMS]; memp++) {

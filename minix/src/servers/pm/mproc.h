@@ -52,6 +52,7 @@ EXTERN struct mproc {
 
   /* Scheduling priority. */
   signed int mp_nice;		/* nice is PRIO_MIN..PRIO_MAX, standard 0. */
+  signed int mp_sched_policy;
 
   char mp_name[PROC_NAME_LEN];	/* process name */
 } mproc[NR_PROCS];

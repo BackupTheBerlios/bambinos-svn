@@ -15,7 +15,17 @@
 #define PRIO_PGRP	1
 #define PRIO_USER	2
 
+/* Scheduling policies */
+#define SCHED_OTHER 0
+#define SCHED_FIFO 1
+#define SCHED_RR 2
+
+
 int getpriority(int, int);
 int setpriority(int, int, int);
+
+int sched_getscheduler(pid_t);
+int sched_setscheduler(pid_t, int, int);
+
 
 #endif
