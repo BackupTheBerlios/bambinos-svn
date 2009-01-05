@@ -52,6 +52,7 @@ all-ack: ../obj-ack//libsys.a
 ../obj-ack//libsys.a: ../obj-ack//libsys.a(sys_memset.o)
 ../obj-ack//libsys.a: ../obj-ack//libsys.a(sys_newmap.o)
 ../obj-ack//libsys.a: ../obj-ack//libsys.a(sys_nice.o)
+../obj-ack//libsys.a: ../obj-ack//libsys.a(sys_setscheduler.o)
 ../obj-ack//libsys.a: ../obj-ack//libsys.a(sys_out.o)
 ../obj-ack//libsys.a: ../obj-ack//libsys.a(sys_physcopy.o)
 ../obj-ack//libsys.a: ../obj-ack//libsys.a(sys_sdevio.o)
@@ -144,6 +145,8 @@ all-ack: ../obj-ack//libsys.a
 	cc -O -D_MINIX -D_POSIX_SOURCE -c -o ../obj-ack//./syslib/sys_newmap.o sys_newmap.c
 ../obj-ack//libsys.a(sys_nice.o): sys_nice.c
 	cc -O -D_MINIX -D_POSIX_SOURCE -c -o ../obj-ack//./syslib/sys_nice.o sys_nice.c
+../obj-ack//libsys.a(sys_setscheduler.o): sys_setscheduler.c
+	cc -O -D_MINIX -D_POSIX_SOURCE -c -o ../obj-ack//./syslib/sys_setscheduler.o sys_setscheduler.c
 ../obj-ack//libsys.a(sys_out.o): sys_out.c
 	cc -O -D_MINIX -D_POSIX_SOURCE -c -o ../obj-ack//./syslib/sys_out.o sys_out.c
 ../obj-ack//libsys.a(sys_physcopy.o): sys_physcopy.c
@@ -222,6 +225,7 @@ all-gnu: ../obj-gnu/libsys.a
 ../obj-gnu/libsys.a: ../obj-gnu/./syslib/sys_memset.o
 ../obj-gnu/libsys.a: ../obj-gnu/./syslib/sys_newmap.o
 ../obj-gnu/libsys.a: ../obj-gnu/./syslib/sys_nice.o
+../obj-gnu/libsys.a: ../obj-gnu/./syslib/sys_setscheduler.o
 ../obj-gnu/libsys.a: ../obj-gnu/./syslib/sys_out.o
 ../obj-gnu/libsys.a: ../obj-gnu/./syslib/sys_physcopy.o
 ../obj-gnu/libsys.a: ../obj-gnu/./syslib/sys_sdevio.o
@@ -345,7 +349,10 @@ all-gnu: ../obj-gnu/libsys.a
 
 ../obj-gnu/./syslib/sys_nice.o: sys_nice.c
 	gcc -O -D_MINIX -D_POSIX_SOURCE -c -o ../obj-gnu/./syslib/sys_nice.o sys_nice.c
-
+	
+../obj-gnu/./syslib/sys_setscheduler.o: sys_setscheduler.c
+	gcc -O -D_MINIX -D_POSIX_SOURCE -c -o ../obj-gnu/./syslib/sys_setscheduler.o sys_setscheduler.c
+	
 ../obj-gnu/./syslib/sys_out.o: sys_out.c
 	gcc -O -D_MINIX -D_POSIX_SOURCE -c -o ../obj-gnu/./syslib/sys_out.o sys_out.c
 

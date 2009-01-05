@@ -1,5 +1,5 @@
 #ifndef _MINIX_COM_H
-#define _MINIX_COM_H 
+#define _MINIX_COM_H
 
 /*===========================================================================*
  *          	    		Magic process numbers			     *
@@ -9,7 +9,7 @@
 #define ANY		0x7ace	/* used to indicate 'any process' */
 #define NONE 		0x6ace  /* used to indicate 'no process at all' */
 #define SELF		0x8ace 	/* used to indicate 'own process' */
-#define _MAX_MAGIC_PROC (SELF)	/* used by <minix/endpoint.h> 
+#define _MAX_MAGIC_PROC (SELF)	/* used by <minix/endpoint.h>
 				   to determine generation size */
 
 /*===========================================================================*
@@ -20,7 +20,7 @@
  * are enabled. They are defined as (PREVIOUS_TASK - ENABLE_TASK) in general.
  * ENABLE_TASK is either 0 or 1, so a task either gets a new number, or gets
  * the same number as the previous task and is further unused. Note that the
- * order should correspond to the order in the task table defined in table.c. 
+ * order should correspond to the order in the task table defined in table.c.
  */
 
 /* Kernel tasks. These all run in the same address space. */
@@ -31,7 +31,7 @@
 #define HARDWARE     KERNEL	/* for hardware interrupt handlers */
 
 /* Number of tasks. Note that NR_PROCS is defined in <minix/config.h>. */
-#define NR_TASKS	  4 
+#define NR_TASKS	  4
 
 /* User-space processes, that is, device drivers, servers, and INIT. */
 #define PM_PROC_NR	  0	/* process manager */
@@ -54,10 +54,10 @@
  * so make sure that these types do not interfere with other message types.
  * Notifications are prioritized because of the way they are unhold() and
  * blocking notifications are delivered. The lowest numbers go first. The
- * offset are used for the per-process notification bit maps. 
+ * offset are used for the per-process notification bit maps.
  */
 #define NOTIFY_MESSAGE		  0x1000
-#define NOTIFY_FROM(p_nr)	 (NOTIFY_MESSAGE | ((p_nr) + NR_TASKS)) 
+#define NOTIFY_FROM(p_nr)	 (NOTIFY_MESSAGE | ((p_nr) + NR_TASKS))
 #  define PROC_EVENT	NOTIFY_FROM(PM_PROC_NR) /* process status change */
 #  define SYN_ALARM	NOTIFY_FROM(CLOCK) 	/* synchronous alarm */
 #  define SYS_SIG	NOTIFY_FROM(SYSTEM) 	/* system signal */
@@ -141,7 +141,7 @@
 #define DEV_SCATTER  	(DEV_RQ_BASE +  8) /* write from a vector */
 #define DEV_GATHER   	(DEV_RQ_BASE +  9) /* read into a vector */
 #define TTY_SETPGRP 	(DEV_RQ_BASE + 10) /* set process group */
-#define TTY_EXIT	(DEV_RQ_BASE + 11) /* process group leader exited */	
+#define TTY_EXIT	(DEV_RQ_BASE + 11) /* process group leader exited */
 #define DEV_SELECT	(DEV_RQ_BASE + 12) /* request select() attention */
 #define DEV_STATUS   	(DEV_RQ_BASE + 13) /* request driver status */
 
@@ -174,7 +174,7 @@
 #define TTY_REQUEST	COUNT	/* message parameter: ioctl request code */
 #define TTY_SPEK	POSITION/* message parameter: ioctl speed, erasing */
 #define TTY_FLAGS	m2_l2	/* message parameter: ioctl tty mode */
-#define TTY_PGRP 	m2_i3	/* message parameter: process group */	
+#define TTY_PGRP 	m2_i3	/* message parameter: process group */
 
 /* Field names for the QIC 02 status reply from tape driver */
 #define TAPE_STAT0	m2_l1
@@ -193,8 +193,8 @@
 #define NW_CANCEL	CANCEL
 
 /* Base type for data link layer requests and responses. */
-#define DL_RQ_BASE	0x800		
-#define DL_RS_BASE	0x900		
+#define DL_RQ_BASE	0x800
+#define DL_RS_BASE	0x900
 
 /* Message types for data link layer requests. */
 #define DL_WRITE	(DL_RQ_BASE + 3)
@@ -236,11 +236,11 @@
  *                  SYSTASK request types and field names                    *
  *===========================================================================*/
 
-/* System library calls are dispatched via a call vector, so be careful when 
+/* System library calls are dispatched via a call vector, so be careful when
  * modifying the system call numbers. The numbers here determine which call
  * is made from the call vector.
- */ 
-#define KERNEL_CALL	0x600	/* base for kernel calls to SYSTEM */ 
+ */
+#define KERNEL_CALL	0x600	/* base for kernel calls to SYSTEM */
 
 #  define SYS_FORK       (KERNEL_CALL + 0)	/* sys_fork() */
 #  define SYS_EXEC       (KERNEL_CALL + 1)	/* sys_exec() */
@@ -278,8 +278,9 @@
 #  define SYS_IOPENABLE  (KERNEL_CALL + 28)	/* sys_enable_iop() */
 #  define SYS_VM_SETBUF  (KERNEL_CALL + 29)	/* sys_vm_setbuf() */
 #  define SYS_VM_MAP  	 (KERNEL_CALL + 30)	/* sys_vm_map() */
+#  define SYS_SETSCHEDULER	(KERNEL_CALL + 31)	/* sys_setscheduler() */
 
-#define NR_SYS_CALLS	31	/* number of system calls */ 
+#define NR_SYS_CALLS	32	/* number of system calls */
 
 /* Subfunctions for SYS_PRIVCTL */
 #define SYS_PRIV_INIT		1	/* Initialize a privilege structure */
@@ -301,7 +302,7 @@
 #define DIO_REQUEST	m2_i3	/* device in or output */
 #   define DIO_INPUT	    0	/* input */
 #   define DIO_OUTPUT	    1	/* output */
-#define DIO_TYPE	m2_i1   /* flag indicating byte, word, or long */ 
+#define DIO_TYPE	m2_i1   /* flag indicating byte, word, or long */
 #   define DIO_BYTE	  'b'	/* byte type values */
 #   define DIO_WORD	  'w'	/* word type values */
 #   define DIO_LONG	  'l'	/* long type values */
@@ -316,7 +317,7 @@
 #define ALRM_ABS_TIME   m2_i2	/* set to 1 to use absolute alarm time */
 #define ALRM_TIME_LEFT  m2_l1	/* how many ticks were remaining */
 #define ALRM_ENDPT      m2_i1	/* which process wants the alarm? */
-#define ALRM_FLAG_PTR	m2_p1   /* virtual address of timeout flag */ 	
+#define ALRM_FLAG_PTR	m2_p1   /* virtual address of timeout flag */
 
 /* Field names for SYS_IRQCTL. */
 #define IRQ_REQUEST     m5_c1	/* what to do? */
@@ -327,14 +328,14 @@
 #define IRQ_VECTOR	m5_c2   /* irq vector */
 #define IRQ_POLICY	m5_i1   /* options for IRQCTL request */
 #  define IRQ_REENABLE  0x001	/* reenable IRQ line after interrupt */
-#  define IRQ_BYTE      0x100	/* byte values */      
+#  define IRQ_BYTE      0x100	/* byte values */
 #  define IRQ_WORD      0x200	/* word values */
 #  define IRQ_LONG      0x400	/* long values */
 #define IRQ_ENDPT	m5_i2   /* endpoint number, SELF, NONE */
 #define IRQ_HOOK_ID	m5_l3   /* id of irq hook at kernel */
 
 /* Field names for SYS_SEGCTL. */
-#define SEG_SELECT	m4_l1   /* segment selector returned */ 
+#define SEG_SELECT	m4_l1   /* segment selector returned */
 #define SEG_OFFSET	m4_l2	/* offset in segment returned */
 #define SEG_PHYS	m4_l3	/* physical address of segment */
 #define SEG_SIZE	m4_l4	/* segment size */
@@ -388,9 +389,9 @@
 #   define GET_BIOSBUFFER 14	/* get a buffer for BIOS calls */
 #   define GET_LOADINFO   15	/* get load average information */
 #define I_ENDPT      m7_i4	/* calling process */
-#define I_VAL_PTR      m7_p1	/* virtual address at caller */ 
+#define I_VAL_PTR      m7_p1	/* virtual address at caller */
 #define I_VAL_LEN      m7_i1	/* max length of value */
-#define I_VAL_PTR2     m7_p2	/* second virtual address */ 
+#define I_VAL_PTR2     m7_p2	/* second virtual address */
 #define I_VAL_LEN2_E   m7_i2	/* second length, or proc nr */
 #   define GET_IRQACTIDS  16	/* get the IRQ masks */
 
@@ -432,7 +433,8 @@
 
 /* Field names for SYS_FORK, _EXEC, _EXIT, _NEWMAP. */
 #define PR_ENDPT       m1_i1	/* indicates a process */
-#define PR_PRIORITY    m1_i2	/* process priority */
+#define PR_PRIORITY	   m1_i2	/* process priority */
+#define PR_SCHED_POLICY	m1_i2	/* process scheduling policy */
 #define PR_SLOT        m1_i2	/* indicates a process slot */
 #define PR_PID	       m1_i3	/* process id at process manager */
 #define PR_STACK_PTR   m1_p1	/* used for stack ptr in sys_exec, sys_getsp */
@@ -505,4 +507,4 @@
 #  define GETKM_PTR	      m1_p1
 
 
-#endif /* _MINIX_COM_H */ 
+#endif /* _MINIX_COM_H */

@@ -54,11 +54,11 @@ struct proc {
 
   int p_endpoint;		/* endpoint number, generation-aware */
 
-  char p_scheduler;		/* current scheduling policy*/
-
 #if DEBUG_SCHED_CHECK
   int p_ready, p_found;
 #endif
+
+  char p_scheduler;		/* current scheduling policy*/
 };
 
 /* Bits for the runtime flags. A process is runnable iff p_rts_flags == 0. */

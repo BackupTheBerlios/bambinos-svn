@@ -1,29 +1,29 @@
 /* This task handles the interface between the kernel and user-level servers.
- * System services can be accessed by doing a system call. System calls are 
- * transformed into request messages, which are handled by this task. By 
+ * System services can be accessed by doing a system call. System calls are
+ * transformed into request messages, which are handled by this task. By
  * convention, a sys_call() is transformed in a SYS_CALL request message that
- * is handled in a function named do_call(). 
+ * is handled in a function named do_call().
  *
  * A private call vector is used to map all system calls to the functions that
  * handle them. The actual handler functions are contained in separate files
  * to keep this file clean. The call vector is used in the system task's main
- * loop to handle all incoming requests.  
+ * loop to handle all incoming requests.
  *
  * In addition to the main sys_task() entry point, which starts the main loop,
  * there are several other minor entry points:
  *   get_priv:		assign privilege structure to user or system process
  *   send_sig:		send a signal directly to a system process
  *   cause_sig:		take action to cause a signal to occur via PM
- *   umap_local:	map virtual address in LOCAL_SEG to physical 
- *   umap_remote:	map virtual address in REMOTE_SEG to physical 
- *   umap_bios:		map virtual address in BIOS_SEG to physical 
- *   virtual_copy:	copy bytes from one virtual address to another 
+ *   umap_local:	map virtual address in LOCAL_SEG to physical
+ *   umap_remote:	map virtual address in REMOTE_SEG to physical
+ *   umap_bios:		map virtual address in BIOS_SEG to physical
+ *   virtual_copy:	copy bytes from one virtual address to another
  *   get_randomness:	accumulate randomness in a buffer
  *   clear_endpoint:	remove a process' ability to send and receive messages
  *
  * Changes:
  *   Aug 04, 2005   check if system call is allowed  (Jorrit N. Herder)
- *   Jul 20, 2005   send signal to services with message  (Jorrit N. Herder) 
+ *   Jul 20, 2005   send signal to services with message  (Jorrit N. Herder)
  *   Jan 15, 2005   new, generalized virtual copy function  (Jorrit N. Herder)
  *   Oct 10, 2004   dispatch system calls from call vector  (Jorrit N. Herder)
  *   Sep 30, 2004   source code documentation updated  (Jorrit N. Herder)
@@ -42,17 +42,17 @@
 #include "protect.h"
 #endif
 
-/* Declaration of the call vector that defines the mapping of system calls 
- * to handler functions. The vector is initialized in sys_init() with map(), 
- * which makes sure the system call numbers are ok. No space is allocated, 
- * because the dummy is declared extern. If an illegal call is given, the 
- * array size will be negative and this won't compile. 
+/* Declaration of the call vector that defines the mapping of system calls
+ * to handler functions. The vector is initialized in sys_init() with map(),
+ * which makes sure the system call numbers are ok. No space is allocated,
+ * because the dummy is declared extern. If an illegal call is given, the
+ * array size will be negative and this won't compile.
  */
 PUBLIC int (*call_vec[NR_SYS_CALLS])(message *m_ptr);
 
 #define map(call_nr, handler) \
     {extern int dummy[NR_SYS_CALLS>(unsigned)(call_nr-KERNEL_CALL) ? 1:-1];} \
-    call_vec[(call_nr-KERNEL_CALL)] = (handler)  
+    call_vec[(call_nr-KERNEL_CALL)] = (handler)
 
 FORWARD _PROTOTYPE( void initialize, (void));
 
@@ -73,8 +73,8 @@ PUBLIC void sys_task()
 
   while (TRUE) {
       /* Get work. Block and wait until a request message arrives. */
-      receive(ANY, &m);			
-      call_nr = (unsigned) m.m_type - KERNEL_CALL;	
+      receive(ANY, &m);
+      call_nr = (unsigned) m.m_type - KERNEL_CALL;
       who_e = m.m_source;
       okendpt(who_e, &who_p);
       caller_ptr = proc_addr(who_p);
@@ -90,7 +90,7 @@ PUBLIC void sys_task()
 	  kprintf("SYSTEM: illegal request %d from %d.\n", call_nr,m.m_source);
 #endif
 	  result = EBADREQUEST;			/* illegal message type */
-      } 
+      }
       else {
           result = (*call_vec[call_nr])(&m);	/* handle the system call */
       }
@@ -126,7 +126,7 @@ PRIVATE void initialize(void)
     tmr_inittimer(&(sp->s_alarm_timer));
   }
 
-  /* Initialize the call vector to a safe default handler. Some system calls 
+  /* Initialize the call vector to a safe default handler. Some system calls
    * may be disabled or nonexistant. Then explicitely map known calls to their
    * handler functions. This is done with a macro that gives a compile error
    * if an illegal call number is used. The ordering is not important here.
@@ -140,6 +140,7 @@ PRIVATE void initialize(void)
   map(SYS_EXEC, do_exec);		/* update process after execute */
   map(SYS_EXIT, do_exit);		/* clean up after process exit */
   map(SYS_NICE, do_nice);		/* set scheduling priority */
+  map(SYS_SETSCHEDULER, do_setscheduler);		/* set scheduling policy */
   map(SYS_PRIVCTL, do_privctl);		/* system privileges control */
   map(SYS_TRACE, do_trace);		/* request a trace operation */
 
@@ -151,11 +152,11 @@ PRIVATE void initialize(void)
   map(SYS_SIGRETURN, do_sigreturn);	/* return from POSIX-style signal */
 
   /* Device I/O. */
-  map(SYS_IRQCTL, do_irqctl);  		/* interrupt control operations */ 
-  map(SYS_DEVIO, do_devio);   		/* inb, inw, inl, outb, outw, outl */ 
+  map(SYS_IRQCTL, do_irqctl);  		/* interrupt control operations */
+  map(SYS_DEVIO, do_devio);   		/* inb, inw, inl, outb, outw, outl */
   map(SYS_SDEVIO, do_sdevio);		/* phys_insb, _insw, _outsb, _outsw */
-  map(SYS_VDEVIO, do_vdevio);  		/* vector with devio requests */ 
-  map(SYS_INT86, do_int86);  		/* real-mode BIOS calls */ 
+  map(SYS_VDEVIO, do_vdevio);  		/* vector with devio requests */
+  map(SYS_INT86, do_int86);  		/* real-mode BIOS calls */
 
   /* Memory management. */
   map(SYS_NEWMAP, do_newmap);		/* set up a process memory map */
@@ -177,7 +178,7 @@ PRIVATE void initialize(void)
 
   /* System control. */
   map(SYS_ABORT, do_abort);		/* abort MINIX */
-  map(SYS_GETINFO, do_getinfo); 	/* request system information */ 
+  map(SYS_GETINFO, do_getinfo); 	/* request system information */
   map(SYS_IOPENABLE, do_iopenable); 	/* Enable I/O */
 }
 
@@ -188,14 +189,14 @@ PUBLIC int get_priv(rc, proc_type)
 register struct proc *rc;		/* new (child) process pointer */
 int proc_type;				/* system or user process flag */
 {
-/* Get a privilege structure. All user processes share the same privilege 
- * structure. System processes get their own privilege structure. 
+/* Get a privilege structure. All user processes share the same privilege
+ * structure. System processes get their own privilege structure.
  */
   register struct priv *sp;			/* privilege structure */
 
   if (proc_type == SYS_PROC) {			/* find a new slot */
-      for (sp = BEG_PRIV_ADDR; sp < END_PRIV_ADDR; ++sp) 
-          if (sp->s_proc_nr == NONE && sp->s_id != USER_PRIV_ID) break;	
+      for (sp = BEG_PRIV_ADDR; sp < END_PRIV_ADDR; ++sp)
+          if (sp->s_proc_nr == NONE && sp->s_id != USER_PRIV_ID) break;
       if (sp->s_proc_nr != NONE) return(ENOSPC);
       rc->p_priv = sp;				/* assign new slot */
       rc->p_priv->s_proc_nr = proc_nr(rc);	/* set association */
@@ -246,12 +247,12 @@ int source;
 PUBLIC void send_sig(int proc_nr, int sig_nr)
 {
 /* Notify a system process about a signal. This is straightforward. Simply
- * set the signal that is to be delivered in the pending signals map and 
+ * set the signal that is to be delivered in the pending signals map and
  * send a notification with source SYSTEM.
  *
  * Process number is verified to avoid writing in random places, but we
  * don't kprintf() or panic() because that causes send_sig() invocations.
- */ 
+ */
   register struct proc *rp;
   static int n;
 
@@ -260,7 +261,7 @@ PUBLIC void send_sig(int proc_nr, int sig_nr)
 
   rp = proc_addr(proc_nr);
   sigaddset(&priv(rp)->s_sig_pending, sig_nr);
-  lock_notify(SYSTEM, rp->p_endpoint); 
+  lock_notify(SYSTEM, rp->p_endpoint);
 }
 
 /*===========================================================================*
@@ -273,14 +274,14 @@ int sig_nr;			/* signal to be sent, 1 to _NSIG */
 /* A system process wants to send a signal to a process.  Examples are:
  *  - HARDWARE wanting to cause a SIGSEGV after a CPU exception
  *  - TTY wanting to cause SIGINT upon getting a DEL
- *  - FS wanting to cause SIGPIPE for a broken pipe 
- * Signals are handled by sending a message to PM.  This function handles the 
- * signals and makes sure the PM gets them by sending a notification. The 
- * process being signaled is blocked while PM has not finished all signals 
- * for it. 
+ *  - FS wanting to cause SIGPIPE for a broken pipe
+ * Signals are handled by sending a message to PM.  This function handles the
+ * signals and makes sure the PM gets them by sending a notification. The
+ * process being signaled is blocked while PM has not finished all signals
+ * for it.
  * Race conditions between calls to this function and the system calls that
  * process pending kernel signals cannot exist. Signal related functions are
- * only called when a user process causes a CPU exception and from the kernel 
+ * only called when a user process causes a CPU exception and from the kernel
  * process level, which runs to completion.
  */
   register struct proc *rp;
@@ -306,10 +307,10 @@ vir_bytes vir_addr;		/* virtual address in BIOS segment */
 vir_bytes bytes;		/* # of bytes to be copied */
 {
 /* Calculate the physical memory address at the BIOS. Note: currently, BIOS
- * address zero (the first BIOS interrupt vector) is not considered, as an 
- * error here, but since the physical address will be zero as well, the 
+ * address zero (the first BIOS interrupt vector) is not considered, as an
+ * error here, but since the physical address will be zero as well, the
  * calling function will think an error occurred. This is not a problem,
- * since no one uses the first BIOS interrupt vector.  
+ * since no one uses the first BIOS interrupt vector.
  */
 
   /* Check all acceptable ranges. */
@@ -363,10 +364,10 @@ vir_bytes bytes;		/* # of bytes to be copied */
 	seg = (vc < rp->p_memmap[S].mem_vir ? D : S);
 #endif
 
-  if ((vir_addr>>CLICK_SHIFT) >= rp->p_memmap[seg].mem_vir + 
+  if ((vir_addr>>CLICK_SHIFT) >= rp->p_memmap[seg].mem_vir +
   	rp->p_memmap[seg].mem_len) return( (phys_bytes) 0 );
 
-  if (vc >= rp->p_memmap[seg].mem_vir + 
+  if (vc >= rp->p_memmap[seg].mem_vir +
   	rp->p_memmap[seg].mem_len) return( (phys_bytes) 0 );
 
 #if (CHIP == INTEL)
@@ -404,7 +405,7 @@ vir_bytes bytes;		/* # of bytes to be copied */
   if (! fm->in_use) return( (phys_bytes) 0);
   if (vir_addr + bytes > fm->mem_len) return( (phys_bytes) 0);
 
-  return(fm->mem_phys + (phys_bytes) vir_addr); 
+  return(fm->mem_phys + (phys_bytes) vir_addr);
 }
 
 /*===========================================================================*
@@ -415,11 +416,11 @@ struct vir_addr *src_addr;	/* source virtual address */
 struct vir_addr *dst_addr;	/* destination virtual address */
 vir_bytes bytes;		/* # of bytes to copy  */
 {
-/* Copy bytes from virtual address src_addr to virtual address dst_addr. 
+/* Copy bytes from virtual address src_addr to virtual address dst_addr.
  * Virtual addresses can be in ABS, LOCAL_SEG, REMOTE_SEG, or BIOS_SEG.
  */
   struct vir_addr *vir_addr[2];	/* virtual source and destination address */
-  phys_bytes phys_addr[2];	/* absolute source and destination */ 
+  phys_bytes phys_addr[2];	/* absolute source and destination */
   int seg_index;
   int i;
 
@@ -463,7 +464,7 @@ vir_bytes bytes;		/* # of bytes to copy  */
       }
 
       /* Check if mapping succeeded. */
-      if (phys_addr[i] <= 0 && vir_addr[i]->segment != PHYS_SEG) 
+      if (phys_addr[i] <= 0 && vir_addr[i]->segment != PHYS_SEG)
           return(EFAULT);
   }
 
@@ -513,9 +514,9 @@ register struct proc *rc;		/* slot of process to clean up */
   }
   rc->p_rts_flags &= ~RECEIVING;
 
-  /* Likewise, if another process was sending or receive a message to or from 
+  /* Likewise, if another process was sending or receive a message to or from
    * the exiting process, it must be alerted that process no longer is alive.
-   * Check all processes. 
+   * Check all processes.
    */
   for (rp = BEG_PROC_ADDR; rp < END_PROC_ADDR; rp++) {
       if(isemptyp(rp))
@@ -532,7 +533,7 @@ register struct proc *rc;		/* slot of process to clean up */
 	  kprintf("Proc %d receive dead src %d\n", proc_nr(rp), proc_nr(rc));
 #endif
   	  if (rp->p_rts_flags == 0) lock_enqueue(rp);/* let process run again */
-      } 
+      }
       if ((rp->p_rts_flags & SENDING) && rp->p_sendto_e == rc->p_endpoint) {
           rp->p_reg.retreg = EDSTDIED;		/* report destination died */
 	  rp->p_rts_flags &= ~SENDING;		/* no longer sending */
@@ -540,7 +541,7 @@ register struct proc *rc;		/* slot of process to clean up */
 	  kprintf("Proc %d send dead dst %d\n", proc_nr(rp), proc_nr(rc));
 #endif
   	  if (rp->p_rts_flags == 0) lock_enqueue(rp);/* let process run again */
-      } 
+      }
   }
 }
 
