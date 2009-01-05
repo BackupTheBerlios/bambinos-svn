@@ -15,11 +15,13 @@ int mycall(int a, int b, int c) {
 
 void main(int argc, char argv[]) {
 
-	int r;
+	int r1, r;
 	pid_t pid = 0;
 	if (argc > 1)
 		pid = atoi(argv[1]);
 
+	r1 = sched_setscheduler(pid,2,0);
+
 	r = sched_getscheduler(pid);
-	printf("r %d", r);
+	printf("r %d %d", r1, r);
 }
