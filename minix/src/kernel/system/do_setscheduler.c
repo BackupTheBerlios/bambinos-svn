@@ -29,7 +29,7 @@ PUBLIC int do_setscheduler(message *m_ptr) {
 	if (!rp->p_rts_flags)
 		lock_enqueue(rp);
 
-	//return (OK);
+	/* return (OK); */
 	return (rp->p_scheduler);
 
 }
