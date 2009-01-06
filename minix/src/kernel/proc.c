@@ -59,11 +59,11 @@ FORWARD _PROTOTYPE( int deadlock, (int function,
 FORWARD _PROTOTYPE( void enqueue, (struct proc *rp));
 FORWARD _PROTOTYPE( void dequeue, (struct proc *rp));
 FORWARD _PROTOTYPE( void sched, (struct proc *rp, int *queue, int *front));
-_PROTOTYPE( void sched_other, (struct proc *rp, int *queue, int *front));
-_PROTOTYPE( void sched_fifo, (struct proc *rp, int *queue, int *front));
-_PROTOTYPE( void sched_rr, (struct proc *rp, int *queue, int *front));
-FORWARD _PROTOTYPE( void pick_proc, (void));
+void sched_other(struct proc *rp, int *queue, int *front);
+void sched_fifo(struct proc *rp, int *queue, int *front);
+void sched_rr(struct proc *rp, int *queue, int *front);
 
+FORWARD _PROTOTYPE(void pick_proc, (void));
 
 #define BuildMess(m_ptr, src, dst_ptr) \
 	(m_ptr)->m_source = proc_addr(src)->p_endpoint;		\
@@ -97,10 +97,10 @@ FORWARD _PROTOTYPE( void pick_proc, (void));
  *				sys_call				     *
  *===========================================================================*/
 PUBLIC int sys_call(call_nr, src_dst_e, m_ptr, bit_map)
-int call_nr; /* system call number and flags */
-int src_dst_e; /* src to receive from or dst to send to */
-message *m_ptr; /* pointer to message in the caller's space */
-longbit_map; /* notification event set or flags */
+	int call_nr; /* system call number and flags */
+	int src_dst_e; /* src to receive from or dst to send to */
+	message *m_ptr; /* pointer to message in the caller's space */
+	long bit_map; /* notification event set or flags */
 {
 	/* System calls are done by trapping to the kernel with an INT instruction.
 	 * The trap is caught and sys_call() is called to send or receive a message
@@ -125,27 +125,26 @@ longbit_map; /* notification event set or flags */
 
 	/* Require a valid source and/ or destination process, unless echoing. */
 	if (src_dst_e != ANY && function != ECHO) {
-		if(!isokendpt(src_dst_e, &src_dst)) {
+		if (!isokendpt(src_dst_e, &src_dst)) {
 #if DEBUG_ENABLE_IPC_WARNINGS
 			kprintf("sys_call: trap %d by %d with bad endpoint %d\n",
 					function, proc_nr(caller_ptr), src_dst_e);
 #endif
 			return EDEADSRCDST;
 		}
-	} else src_dst = src_dst_e;
+	} else
+		src_dst = src_dst_e;
 
 	/* Check if the process has privileges for the requested call. Calls to the
 	 * kernel may only be SENDREC, because tasks always reply and may not block
 	 * if the caller doesn't do receive().
 	 */
-	if (! (priv(caller_ptr)->s_trap_mask & (1 << function)) ||
-			(iskerneln(src_dst) && function != SENDREC
-					&& function != RECEIVE)) {
+	if (!(priv(caller_ptr)->s_trap_mask & (1 << function)) || (iskerneln(src_dst) && function != SENDREC && function != RECEIVE)) {
 #if DEBUG_ENABLE_IPC_WARNINGS
 		kprintf("sys_call: trap %d not allowed, caller %d, src_dst %d\n",
 				function, proc_nr(caller_ptr), src_dst);
 #endif
-		return(ETRAPDENIED); /* trap denied by mask or kernel */
+		return (ETRAPDENIED); /* trap denied by mask or kernel */
 	}
 
 	/* If the call involves a message buffer, i.e., for SEND, RECEIVE, SENDREC,
@@ -156,14 +155,14 @@ longbit_map; /* notification event set or flags */
 	if (function & CHECK_PTR) {
 		vlo = (vir_bytes) m_ptr >> CLICK_SHIFT;
 		vhi = ((vir_bytes) m_ptr + MESS_SIZE - 1) >> CLICK_SHIFT;
-		if (vlo < caller_ptr->p_memmap[D].mem_vir || vlo> vhi ||
-				vhi >= caller_ptr->p_memmap[S].mem_vir +
-				caller_ptr->p_memmap[S].mem_len) {
+		if (vlo < caller_ptr->p_memmap[D].mem_vir || vlo > vhi || vhi
+				>= caller_ptr->p_memmap[S].mem_vir
+						+ caller_ptr->p_memmap[S].mem_len) {
 #if DEBUG_ENABLE_IPC_WARNINGS
 			kprintf("sys_call: invalid message pointer, trap %d, caller %d\n",
 					function, proc_nr(caller_ptr));
 #endif
-			return(EFAULT); /* invalid message pointer */
+			return (EFAULT); /* invalid message pointer */
 		}
 	}
 
@@ -171,12 +170,12 @@ longbit_map; /* notification event set or flags */
 	 * verify that the caller is allowed to send to the given destination.
 	 */
 	if (function & CHECK_DST) {
-		if (! get_sys_bit(priv(caller_ptr)->s_ipc_to, nr_to_id(src_dst))) {
+		if (!get_sys_bit(priv(caller_ptr)->s_ipc_to, nr_to_id(src_dst))) {
 #if DEBUG_ENABLE_IPC_WARNINGS
 			kprintf("sys_call: ipc mask denied trap %d from %d to %d\n",
 					function, proc_nr(caller_ptr), src_dst);
 #endif
-			return(ECALLDENIED); /* call denied by ipc mask */
+			return (ECALLDENIED); /* call denied by ipc mask */
 		}
 	}
 
@@ -187,7 +186,7 @@ longbit_map; /* notification event set or flags */
 			kprintf("sys_call: trap %d from %d to %d deadlocked, group size %d\n",
 					function, proc_nr(caller_ptr), src_dst, group_size);
 #endif
-			return(ELOCKED);
+			return (ELOCKED);
 		}
 	}
 
@@ -199,34 +198,34 @@ longbit_map; /* notification event set or flags */
 	 *   - NOTIFY:  nonblocking call; deliver notification or mark pending
 	 *   - ECHO:    nonblocking call; directly echo back the message
 	 */
-	switch(function) {
-		case SENDREC:
+	switch (function) {
+	case SENDREC:
 		/* A flag is set so that notifications cannot interrupt SENDREC. */
 		caller_ptr->p_misc_flags |= REPLY_PENDING;
 		/* fall through */
-		case SEND:
+	case SEND:
 		result = mini_send(caller_ptr, src_dst_e, m_ptr, flags);
 		if (function == SEND || result != OK) {
 			break; /* done, or SEND failed */
 		} /* fall through for SENDREC */
-		case RECEIVE:
+	case RECEIVE:
 		if (function == RECEIVE)
-		caller_ptr->p_misc_flags &= ~REPLY_PENDING;
+			caller_ptr->p_misc_flags &= ~REPLY_PENDING;
 		result = mini_receive(caller_ptr, src_dst_e, m_ptr, flags);
 		break;
-		case NOTIFY:
+	case NOTIFY:
 		result = mini_notify(caller_ptr, src_dst);
 		break;
-		case ECHO:
+	case ECHO:
 		CopyMess(caller_ptr->p_nr, caller_ptr, m_ptr, caller_ptr, m_ptr);
 		result = OK;
 		break;
-		default:
+	default:
 		result = EBADCALL; /* illegal system call */
 	}
 
 	/* Now, return the result of the system call to the caller. */
-	return(result);
+	return (result);
 }
 
 /*===========================================================================*
@@ -687,6 +686,7 @@ PRIVATE void sched_rr(rp, queue, front)
 	int *queue; /* return: queue to use */
 	int *front; /* return: front or back */
 {
+	static int only_once = 0;
 
 	int time_left = (rp->p_ticks_left > 0); /* quantum fully consumed*/
 
@@ -698,9 +698,8 @@ PRIVATE void sched_rr(rp, queue, front)
 	}
 
 #if DEBUG_SCHED_POLICY
-	static int only_once=0;
 
-	if (! only_once)
+	if (!only_once)
 		kprintf("function sched_rr: Quantum_Size %i", rp->p_quantum_size);
 
 	only_once++;
