@@ -691,7 +691,7 @@ PRIVATE void sched_rr(rp, queue, front)
 #if DEBUG_SCHED_POLICY
 
 	if (!only_once)
-		kprintf("function sched_rr: Quantum_Size %i", rp->p_quantum_size);
+		kprintf("function sched_rr: Quantum_Size %d", rp->p_quantum_size);
 
 	only_once++;
 #endif
