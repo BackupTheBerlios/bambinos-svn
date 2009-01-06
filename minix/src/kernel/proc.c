@@ -622,21 +622,12 @@ PRIVATE void sched(rp, queue, front)
 
 	switch (rp->p_scheduler) {
 	case SCHED_FIFO:
-#if DEBUG_SCHED_POLICY
-		kprintf("Choose Sched_FIFO");
-#endif
 		sched_fifo(rp, queue, front);
 		break;
 	case SCHED_RR:
-#if DEBUG_SCHED_POLICY
-		kprintf("Choose Sched_RR");
-#endif
 		sched_rr(rp, queue, front);
 		break;
 	default:
-#if DEBUG_SCHED_POLICY
-		kprintf("Choose Sched_OTHER");
-#endif
 		sched_other(rp, queue, front);
 
 	}
