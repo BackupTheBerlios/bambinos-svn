@@ -1,7 +1,8 @@
 #include <lib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include "/usr/src/include/sys/resource.h"
-
+/*
 int mycall(int a, int b, int c) {
 
 	message m;
@@ -12,16 +13,17 @@ int mycall(int a, int b, int c) {
 	return (_syscall(MM,57, &m));
 
 }
+*/
 
 void main(int argc, char argv[]) {
 
-	int r1, r;
+	int rs, rg;
 	pid_t pid = 0;
 	if (argc > 1)
-		pid = atoi(argv[1]);
+		pid =  atoi(argv[1]);
 
-	r1 = sched_setscheduler(pid,2,0);
+	rs = sched_setscheduler(pid,2,0);
 
-	r = sched_getscheduler(pid);
-	printf("r %d %d \n", r1, r);
+	rg = sched_getscheduler(pid);
+	printf("r set:%d get:%d \n", rs, rg);
 }
