@@ -23,5 +23,5 @@ void main(int argc, char argv[]) {
 	r1 = sched_setscheduler(pid,2,0);
 
 	r = sched_getscheduler(pid);
-	printf("r %d %d", r1, r);
+	printf("r %d %d \n", r1, r);
 }
