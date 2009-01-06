@@ -296,7 +296,8 @@ PRIVATE void m_init()
   printf("foobardisk_base %d \n", m_geom[FOOBARDISK_DEV].dv_base);
   m_geom[FOOBARDISK_DEV].dv_size = cvul64(foobardisk_size); /* 16M */
   if (OK != (s=sys_segctl(&m_seg[FOOBARDISK_DEV], (u16_t *) &s, (vir_bytes *) &s, foobardisk_base, foobardisk_size))) {
-      panic("MEM","SCHEISS IDEE.",s);
+      panic("MEM","PANIC FOOBARDISK",s);
+  }
 
 
   /* See if there are already RAM disk details at the Data Store server. */
