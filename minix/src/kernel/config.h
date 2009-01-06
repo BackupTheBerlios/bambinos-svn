@@ -76,6 +76,7 @@
 /* This section allows to enable kernel debugging and timing functionality.
  * For normal operation all options should be disabled.
  */
+#define DEBUG_SCHED_POLICY 1     /* Assingment 6 Debug Info for schedul policy */
 #define DEBUG_SCHED_CHECK  0	/* sanity check of scheduling queues */
 #define DEBUG_TIME_LOCKS   0	/* measure time spent in locks */
 

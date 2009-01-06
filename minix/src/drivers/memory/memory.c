@@ -1,10 +1,10 @@
 /* This file contains the device dependent part of the drivers for the
  * following special files:
- *     /dev/ram		- RAM disk 
+ *     /dev/ram		- RAM disk
  *     /dev/mem		- absolute memory
  *     /dev/kmem	- kernel virtual memory
  *     /dev/null	- null device (data sink)
- *     /dev/boot	- boot device loaded from boot image 
+ *     /dev/boot	- boot device loaded from boot image
  *     /dev/zero	- null byte stream generator
  *
  *  Changes:
@@ -33,8 +33,8 @@
 PRIVATE struct device m_geom[NR_DEVS];  /* base and size of each device */
 PRIVATE int m_seg[NR_DEVS];  		/* segment index of each device */
 PRIVATE int m_device;			/* current device */
-PRIVATE struct kinfo kinfo;		/* kernel information */ 
-PRIVATE struct machine machine;		/* machine information */ 
+PRIVATE struct kinfo kinfo;		/* kernel information */
+PRIVATE struct machine machine;		/* machine information */
 
 extern int errno;			/* error number for PM calls */
 
@@ -85,9 +85,9 @@ PUBLIC int main(void)
   sa.sa_flags = 0;
   if (sigaction(SIGTERM,&sa,NULL)<0) panic("MEM","sigaction failed", errno);
 
-  m_init();			
-  driver_task(&m_dtab);		
-  return(OK);				
+  m_init();
+  driver_task(&m_dtab);
+  return(OK);
 }
 
 /*===========================================================================*
@@ -97,7 +97,7 @@ PRIVATE char *m_name()
 {
 /* Return a name for the current device. */
   static char name[] = "memory";
-  return name;  
+  return name;
 }
 
 /*===========================================================================*
@@ -173,10 +173,10 @@ unsigned nr_req;		/* length of request vector */
 	    mem_phys = cv64ul(dv->dv_base) + position;
 
 	    if (opcode == DEV_GATHER) {			/* copy data */
-	        sys_physcopy(NONE, PHYS_SEG, mem_phys, 
+	        sys_physcopy(NONE, PHYS_SEG, mem_phys,
 	        	proc_nr, D, user_vir, count);
 	    } else {
-	        sys_physcopy(proc_nr, D, user_vir, 
+	        sys_physcopy(proc_nr, D, user_vir,
 	        	NONE, PHYS_SEG, mem_phys, count);
 	    }
 	    break;
@@ -187,7 +187,7 @@ unsigned nr_req;		/* length of request vector */
 	        left = count;
 	    	while (left > 0) {
 	    	    chunk = (left > ZERO_BUF_SIZE) ? ZERO_BUF_SIZE : left;
-	    	    if (OK != (s=sys_vircopy(SELF, D, (vir_bytes) dev_zero, 
+	    	    if (OK != (s=sys_vircopy(SELF, D, (vir_bytes) dev_zero,
 	    	            proc_nr, D, user_vir, chunk)))
 	    	        report("MEM","sys_vircopy failed", s);
 	    	    left -= chunk;
@@ -268,7 +268,7 @@ PRIVATE void m_init()
   m_geom[KMEM_DEV].dv_base = cvul64(kinfo.kmem_base);
   printf("kmem_base %d \n", kinfo.kmem_base);
   m_geom[KMEM_DEV].dv_size = cvul64(kinfo.kmem_size);
-  if (OK != (s=sys_segctl(&m_seg[KMEM_DEV], (u16_t *) &s, (vir_bytes *) &s, 
+  if (OK != (s=sys_segctl(&m_seg[KMEM_DEV], (u16_t *) &s, (vir_bytes *) &s,
   		kinfo.kmem_base, kinfo.kmem_size))) {
       panic("MEM","Couldn't install remote segment.",s);
   }
@@ -280,7 +280,7 @@ PRIVATE void m_init()
   /* printf("BOOT BASE %d",m_geom[BOOT_DEV].dv_base); */
   m_geom[BOOT_DEV].dv_size = cvul64(kinfo.bootdev_size);
   if (kinfo.bootdev_base > 0) {
-      if (OK != (s=sys_segctl(&m_seg[BOOT_DEV], (u16_t *) &s, (vir_bytes *) &s, 
+      if (OK != (s=sys_segctl(&m_seg[BOOT_DEV], (u16_t *) &s, (vir_bytes *) &s,
               kinfo.bootdev_base, kinfo.bootdev_size))) {
           panic("MEM","Couldn't install remote segment.",s);
       }
@@ -293,15 +293,12 @@ PRIVATE void m_init()
   	report("FOOBARDISK", "warning, allocmem failed", errno);
   }
   m_geom[FOOBARDISK_DEV].dv_base = cvul64(foobardisk_base);
-  printf("foobardisk_base %d \n", m_geom[FOOBARDISK_DEV].dv_base); 
+  printf("foobardisk_base %d \n", m_geom[FOOBARDISK_DEV].dv_base);
   m_geom[FOOBARDISK_DEV].dv_size = cvul64(foobardisk_size); /* 16M */
   if (OK != (s=sys_segctl(&m_seg[FOOBARDISK_DEV], (u16_t *) &s, (vir_bytes *) &s, foobardisk_base, foobardisk_size))) {
       panic("MEM","SCHEISS IDEE.",s);
-  }else{
-	  printf("JUHU FOOBARDISK GEHT \n");
-  }
 
-  	
+
   /* See if there are already RAM disk details at the Data Store server. */
   m.DS_KEY = MEMORY_MAJOR;
   if (OK == (s = _taskcall(DS_PROC_NR, DS_RETRIEVE, &m))) {
@@ -309,7 +306,7 @@ PRIVATE void m_init()
  	ramdev_base = m.DS_VAL_L2;
   	printf("MEM retrieved size %u and base %u from DS, status %d\n",
     		ramdev_size, ramdev_base, s);
-  	if (OK != (s=sys_segctl(&m_seg[RAM_DEV], (u16_t *) &s, 
+  	if (OK != (s=sys_segctl(&m_seg[RAM_DEV], (u16_t *) &s,
 		(vir_bytes *) &s, ramdev_base, ramdev_size))) {
       		panic("MEM","Couldn't install remote segment.",s);
   	}
@@ -411,7 +408,7 @@ message *m_ptr;				/* pointer to control message */
 	    ramdev_size, ramdev_base, s);
 #endif
 
-  	if (OK != (s=sys_segctl(&m_seg[RAM_DEV], (u16_t *) &s, 
+  	if (OK != (s=sys_segctl(&m_seg[RAM_DEV], (u16_t *) &s,
 		(vir_bytes *) &s, ramdev_base, ramdev_size))) {
       		panic("MEM","Couldn't install remote segment.",s);
   	}
