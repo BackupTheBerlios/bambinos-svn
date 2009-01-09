@@ -59,9 +59,9 @@ FORWARD _PROTOTYPE( int deadlock, (int function,
 FORWARD _PROTOTYPE( void enqueue, (struct proc *rp));
 FORWARD _PROTOTYPE( void dequeue, (struct proc *rp));
 FORWARD _PROTOTYPE( void sched, (struct proc *rp, int *queue, int *front));
-void sched_other(struct proc *rp, int *queue, int *front);
-void sched_fifo(struct proc *rp, int *queue, int *front);
-void sched_rr(struct proc *rp, int *queue, int *front);
+PRIVATE void sched_other(struct proc *rp, int *queue, int *front);
+PRIVATE void sched_fifo(struct proc *rp, int *queue, int *front);
+PRIVATE void sched_rr(struct proc *rp, int *queue, int *front);
 
 FORWARD _PROTOTYPE(void pick_proc, (void));
 
