@@ -677,7 +677,6 @@ PRIVATE void sched_rr(rp, queue, front)
 	int *queue; /* return: queue to use */
 	int *front; /* return: front or back */
 {
-	static int only_once = 0;
 
 	int time_left = (rp->p_ticks_left > 0); /* quantum fully consumed*/
 
@@ -688,13 +687,6 @@ PRIVATE void sched_rr(rp, queue, front)
 		rp->p_ticks_left = rp->p_quantum_size; /* give new quantum */
 	}
 
-#if DEBUG_SCHED_POLICY
-
-	if (!only_once)
-		kprintf("function sched_rr: Quantum_Size %d \n", rp->p_quantum_size);
-
-	only_once++;
-#endif
 	/* If there is time left, the process is added to the front of its queue,
 	 * so that it can immediately run. The queue to use simply is always the
 	 * process' current priority.
