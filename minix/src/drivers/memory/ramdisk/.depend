@@ -9,3 +9,5 @@ bintoc.o:	/usr/include/sys/dir.h
 bintoc.o:	/usr/include/sys/types.h
 bintoc.o:	/usr/include/unistd.h
 bintoc.o:	bintoc.c
+
+image.o:	image.c
