@@ -31,6 +31,7 @@
 
 #include "kernel.h"
 #include "proc.h"
+#include <sys/resource.h>
 #include <signal.h>
 #include <minix/com.h>
 
