@@ -110,10 +110,10 @@ message *m_ptr;				/* pointer to request message */
    * no more time left, it gets a new quantum and is inserted at the right
    * place in the queues.  As a side-effect a new process will be scheduled.
    */
-  if (prev_ptr->p_ticks_left <= 0 && priv(prev_ptr)->s_flags & PREEMPTIBLE) {
-	  if (prev_ptr->p_scheduler == SCHED_FIFO ){
+  if (prev_ptr->p_ticks_left <= 0 && priv(prev_ptr)->s_flags & PREEMPTIBLE && prev_ptr->p_scheduler != SCHED_FIFO) {
+
 	     	  kprintf("do_clocktick ticks left %d %s \n", prev_ptr->p_ticks_left, prev_ptr->p_name);
-	  }
+
       lock_dequeue(prev_ptr);		/* take it off the queues */
       lock_enqueue(prev_ptr);		/* and reinsert it again */
   }
