@@ -1,6 +1,12 @@
-#include <lib.h>
-#include <stdio.h>
+/* test 1 */
+
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <errno.h>
+#include <signal.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <stdio.h>
 
 /*
 int fak (int val) {
