@@ -218,7 +218,7 @@ irq_hook_t *hook;
   /* TODO */
   if (once < 20 && proc_ptr->p_scheduler == SCHED_FIFO ){
 	  once++;
-	  kprintf("SCHED_FIFO, s_flags %d , ticks left %d ",priv(proc_ptr)->s_flags, proc_ptr->p_ticks_left);
+	  kprintf("SCHED_FIFO, s_flags %d , ticks left %d %c \n",priv(proc_ptr)->s_flags, proc_ptr->p_ticks_left, proc_ptr->p_name);
   }
 
   /* Update load average. */
