@@ -2,13 +2,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-
+/*
 int fak (int val) {
 	if (val > 2) {
 	  return fak(val-1) * val;
 	}else return val;
 }
-
+*/
 
 int main(int argc, char *argv[]) {
 
@@ -16,7 +16,7 @@ int main(int argc, char *argv[]) {
 
 	if (argc > 1) {
 		arg = atoi(argv[1]);
-		i = fak(arg);
+		/*i = fak(arg);*/
 		printf("%i! = %i\n", arg, i);
 	}
 
