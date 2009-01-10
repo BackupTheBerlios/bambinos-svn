@@ -213,6 +213,7 @@ irq_hook_t *hook;
 		  if (proc_ptr->p_scheduler == SCHED_FIFO ){
 		  	  kprintf("PREEMPTIBLE -ticks %d, ticks left %d %s \n", ticks, proc_ptr->p_ticks_left, proc_ptr->p_name);
 		      proc_ptr->p_ticks_left -= ticks;
+		  }
 	  }
   }
   if (! (priv(proc_ptr)->s_flags & BILLABLE)) {
