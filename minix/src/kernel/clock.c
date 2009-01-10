@@ -110,16 +110,10 @@ message *m_ptr;				/* pointer to request message */
    * no more time left, it gets a new quantum and is inserted at the right
    * place in the queues.  As a side-effect a new process will be scheduled.
    */
-
-	static int once = 0;
-
   if (prev_ptr->p_ticks_left <= 0 && priv(prev_ptr)->s_flags & PREEMPTIBLE) {
-
-	  if (once < 20 && proc_ptr->p_scheduler != SCHED_OTHER ){
-		  once++;
-		  kprintf("do_clocktick() sched: %i, t left: %i, n: %s\n", proc_ptr->p_scheduler, proc_ptr->p_ticks_left, proc_ptr->p_name);
+	  if (prev_ptr->p_scheduler == SCHED_FIFO ){
+	     	  kprintf("do_clocktick ticks left %d %s \n", prev_ptr->p_ticks_left, prev_ptr->p_name);
 	  }
-
       lock_dequeue(prev_ptr);		/* take it off the queues */
       lock_enqueue(prev_ptr);		/* and reinsert it again */
   }
@@ -215,17 +209,21 @@ irq_hook_t *hook;
    */
   proc_ptr->p_user_time += ticks;
   if (priv(proc_ptr)->s_flags & PREEMPTIBLE) {
-	  if (proc_ptr->p_scheduler != SCHED_FIFO)
-		  proc_ptr->p_ticks_left -= ticks;
+	  if(proc_ptr->p_scheduler != SCHED_FIFO){
+		  if (proc_ptr->p_scheduler == SCHED_FIFO ){
+		  	  kprintf("PREEMPTIBLE -ticks %d, ticks left %d %s \n", ticks, proc_ptr->p_ticks_left, proc_ptr->p_name);
+		      proc_ptr->p_ticks_left -= ticks;
+	  }
   }
   if (! (priv(proc_ptr)->s_flags & BILLABLE)) {
       bill_ptr->p_sys_time += ticks;
-      if (proc_ptr->p_scheduler != SCHED_FIFO)
-    	  bill_ptr->p_ticks_left -= ticks;
+
+      bill_ptr->p_ticks_left -= ticks;
+
   }
 
   /* TODO */
-  if (once < 20 && proc_ptr->p_scheduler == SCHED_FIFO ){
+  if (proc_ptr->p_scheduler == SCHED_FIFO ){
 	  once++;
 	  kprintf("SCHED_FIFO, s_flags %d , ticks left %d %s \n",priv(proc_ptr)->s_flags, proc_ptr->p_ticks_left, proc_ptr->p_name);
   }
