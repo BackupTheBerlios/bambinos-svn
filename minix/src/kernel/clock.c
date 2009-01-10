@@ -115,7 +115,7 @@ message *m_ptr;				/* pointer to request message */
       lock_enqueue(prev_ptr);		/* and reinsert it again */
   }
   if (prev_ptr->p_scheduler != SCHED_OTHER)
-	  kprintf("do_clocktick() sched: %i, t left: %i, n: %s\n", prev_ptr->p_scheduler, prev_ptr->p_ticks_left, prev_ptr->p_name);
+	  kprintf("do_clocktick() sched: %d, t left: %d, n: %s \n", prev_ptr->p_scheduler, prev_ptr->p_ticks_left, prev_ptr->p_name);
 
   /* Check if a clock timer expired and run its watchdog function. */
   if (next_timeout <= realtime) {
@@ -221,7 +221,7 @@ irq_hook_t *hook;
   /* TODO */
   if (proc_ptr->p_scheduler != SCHED_OTHER){
 	  once++;
-	  kprintf("clock_handler() sched: %i, t left: %i, n: %s\n", proc_ptr->p_scheduler, proc_ptr->p_ticks_left, proc_ptr->p_name);
+	  kprintf("clock_handler() sched: %d, t left: %d, n: %s \n", proc_ptr->p_scheduler, proc_ptr->p_ticks_left, proc_ptr->p_name);
   }
 
   /* Update load average. */
