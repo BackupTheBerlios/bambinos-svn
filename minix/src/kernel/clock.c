@@ -111,12 +111,11 @@ message *m_ptr;				/* pointer to request message */
    * place in the queues.  As a side-effect a new process will be scheduled.
    */
   if (prev_ptr->p_ticks_left <= 0 && priv(prev_ptr)->s_flags & PREEMPTIBLE && prev_ptr->p_scheduler != SCHED_FIFO) {
-
-	  kprintf("do_clocktick() sched: %i, t left: %i, n: %s\n", proc_ptr->p_scheduler, proc_ptr->p_ticks_left, proc_ptr->p_name);
-
       lock_dequeue(prev_ptr);		/* take it off the queues */
       lock_enqueue(prev_ptr);		/* and reinsert it again */
   }
+  if (prev_ptr->p_scheduler != SCHED_OTHER)
+	  kprintf("do_clocktick() sched: %i, t left: %i, n: %s\n", prev_ptr->p_scheduler, prev_ptr->p_ticks_left, prev_ptr->p_name);
 
   /* Check if a clock timer expired and run its watchdog function. */
   if (next_timeout <= realtime) {
