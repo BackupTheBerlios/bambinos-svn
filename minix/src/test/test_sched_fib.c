@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <time.h>
 #include <sys/resource.h>
 
 
@@ -20,6 +21,8 @@ int main(int argc, char *argv[]) {
 	int pid = 0;
 	int sched = SCHED_RR;
 	int rs, rg;
+	time_t start, end;
+	double elapsed;
 
 	if (argc > 1)
 		n =  atoi(argv[1]); /*fibonacci(n)*/
@@ -32,8 +35,13 @@ int main(int argc, char *argv[]) {
 	if (pid == 0) {
 		/* child calculates fibonacci */
 		printf("calculating fib(%d) \n", n);
+		time(&start);
 		result = fib(n);
+		time(&end);
 		printf("fib(%d) = %d \n", n, result);
+
+		elapsed = difftime(end, start);
+		printf("took %.2lf seconds \n", elapsed);
 
 	}else {
 		/* set the scheduling policy for the child */
