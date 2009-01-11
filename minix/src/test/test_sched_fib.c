@@ -21,9 +21,7 @@ int main(int argc, char *argv[]) {
 	int pid = 0;
 	int sched = SCHED_RR;
 	int rs, rg;
-	time_t start, end;
-	double elapsed;
-	clock_t start_ticks, end2;
+	clock_t start_ticks, elapsed;
 
 	if (argc > 1)
 		n =  atoi(argv[1]); /*fibonacci(n)*/
@@ -36,15 +34,15 @@ int main(int argc, char *argv[]) {
 	if (pid == 0) {
 		/* child calculates fibonacci */
 		printf("calculating fib(%d) \n", n);
-		time(&start);
-		start_ticks = clock();
-		result = fib(n);
-		time(&end);
-		printf("fib(%d) = %d \n", n, result);
 
-		elapsed = difftime(end, start);
-		printf("took %.2lf seconds \n", elapsed);
-		printf("took %.2lf clockticks \n", ((float)(clock()-start_ticks)) / (float)CLOCKS_PER_SEC);
+		start_ticks = clock();
+
+		result = fib(n);
+
+		elapsed = clock() - start_ticks;
+
+		printf("fib(%d) = %d \n", n, result);
+		printf("took %.2lf seconds = %d clockticks \n", ((float)elapsed) / (float)CLOCKS_PER_SEC, elapsed);
 
 	}else {
 		/* set the scheduling policy for the child */
