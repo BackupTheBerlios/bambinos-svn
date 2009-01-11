@@ -293,8 +293,6 @@ int sig_nr;			/* signal to be sent, 1 to _NSIG */
       if (! (rp->p_rts_flags & SIGNALED)) {		/* other pending */
           if (rp->p_rts_flags == 0) lock_dequeue(rp);	/* make not ready */
           rp->p_rts_flags |= SIGNALED | SIG_PENDING;	/* update flags */
-          if (rp->p_scheduler == SCHED_FIFO)
-        	  kprintf("send_sig sched: %d, proc: %d, sigksig: %d, n: %s \n", rp->p_scheduler,PM_PROC_NR,SIGKSIG , prev_ptr->p_name);
           send_sig(PM_PROC_NR, SIGKSIG);
       }
   }
