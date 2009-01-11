@@ -811,8 +811,8 @@ PUBLIC void lock_enqueue(rp)
 PUBLIC void lock_dequeue(rp)
 	struct proc *rp; /* this process is no longer runnable */
 {
-	kprintf("lock dequeue sched: %d ,tleft: %d ,rts: %d ,misc: %d, %s \n", rp->p_scheduler, rp->p_ticks_left, rp->p_rts_flags,rp->p_misc_flags, rp->p_name);
-	/* Safe gateway to dequeue() for tasks. */
+	/* kprintf("lock dequeue sched: %d ,tleft: %d ,rts: %d ,misc: %d, %s \n", rp->p_scheduler, rp->p_ticks_left, rp->p_rts_flags,rp->p_misc_flags, rp->p_name);
+	Safe gateway to dequeue() for tasks. */
 	if (k_reenter >= 0) {
 		/* We're in an exception or interrupt, so don't lock (and ...
 		 * don't unlock).
