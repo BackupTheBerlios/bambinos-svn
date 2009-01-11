@@ -3,7 +3,7 @@
 #include <lib.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "/usr/src/include/sys/resource.h"
+#include "sys/resource.h"
 
 int main(int argc, char *argv[]) {
 
@@ -23,6 +23,6 @@ int main(int argc, char *argv[]) {
 	rg = sched_getscheduler(pid);
 	printf("r set:%d get:%d \n", rs, rg);
 
-	
+
 	return 0;
 }
