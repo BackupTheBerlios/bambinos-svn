@@ -4,7 +4,7 @@
 #include <stdio.h>
 
 
-int fak (int val) {
+int fak (double val) {
 	if (val > 2) {
 	  return fak(val-1) * val;
 	}else return val;
@@ -13,12 +13,13 @@ int fak (int val) {
 
 int main(int argc, char *argv[]) {
 
-	int arg, i = 0;
+	double i = 0;
+	int arg = 0;
 
 	if (argc > 1) {
 		arg = atoi(argv[1]);
-		i = fak(arg);
-		printf("%d! = %d\n", arg, i);
+		i = fak((double)arg);
+		printf("%e! = %e\n", arg, i);
 	}
 
 	return 0;
