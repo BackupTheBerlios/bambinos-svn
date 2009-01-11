@@ -18,9 +18,9 @@ int main(int argc, char *argv[]) {
 
 	int n = 42;
 	long result = 0;
-	int pid = 0;
+	int pid, pid_nested = 0;
 	int sched = SCHED_RR;
-	int rs, rg;
+	int rs, status, i;
 	clock_t start_ticks, elapsed;
 
 	if (argc > 1)
@@ -32,36 +32,43 @@ int main(int argc, char *argv[]) {
 	pid = fork();
 
 	if (pid == 0) {
-		/* child calculates fibonacci */
-		printf("calculating fib(%d) \n", n);
+		for (i = 0; i < 3; i++) {
+			pid_nested = fork();
 
-		start_ticks = clock();
+			if (pid_nested == 0) {
+				/* child calculates fibonacci */
+				printf("calculating fib(%d) \n", n);
 
-		result = fib(n);
+				start_ticks = clock();
 
-		elapsed = clock() - start_ticks;
+				result = fib(n);
 
-		printf("fib(%d) = %d \n", n, result);
-		printf("took %.2lf seconds = %d clockticks \n", (float)elapsed / (float)CLOCKS_PER_SEC, elapsed);
+				elapsed = clock() - start_ticks;
 
-	}else {
-		/* set the scheduling policy for the child */
-		printf("setting scheduling policy to ");
+				printf("fib(%d) = %d \n", n, result);
+				printf("took %.2lf seconds = %d clockticks \n", (float)elapsed / (float)CLOCKS_PER_SEC, elapsed);
 
-		switch(sched) {
-		case SCHED_FIFO: printf("FIFO \n"); break;
-		case SCHED_RR: printf("RR \n"); break;
-		case SCHED_OTHER: printf("OTHER \n"); break;
-		default:
-			printf("wrong policy argument - using SCHED_OTHER. \n");
-			sched = SCHED_OTHER;
+			}else {
+				/* set the scheduling policy for the child */
+				printf("setting scheduling policy to ");
+
+				switch(sched) {
+				case SCHED_FIFO: printf("FIFO \n"); break;
+				case SCHED_RR: printf("RR \n"); break;
+				case SCHED_OTHER: printf("OTHER \n"); break;
+				default:
+					printf("wrong policy argument - using SCHED_OTHER. \n");
+					sched = SCHED_OTHER;
+				}
+
+				rs = sched_setscheduler(pid, sched, 0);
+
+				if (rs != sched)
+					printf("set policy FAILED and returned: %d \n", rs);
+			}
 		}
-
-		rs = sched_setscheduler(pid, sched, 0);
-
-		if (rs != sched)
-			printf("set policy FAILED and returned: %d \n", rs);
 	}
+	wait(&status);
 
 	return 0;
 }
