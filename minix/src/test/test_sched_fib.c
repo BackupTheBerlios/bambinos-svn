@@ -42,7 +42,7 @@ int main(int argc, char *argv[]) {
 		elapsed = clock() - start_ticks;
 
 		printf("fib(%d) = %d \n", n, result);
-		printf("took %.2lf seconds = %d clockticks \n", ((float)elapsed) / (float)CLOCKS_PER_SEC, elapsed);
+		printf("took %.2lf seconds = %d clockticks \n", (float)elapsed / (float)CLOCKS_PER_SEC, elapsed);
 
 	}else {
 		/* set the scheduling policy for the child */
