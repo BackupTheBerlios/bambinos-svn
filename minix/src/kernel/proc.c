@@ -603,7 +603,6 @@ PRIVATE void dequeue(rp)
 				rdy_tail[q] = prev_xp; /* set new tail */
 			if (rp == proc_ptr || rp == next_ptr) /* active process removed */
 				pick_proc(); /* pick new process to run */
-			}
 			break;
 		}
 		prev_xp = *xpp; /* save previous in chain */
