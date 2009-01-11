@@ -23,7 +23,7 @@ int main(int argc, char *argv[]) {
 	int rs, rg;
 	time_t start, end;
 	double elapsed;
-	clock_t start2, end2;
+	clock_t start_ticks, end2;
 
 	if (argc > 1)
 		n =  atoi(argv[1]); /*fibonacci(n)*/
@@ -37,14 +37,14 @@ int main(int argc, char *argv[]) {
 		/* child calculates fibonacci */
 		printf("calculating fib(%d) \n", n);
 		time(&start);
-		start2 = clock();
+		start_ticks = clock();
 		result = fib(n);
 		time(&end);
 		printf("fib(%d) = %d \n", n, result);
 
 		elapsed = difftime(end, start);
 		printf("took %.2lf seconds \n", elapsed);
-		printf("took %d clockticks \n", clock()-start2);
+		printf("took %.2lf clockticks \n", (clock()-start_ticks)/CLOCKS_PER_SEC);
 
 	}else {
 		/* set the scheduling policy for the child */
