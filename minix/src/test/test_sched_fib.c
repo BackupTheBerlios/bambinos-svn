@@ -51,7 +51,7 @@ int main(int argc, char *argv[]) {
 		rs = sched_setscheduler(pid, sched, 0);
 
 		if (rs != sched)
-			printf("set policy FAILED and returned: %d", rs);
+			printf("set policy FAILED and returned: %d \n", rs);
 	}
 
 	return 0;
