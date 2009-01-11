@@ -44,7 +44,7 @@ int main(int argc, char *argv[]) {
 
 		elapsed = difftime(end, start);
 		printf("took %.2lf seconds \n", elapsed);
-		printf("took %.2lf clockticks \n", (clock()-start_ticks)/CLOCKS_PER_SEC);
+		printf("took %.2lf clockticks \n", ((float)(clock()-start_ticks)) / (float)CLOCKS_PER_SEC);
 
 	}else {
 		/* set the scheduling policy for the child */
