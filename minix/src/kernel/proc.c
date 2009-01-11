@@ -538,11 +538,12 @@ PRIVATE void enqueue(rp)
 			once++;
 
 	}
-	if (once > 0 && once < 200){
+	kprintf("once: %d", once);
+/*	if (once > 0 && once < 200){
 		once++;
 		kprintf("once: %d", once);
 		/* kprintf("ENQUEUE once sched: %d ,tleft: %d ,rts: %d ,misc: %d, %s \n", rp->p_scheduler, rp->p_ticks_left, rp->p_rts_flags,rp->p_misc_flags, rp->p_name);*/
-	}
+/*	}
 
 	/* Determine where to insert to process. */
 	sched(rp, &q, &front);
