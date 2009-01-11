@@ -567,6 +567,7 @@ PRIVATE void dequeue(rp)
 	 * it has blocked.  If the currently active process is removed, a new process
 	 * is picked to run by calling pick_proc().
 	 */
+	kprintf("dequeue sched: %d ,tleft: %d ,rts: %d ,misc: %d, %s \n", rp->p_scheduler, rp->p_ticks_left, rp->p_rts_flags,rp->p_misc_flags, rp->p_name);
 	register int q = rp->p_priority; /* queue to use */
 	register struct proc **xpp; /* iterate over queue */
 	register struct proc *prev_xp;
