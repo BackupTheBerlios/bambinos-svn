@@ -538,11 +538,11 @@ PRIVATE void enqueue(rp)
 			once++;
 
 	}
-	if ((once > 0) && (once < 200)){
+/*	if ((once > 0) && (once < 200)){
 		once++;
 		kprintf("ENQUEUE once sched: %d ,tleft: %d ,rts: %d ,misc: %d, %s \n", rp->p_scheduler, rp->p_ticks_left, rp->p_rts_flags,rp->p_misc_flags, rp->p_name);
 	}
-
+*/
 	/* Determine where to insert to process. */
 	sched(rp, &q, &front);
 
@@ -727,13 +727,13 @@ PRIVATE void pick_proc() {
 	 */
 	for (q = 0; q < NR_SCHED_QUEUES; q++) {
 		if ((rp = rdy_head[q]) != NIL_PROC) {
-/*			if (once > 0 && once < 200){
+			if (once > 0 && once < 200){
 				once ++;
 				kprintf("pick_proc old, sched: %d ,tleft: %d ,rts: %d ,misc: %d, %s \n", next_ptr->p_scheduler,
 						next_ptr->p_ticks_left, next_ptr->p_rts_flags,next_ptr->p_misc_flags, next_ptr->p_name);
 				kprintf("pick_proc new, sched: %d ,tleft: %d ,rts: %d ,misc: %d, %s \n", rp->p_scheduler,
 										rp->p_ticks_left, rp->p_rts_flags,rp->p_misc_flags, rp->p_name);
-			}*/
+			}
 			next_ptr = rp; /* run process 'rp' next */
 			if (priv(rp)->s_flags & BILLABLE)
 				bill_ptr = rp; /* bill for system time */
