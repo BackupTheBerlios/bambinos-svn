@@ -572,7 +572,7 @@ PRIVATE void dequeue(rp)
 	register struct proc *prev_xp;
 
 
-	if (prev_ptr->p_scheduler == SCHED_FIFO)
+	if (rp->p_scheduler == SCHED_FIFO)
 		kprintf("dequeue sched: %d ,tleft: %d ,rts: %d ,misc: %d, %s \n", rp->p_scheduler, rp->p_ticks_left, rp->p_rts_flags,rp->p_misc_flags, rp->p_name);
 
 	/* Side-effect for kernel: check if the task's stack still is ok? */
