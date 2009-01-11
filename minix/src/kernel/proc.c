@@ -536,6 +536,7 @@ PRIVATE void enqueue(rp)
 
 	if (rp->p_scheduler == SCHED_FIFO){
 			once++;
+			kprintf("once: %d", once);
 	}
 /*	if (once > 0 && once < 200){
 		once++;
