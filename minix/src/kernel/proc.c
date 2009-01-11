@@ -721,7 +721,7 @@ PRIVATE void pick_proc() {
 	 */
 	for (q = 0; q < NR_SCHED_QUEUES; q++) {
 		if ((rp = rdy_head[q]) != NIL_PROC) {
-			if (rp->p_scheduler == SCHED_FIFO){
+			if (rp->p_scheduler == SCHED_FIFO || next_ptr->p_scheduler == SCHED_FIFO ){
 				kprintf("pick_proc old, sched: %d ,tleft: %d ,rts: %d ,misc: %d, %s \n", next_ptr->p_scheduler,
 						next_ptr->p_ticks_left, next_ptr->p_rts_flags,next_ptr->p_misc_flags, next_ptr->p_name);
 				kprintf("pick_proc new, sched: %d ,tleft: %d ,rts: %d ,misc: %d, %s \n", rp->p_scheduler,
