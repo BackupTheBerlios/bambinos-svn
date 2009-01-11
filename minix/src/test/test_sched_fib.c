@@ -9,6 +9,8 @@
 #include <sys/wait.h>
 
 
+#define NR_OF_WORKERS 3
+
 int fib (long n) {
 	if (n <= 2) return 1;
 	else return fib(n-1) + fib(n-2);
@@ -23,6 +25,8 @@ int main(int argc, char *argv[]) {
 	int sched = SCHED_RR;
 	int rs, status, i;
 	clock_t start_ticks, elapsed;
+	static clock_t global_start_ticks;
+	static int stats[NR_OF_WORKERS];
 
 	if (argc > 1)
 		n =  atoi(argv[1]); /*fibonacci(n)*/
@@ -30,28 +34,30 @@ int main(int argc, char *argv[]) {
 	if (argc > 2)
 		sched =  atoi(argv[2]);
 
+	global_start_ticks = clock();
+
 	pid = fork();
 
 	if (pid == 0) {
-		for (i = 0; i < 3; i++) {
+		for (i = 0; i < NR_OF_WORKERS; i++) {
 			pid_nested = fork();
 
 			if (pid_nested == 0) {
 				/* child calculates fibonacci */
-				printf("calculating fib(%d) \n", n);
+				printf("w%d: calculating fib(%d) \n", i, n);
 
 				start_ticks = clock();
 
 				result = fib(n);
 
 				elapsed = clock() - start_ticks;
-
-				printf("fib(%d) = %d \n", n, result);
-				printf("took %.2lf seconds = %d clockticks \n", (float)elapsed / (float)CLOCKS_PER_SEC, elapsed);
+				stats[i] = clock() - global_start_ticks;
+				printf("w%d: fib(%d) = %d \n", i, n, result);
+				printf("w%d: took %.2lf seconds = %d clockticks \n", i, (float)elapsed / (float)CLOCKS_PER_SEC, elapsed);
 
 			}else {
 				/* set the scheduling policy for the child */
-				printf("setting scheduling policy to ");
+				printf("w%d: setting scheduling policy to ", i);
 
 				switch(sched) {
 				case SCHED_FIFO: printf("FIFO \n"); break;
@@ -65,11 +71,14 @@ int main(int argc, char *argv[]) {
 				rs = sched_setscheduler(pid, sched, 0);
 
 				if (rs != sched)
-					printf("set policy FAILED and returned: %d \n", rs);
+					printf("w%d: set policy FAILED and returned: %d \n", i, rs);
 			}
 		}
 	}
 	wait(&status);
+	for (i = 0; i < NR_OF_WORKERS; i++) {
+		printf("w%d: %d \n", i, stats[i]);
+	}
 
 	return 0;
 }
