@@ -1,3 +1,5 @@
+/* set different scheduling policies for a process */
+
 #include <lib.h>
 #include <stdio.h>
 #include <stdlib.h>
