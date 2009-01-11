@@ -532,6 +532,10 @@ PRIVATE void enqueue(rp)
 	if (rp->p_ready) kprintf("enqueue() already ready process\n");
 #endif
 
+
+	if (rp->p_scheduler == SCHED_FIFO)
+			kprintf("enqueue sched: %d ,tleft: %d ,rts: %d ,misc: %d, %s \n", rp->p_scheduler, rp->p_ticks_left, rp->p_rts_flags,rp->p_misc_flags, rp->p_name);
+
 	/* Determine where to insert to process. */
 	sched(rp, &q, &front);
 
@@ -599,6 +603,7 @@ PRIVATE void dequeue(rp)
 				rdy_tail[q] = prev_xp; /* set new tail */
 			if (rp == proc_ptr || rp == next_ptr) /* active process removed */
 				pick_proc(); /* pick new process to run */
+			}
 			break;
 		}
 		prev_xp = *xpp; /* save previous in chain */
@@ -716,6 +721,12 @@ PRIVATE void pick_proc() {
 	 */
 	for (q = 0; q < NR_SCHED_QUEUES; q++) {
 		if ((rp = rdy_head[q]) != NIL_PROC) {
+			if (rp->p_scheduler == SCHED_FIFO){
+				kprintf("pick_proc old, sched: %d ,tleft: %d ,rts: %d ,misc: %d, %s \n", next_ptr->p_scheduler,
+						next_ptr->p_ticks_left, next_ptr->p_rts_flags,next_ptr->p_misc_flags, next_ptr->p_name);
+				kprintf("pick_proc new, sched: %d ,tleft: %d ,rts: %d ,misc: %d, %s \n", rp->p_scheduler,
+										rp->p_ticks_left, rp->p_rts_flags,rp->p_misc_flags, rp->p_name);
+			}
 			next_ptr = rp; /* run process 'rp' next */
 			if (priv(rp)->s_flags & BILLABLE)
 				bill_ptr = rp; /* bill for system time */
