@@ -687,21 +687,21 @@ PRIVATE void sched_fifo(rp, queue, front)
 	 *
 	 * */
 
-	/* New Process
+	/* New Process*/
 	if (rp->p_user_time == 0){
 		kprintf("FIFO NEW PROC sched: %d ,tleft: %d ,rts: %d ,misc: %d, %s \n", rp->p_scheduler,
 								rp->p_ticks_left, rp->p_rts_flags,rp->p_misc_flags, rp->p_name);
 	}
 
 	if (rp->p_rts_flags == 0){
-		kprintf("FIFO PREEMPTED blocked sched: %d ,tleft: %d ,rts: %d ,misc: %d, user_time: %d, name: %s \n", rp->p_scheduler,
-								rp->p_ticks_left, rp->p_rts_flags,rp->p_misc_flags,rp->p_user_time, rp->p_name);
+		kprintf("FIFO PREEMPTED tleft: %d ,rts: %d ,misc: %d, name: %s \n",rp->p_ticks_left,
+				rp->p_rts_flags,rp->p_misc_flags,rp->p_name);
 	}else{
-		kprintf("FIFO BLOCKED blocked sched: %d ,tleft: %d ,rts: %d ,misc: %d, user_time: %d, %s \n", rp->p_scheduler,
-								rp->p_ticks_left, rp->p_rts_flags,rp->p_misc_flags,rp->p_user_time, rp->p_name);
+		kprintf("FIFO BLOCKED blocked sched: %d ,tleft: %d ,rts: %d ,misc: %d, %s \n", rp->p_scheduler,
+								rp->p_ticks_left, rp->p_rts_flags,rp->p_misc_flags,rp->p_name);
 	}
 
-*/
+
 	if (rp->p_rts_flags == 0 && rp->p_user_time != 0  ){
 		*front = 1; /* Add to front, Process Blocked */
 	}else{
