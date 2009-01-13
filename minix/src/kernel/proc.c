@@ -678,10 +678,18 @@ PRIVATE void sched_fifo(rp, queue, front)
 {
 
 	*queue = rp->p_priority;
-	if (rp->p_rts_flags == 0){/* Check if Prozess is blocked*/
-		*front = 1; /* Add to front */
-	}
-	else{
+
+	/* HEAD:
+	 * Wenn Prozess neu ist, oder Prozess ist nicht Ready
+	 *
+	 * TAIL:
+	 * Nur wenn der Prozess Preempted ist dann wieder am Beginn der Queue
+	 *
+	 * */
+
+	if (rp->p_misc_flags == 0){
+		*front = 1; /* Add to head */
+	}else{
 		*front = 0; /* Add to tail */
 		kprintf("FIFO PROC blocked sched: %d ,tleft: %d ,rts: %d ,misc: %d, %s \n", rp->p_scheduler,
 								rp->p_ticks_left, rp->p_rts_flags,rp->p_misc_flags, rp->p_name);
