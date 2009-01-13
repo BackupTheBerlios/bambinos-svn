@@ -690,6 +690,9 @@ PRIVATE void sched_fifo(rp, queue, front)
 	/* New Process */
 	if (rp->p_user_time == 0){
 		*front = 0; /* Add to tail */
+		kprintf("FIFO NEW PROC sched: %d ,tleft: %d ,rts: %d ,misc: %d, %s \n", rp->p_scheduler,
+								rp->p_ticks_left, rp->p_rts_flags,rp->p_misc_flags, rp->p_name);
+
 		return 0;
 	}
 
@@ -700,6 +703,8 @@ PRIVATE void sched_fifo(rp, queue, front)
 	}else{
 		*front = 1; /* Add to head, Prozess Blocked */
 	}
+
+	/* Wenn rts_flag != 0 und usertime != 0 dann front = 1*/
 }
 
 PRIVATE void sched_rr(rp, queue, front)
