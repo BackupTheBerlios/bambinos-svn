@@ -580,7 +580,7 @@ PRIVATE void dequeue(rp)
 
 /*	if (rp->p_scheduler == SCHED_FIFO)
 		kprintf("dequeue sched: %d ,tleft: %d ,rts: %d ,misc: %d, %s \n", rp->p_scheduler, rp->p_ticks_left, rp->p_rts_flags,rp->p_misc_flags, rp->p_name);
-*/j
+*/
 	/* Side-effect for kernel: check if the task's stack still is ok? */
 	if (iskernelp(rp)) {
 		if (*priv(rp)->s_stack_guard != STACK_GUARD)
