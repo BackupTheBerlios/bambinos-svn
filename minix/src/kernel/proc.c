@@ -698,10 +698,13 @@ PRIVATE void sched_fifo(rp, queue, front)
 
 	if (rp->p_rts_flags == 0){
 		*front = 0; /* Add to tail, Prozess was Preempted*/
-		kprintf("FIFO PROC blocked sched: %d ,tleft: %d ,rts: %d ,misc: %d, %s \n", rp->p_scheduler,
+		kprintf("FIFO PREEMPTED blocked sched: %d ,tleft: %d ,rts: %d ,misc: %d, %s \n", rp->p_scheduler,
 								rp->p_ticks_left, rp->p_rts_flags,rp->p_misc_flags, rp->p_name);
 	}else{
 		*front = 1; /* Add to head, Prozess Blocked */
+		kprintf("FIFO BLOCKED blocked sched: %d ,tleft: %d ,rts: %d ,misc: %d, %s \n", rp->p_scheduler,
+								rp->p_ticks_left, rp->p_rts_flags,rp->p_misc_flags, rp->p_name);
+
 	}
 
 	/* Wenn rts_flag != 0 und usertime != 0 dann front = 1*/
