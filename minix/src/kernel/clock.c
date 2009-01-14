@@ -207,8 +207,8 @@ irq_hook_t *hook;
    * process is running, charge the billable process for system time as well.
    * Thus the unbillable process' user time is the billable user's system time.
    */
-  if (proc_ptr->p_scheduler == SCHED_FIFO)
-	  kprintf("clock handler %d, %s",proc_ptr->p_user_time,proc_ptr->p_name);
+  /*if (proc_ptr->p_scheduler == SCHED_FIFO)
+	  kprintf("clock handler %d, %s",proc_ptr->p_user_time,proc_ptr->p_name); */
 
   proc_ptr->p_user_time += ticks;
   if (priv(proc_ptr)->s_flags & PREEMPTIBLE && proc_ptr->p_scheduler != SCHED_FIFO) {
