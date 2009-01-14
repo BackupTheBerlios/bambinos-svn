@@ -681,7 +681,7 @@ PRIVATE void sched_fifo(rp, queue, front)
 	if (rp->p_rts_flags == 0)
 		front=1;
 	else
-		front=1;
+		front=0;
 
 	/* HEAD:
 	 * Wenn Prozess neu ist, oder Prozess ist nicht Ready
