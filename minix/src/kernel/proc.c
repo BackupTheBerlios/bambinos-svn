@@ -680,9 +680,10 @@ PRIVATE void sched_fifo(rp, queue, front)
 	*queue = rp->p_priority;
 	if (rp->p_rts_flags == 0)
 		front=1;
-	else
+	else{
 		front=0;
-
+		kprintf("FIFO rts %d, %s \n",rp->p_rts_flags,rp->p_name);
+	}
 	/* HEAD:
 	 * Wenn Prozess neu ist, oder Prozess ist nicht Ready
 	 *
