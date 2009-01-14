@@ -695,13 +695,7 @@ PRIVATE void sched_fifo(rp, queue, front)
 	}
 
 
-	if (rp->p_sys_time == 0){
-			kprintf("FIFO NEW SYS");
-			/*PROC sched: %d ,tleft: %d ,rts: %d ,misc: %d, %s pri: %d \n", rp->p_scheduler,
-									rp->p_ticks_left, rp->p_rts_flags,rp->p_misc_flags, rp->p_name, rp->p_priority); */
-		}
-
-	kprintf("FIFO user: %d, syst %d, rts %d \n", (int)rp->p_user_time, (int)rp->p_sys_time, rp->p_rts_flags);
+	kprintf("FIFO user: %d, rts %d \n", (int)rp->p_user_time, rp->p_rts_flags);
 
 	if (rp->p_rts_flags == 0){
 		kprintf("FIFO PREEMPTED");
