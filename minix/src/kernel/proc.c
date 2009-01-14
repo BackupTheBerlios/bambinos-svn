@@ -708,7 +708,7 @@ PRIVATE void sched_fifo(rp, queue, front)
 	}
 
 
-	if (rp->p_rts_flags == 0 && rp->p_user_time >= 2  ){
+	if (rp->p_rts_flags == 0 && rp->p_user_time > 2  ){
 		*front = 1; /* Add to front, Process is Preempted but ready */
 	}else{
 		*front = 0; /* Add to tail, Process is Blocked or is New*/
