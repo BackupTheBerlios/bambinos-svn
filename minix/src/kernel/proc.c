@@ -701,7 +701,7 @@ PRIVATE void sched_fifo(rp, queue, front)
 									rp->p_ticks_left, rp->p_rts_flags,rp->p_misc_flags, rp->p_name, rp->p_priority); */
 		}
 
-	kprintf("FIFO user: %d, syst %d \n", (int)rp->p_user_time, (int)rp->p_sys_time);
+	kprintf("FIFO user: %d, syst %d, rts %d \n", (int)rp->p_user_time, (int)rp->p_sys_time, rp->p_rts_flags);
 
 	if (rp->p_rts_flags == 0){
 		kprintf("FIFO PREEMPTED");
