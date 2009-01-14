@@ -688,7 +688,7 @@ PRIVATE void sched_fifo(rp, queue, front)
 	 * */
 
 	/* New Process */
-	if (rp->p_user_time == 0){
+	if (rp->p_user_time <= 2){
 		kprintf("FIFO NEW");
 		/*PROC sched: %d ,tleft: %d ,rts: %d ,misc: %d, %s pri: %d \n", rp->p_scheduler,
 								rp->p_ticks_left, rp->p_rts_flags,rp->p_misc_flags, rp->p_name, rp->p_priority); */
@@ -708,10 +708,10 @@ PRIVATE void sched_fifo(rp, queue, front)
 	}
 
 
-	if (rp->p_rts_flags == 0 && rp->p_user_time != 0  ){
-		*front = 1; /* Add to front, Process Blocked */
+	if (rp->p_rts_flags == 0 && rp->p_user_time >= 2  ){
+		*front = 1; /* Add to front, Process is Preempted but ready */
 	}else{
-		*front = 0; /* Add to tail, Process was Preempted or is New*/
+		*front = 0; /* Add to tail, Process is Blocked or is New*/
 	}
 
 
