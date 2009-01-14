@@ -678,6 +678,7 @@ PRIVATE void sched_fifo(rp, queue, front)
 {
 
 	*queue = rp->p_priority;
+	front=0;
 
 	/* HEAD:
 	 * Wenn Prozess neu ist, oder Prozess ist nicht Ready
@@ -686,33 +687,23 @@ PRIVATE void sched_fifo(rp, queue, front)
 	 * Nur wenn der Prozess Preempted ist dann wieder am Beginn der Queue
 	 *
 	 * */
-
-	/* New Process */
-	if (rp->p_user_time <= 2){
-		kprintf("FIFO NEW %s \n",rp->p_name);
-		/*PROC sched: %d ,tleft: %d ,rts: %d ,misc: %d, %s pri: %d \n", rp->p_scheduler,
-								rp->p_ticks_left, rp->p_rts_flags,rp->p_misc_flags, rp->p_name, rp->p_priority); */
-	}
-
-
-	kprintf("FIFO user: %d, rts %d \n", (int)rp->p_user_time, rp->p_rts_flags);
-
+/*
 	if (rp->p_rts_flags == 0){
 		kprintf("FIFO PREEMPTED %s \n",rp->p_name);
 		/* tleft: %d ,rts: %d ,misc: %d, name: %s , pri: %d \n",rp->p_ticks_left,
 				rp->p_rts_flags,rp->p_misc_flags,rp->p_name,rp->p_priority);*/
-	}else{
+/*	}else{
 		kprintf("FIFO BLOCKED %s \n",rp->p_name);
 		/* blocked sched: %d ,tleft: %d ,rts: %d ,misc: %d, %s \n", rp->p_scheduler,
 								rp->p_ticks_left, rp->p_rts_flags,rp->p_misc_flags,rp->p_name);*/
-	}
+/*	}
 
 
 	if (rp->p_rts_flags == 0 && rp->p_user_time > 2  ){
 		*front = 1; /* Add to front, Process is Preempted but ready */
-	}else{
+/*	}else{
 		*front = 0; /* Add to tail, Process is Blocked or is New*/
-	}
+/*	}
 
 
 	/* Wenn rts_flag != 0 und usertime != 0 dann front = 1*/
