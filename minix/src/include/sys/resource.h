@@ -16,10 +16,9 @@
 #define PRIO_USER	2
 
 /* Scheduling policies */
-#define SCHED_OTHER 0
-#define SCHED_FIFO 1
-#define SCHED_RR 2
-
+#define SCHED_FIFO 0
+#define SCHED_RR 1
+#define SCHED_OTHER 2
 
 int getpriority(int, int);
 int setpriority(int, int, int);
