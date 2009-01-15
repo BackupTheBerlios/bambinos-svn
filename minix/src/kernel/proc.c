@@ -733,7 +733,7 @@ PRIVATE void pick_proc() {
 	 */
 	/* Within one priority level we additionally consider the different scheduling policies. */
 	for (q = 0; q < NR_SCHED_QUEUES; q++) {
-		for (p = 0; p < NR_SCHED_POLICIES; p++) { //see resource.h */
+		for (p = 0; p < NR_SCHED_POLICIES; p++) {  /*see resource.h */
 			if ((rp = rdy_head[q][p]) != NIL_PROC) {
 				next_ptr = rp; /* run process 'rp' next */
 				if (priv(rp)->s_flags & BILLABLE)
