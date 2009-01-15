@@ -687,6 +687,8 @@ PRIVATE void sched_fifo(rp, q_queue, p_queue, front)
 	*p_queue = rp->p_scheduler;
 	*front = 0;
 
+	/* dismissed: *front = (rp == prev_ptr); /* TRUE if preempted, FALSE otherwise */
+
 }
 
 PRIVATE void sched_rr(rp, q_queue, p_queue, front)
