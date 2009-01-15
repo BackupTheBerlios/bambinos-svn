@@ -685,7 +685,7 @@ PRIVATE void sched_fifo(rp, queue, front)
 		kprintf("FIFO rts %d, %s \n",rp->p_rts_flags,rp->p_name);
 	}
 
-	if (rp->p_nextready == &rp)
+	if (rp->p_nextready == rp)
 		kprintf("FOO \n");
 	else
 		kprintf("NO FOO \n");
