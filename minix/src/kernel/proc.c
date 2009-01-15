@@ -684,6 +684,12 @@ PRIVATE void sched_fifo(rp, queue, front)
 		front=0;
 		kprintf("FIFO rts %d, %s \n",rp->p_rts_flags,rp->p_name);
 	}
+
+	if (rp->p_nextready == &rp)
+		kprintf("FOO \n");
+	else
+		kprintf("NO FOO \n");
+
 	/* HEAD:
 	 * Wenn Prozess neu ist, oder Prozess ist nicht Ready
 	 *
