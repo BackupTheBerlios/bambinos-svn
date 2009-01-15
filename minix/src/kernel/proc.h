@@ -83,6 +83,7 @@ struct proc {
  * priority user processes to run round-robin with IDLE.
  */
 #define NR_SCHED_QUEUES   16	/* MUST equal minimum priority + 1 */
+#define NR_SCHED_POLICIES  3	/* we have one ready list (head/tail) per policy */
 #define TASK_Q		   0	/* highest, used for kernel tasks */
 #define MAX_USER_Q  	   0    /* highest priority for user processes */
 #define USER_Q  	   7    /* default (should correspond to nice 0) */
@@ -115,7 +116,7 @@ struct proc {
  */
 EXTERN struct proc proc[NR_TASKS + NR_PROCS];	/* process table */
 EXTERN struct proc *pproc_addr[NR_TASKS + NR_PROCS];
-EXTERN struct proc *rdy_head[NR_SCHED_QUEUES]; /* ptrs to ready list headers */
-EXTERN struct proc *rdy_tail[NR_SCHED_QUEUES]; /* ptrs to ready list tails */
+EXTERN struct proc *rdy_head[NR_SCHED_QUEUES][NR_SCHED_POLICIES]; /* ptrs to ready list headers */
+EXTERN struct proc *rdy_tail[NR_SCHED_QUEUES][NR_SCHED_POLICIES]; /* ptrs to ready list tails */
 
 #endif /* PROC_H */
