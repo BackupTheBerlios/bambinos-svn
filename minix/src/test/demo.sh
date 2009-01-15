@@ -1,7 +1,7 @@
 
 if [ -z "$*" ]; then 
 	round=3
-	schedround=1
+	schedround=2
 else
 	round=1
 	fixedsched=$1
@@ -28,7 +28,7 @@ do
 	while [ "$i" -lt $schedround ]
 	do
 		eval test -f $name$i || ln -s test_sched_fib $name$i 
-		echo Start Prozess $name$i
+		echo Start Prozess $name$i $sched
 		eval time /usr/src/test/$name$i 46 $sched > $name"$1".txt 2>&1 & 
 		sleep 1
 		i=`expr $i + 1`
