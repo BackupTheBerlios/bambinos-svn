@@ -17,9 +17,9 @@ do
 	fi
 
 	case $sched in
-		0)name=F_OTHER;;
-		1)name=F_FIFO;;
-		2)name=F_RR;;
+		0)name=F_FIFO;;
+		1)name=F_RR;;
+		2)name=F_OTHER;;
 		*)echo "Illegal scheduling policy"; exit 1 ;;
 	esac
 
