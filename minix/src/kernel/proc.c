@@ -714,18 +714,21 @@ PRIVATE void pick_proc() {
 	 * clock task can tell who to bill for system time.
 	 */
 	register struct proc *rp; /* process to run */
-	int q; /* iterate over queues */
+	int p, q; /* iterate over queues */
 
 	/* Check each of the scheduling queues for ready processes. The number of
 	 * queues is defined in proc.h, and priorities are set in the task table.
 	 * The lowest queue contains IDLE, which is always ready.
 	 */
+	/* Within one priority level we additionally consider the different scheduling policies. */
 	for (q = 0; q < NR_SCHED_QUEUES; q++) {
-		if ((rp = rdy_head[q]) != NIL_PROC) {
-			next_ptr = rp; /* run process 'rp' next */
-			if (priv(rp)->s_flags & BILLABLE)
-				bill_ptr = rp; /* bill for system time */
-			return;
+		for (p = 0; p < NR_SCHED_POLICIES; p++) { //see resource.h */
+			if ((rp = rdy_head[q][p]) != NIL_PROC) {
+				next_ptr = rp; /* run process 'rp' next */
+				if (priv(rp)->s_flags & BILLABLE)
+					bill_ptr = rp; /* bill for system time */
+				return;
+			}
 		}
 	}
 }

@@ -16,6 +16,9 @@
 #define PRIO_USER	2
 
 /* Scheduling policies */
+/* ATTENTION: these have to be in one order, have to start with 0, be increased by 1
+ * The order defines the order of the scheduling policies for processes on the same prio-level
+ * */
 #define SCHED_FIFO 0
 #define SCHED_RR 1
 #define SCHED_OTHER 2
