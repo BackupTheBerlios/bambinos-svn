@@ -525,6 +525,7 @@ PRIVATE void enqueue(rp)
 	 * defined in sched() and pick_proc().
 	 */
 	int q; /* scheduling queue to use */
+	int p; /* policy queue to use */
 	int front; /* add to front or back */
 
 #if DEBUG_SCHED_CHECK
@@ -539,18 +540,18 @@ PRIVATE void enqueue(rp)
 	}
 */
 	/* Determine where to insert to process. */
-	sched(rp, &q, &front);
+	sched(rp, &q, &p, &front);
 
 	/* Now add the process to the queue. */
-	if (rdy_head[q] == NIL_PROC) { /* add to empty queue */
-		rdy_head[q] = rdy_tail[q] = rp; /* create a new queue */
+	if (rdy_head[q][p] == NIL_PROC) { /* add to empty queue */
+		rdy_head[q][p] = rdy_tail[q][p] = rp; /* create a new queue */
 		rp->p_nextready = NIL_PROC; /* mark new end */
 	} else if (front) { /* add to head of queue */
-		rp->p_nextready = rdy_head[q]; /* chain head of queue */
-		rdy_head[q] = rp; /* set new queue head */
+		rp->p_nextready = rdy_head[q][p]; /* chain head of queue */
+		rdy_head[q][p] = rp; /* set new queue head */
 	} else { /* add to tail of queue */
-		rdy_tail[q]->p_nextready = rp; /* chain tail of queue */
-		rdy_tail[q] = rp; /* set new queue tail */
+		rdy_tail[q][p]->p_nextready = rp; /* chain tail of queue */
+		rdy_tail[q][p] = rp; /* set new queue tail */
 		rp->p_nextready = NIL_PROC; /* mark new end */
 	}
 
@@ -574,6 +575,7 @@ PRIVATE void dequeue(rp)
 	 * is picked to run by calling pick_proc().
 	 */
 	register int q = rp->p_priority; /* queue to use */
+	register int p = rp->p_scheduler; /* queue to use */
 	register struct proc **xpp; /* iterate over queue */
 	register struct proc *prev_xp;
 
@@ -597,12 +599,12 @@ PRIVATE void dequeue(rp)
 	 * running by being sent a signal that kills it.
 	 */
 	prev_xp = NIL_PROC;
-	for (xpp = &rdy_head[q]; *xpp != NIL_PROC; xpp = &(*xpp)->p_nextready) {
+	for (xpp = &rdy_head[q][p]; *xpp != NIL_PROC; xpp = &(*xpp)->p_nextready) {
 
 		if (*xpp == rp) { /* found process to remove */
 			*xpp = (*xpp)->p_nextready; /* replace with next chain */
-			if (rp == rdy_tail[q]) /* queue tail removed */
-				rdy_tail[q] = prev_xp; /* set new tail */
+			if (rp == rdy_tail[q][p]) /* queue tail removed */
+				rdy_tail[q][p] = prev_xp; /* set new tail */
 			if (rp == proc_ptr || rp == next_ptr) /* active process removed */
 				pick_proc(); /* pick new process to run */
 			break;
@@ -619,9 +621,10 @@ PRIVATE void dequeue(rp)
 /*===========================================================================*
  *				sched					     *
  *===========================================================================*/
-PRIVATE void sched(rp, queue, front)
+PRIVATE void sched(rp, q_queue,p_queue, front)
 	register struct proc *rp; /* process to be scheduled */
-	int *queue; /* return: queue to use */
+	int *q_queue; /* return: priority queue to use */
+	int *p_queue; /* return: policy queue to use */
 	int *front; /* return: front or back */
 {
 
@@ -632,21 +635,22 @@ PRIVATE void sched(rp, queue, front)
 
 	switch (rp->p_scheduler) {
 	case SCHED_FIFO:
-		sched_fifo(rp, queue, front);
+		sched_fifo(rp, q_queue,p_queue, front);
 		break;
 	case SCHED_RR:
-		sched_rr(rp, queue, front);
+		sched_rr(rp, q_queue,p_queue, front);
 		break;
 	default:
-		sched_other(rp, queue, front);
+		sched_other(rp, q_queue,p_queue, front);
 
 	}
 
 }
 
-PRIVATE void sched_other(rp, queue, front)
+PRIVATE void sched_other(rp, q_queue, p_queue, front)
 	register struct proc *rp; /* process to be scheduled */
-	int *queue; /* return: queue to use */
+	int *q_queue; /* return: priority queue to use */
+	int *p_queue; /* return: policy queue to use */
 	int *front; /* return: front or back */
 {
 
@@ -667,24 +671,28 @@ PRIVATE void sched_other(rp, queue, front)
 	 * so that it can immediately run. The queue to use simply is always the
 	 * process' current priority.
 	 */
-	*queue = rp->p_priority;
+	*q_queue = rp->p_priority;
+	*p_queue = rp->p_scheduler;
 	*front = time_left;
 }
 
-PRIVATE void sched_fifo(rp, queue, front)
+PRIVATE void sched_fifo(rp, q_queue, p_queue, front)
 	register struct proc *rp; /* process to be scheduled */
-	int *queue; /* return: queue to use */
+	int *q_queue; /* return: priority queue to use */
+	int *p_queue; /* return: policy queue to use */
 	int *front; /* return: front or back */
 {
 
-	*queue = rp->p_priority;
-	/* dismissed: *front = (rp == prev_ptr); /* TRUE if preempted, FALSE otherwise */
+	*q_queue = rp->p_priority;
+	*p_queue = rp->p_scheduler;
+	*front = 0;
 
 }
 
-PRIVATE void sched_rr(rp, queue, front)
+PRIVATE void sched_rr(rp, q_queue, p_queue, front)
 	register struct proc *rp; /* process to be scheduled */
-	int *queue; /* return: queue to use */
+	int *q_queue; /* return: priority queue to use */
+	int *p_queue; /* return: policy queue to use */
 	int *front; /* return: front or back */
 {
 
@@ -701,7 +709,8 @@ PRIVATE void sched_rr(rp, queue, front)
 	 * so that it can immediately run. The queue to use simply is always the
 	 * process' current priority.
 	 */
-	*queue = rp->p_priority;
+	*q_queue = rp->p_priority;
+	*p_queue = rp->p_scheduler;
 	*front = time_left;
 }
 
