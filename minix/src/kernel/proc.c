@@ -686,11 +686,13 @@ PRIVATE void sched_fifo(rp, queue, front)
 	}
 
 	/* oda: rp == proc_ptr || rp == next_ptr */
-	if (rp == prev_ptr || rp == proc_ptr )
+	if (rp == prev_ptr /*|| rp == proc_ptr*/ ){
+		front=1;
 		kprintf("FOO \n");
-	else
+	}else {
+		front=0;
 		kprintf("NO FOO \n");
-
+	}
 	/* HEAD:
 	 * Wenn Prozess neu ist, oder Prozess ist nicht Ready
 	 *
