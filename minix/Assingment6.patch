@@ -1,0 +1,572 @@
+diff -uprbBN minixx/src/include/sys/resource.h minixx6/src/include/sys/resource.h
+--- minixx/src/include/sys/resource.h	2009-01-04 17:38:47.000000000 +0100
++++ minixx6/src/include/sys/resource.h	2009-01-15 20:19:54.000000000 +0100
+@@ -16,10 +16,12 @@
+ #define PRIO_USER	2
+ 
+ /* Scheduling policies */
+-#define SCHED_OTHER 0
+-#define SCHED_FIFO 1
+-#define SCHED_RR 2
+-
++/* ATTENTION: these have to be in one order, have to start with 0, be increased by 1
++ * The order defines the order of the scheduling policies for processes on the same prio-level
++ * */
++#define SCHED_FIFO 0
++#define SCHED_RR 1
++#define SCHED_OTHER 2
+ 
+ int getpriority(int, int);
+ int setpriority(int, int, int);
+diff -uprbBN minixx/src/kernel/clock.c minixx6/src/kernel/clock.c
+--- minixx/src/kernel/clock.c	2009-01-03 17:41:27.000000000 +0100
++++ minixx6/src/kernel/clock.c	2009-01-14 20:36:02.000000000 +0100
+@@ -31,6 +31,7 @@
+ 
+ #include "kernel.h"
+ #include "proc.h"
++#include <sys/resource.h>
+ #include <signal.h>
+ #include <minix/com.h>
+ 
+@@ -109,11 +110,14 @@ message *m_ptr;				/* pointer to request
+    * no more time left, it gets a new quantum and is inserted at the right 
+    * place in the queues.  As a side-effect a new process will be scheduled.
+    */ 
+-  if (prev_ptr->p_ticks_left <= 0 && priv(prev_ptr)->s_flags & PREEMPTIBLE) {
++  if (prev_ptr->p_ticks_left <= 0 && priv(prev_ptr)->s_flags & PREEMPTIBLE && prev_ptr->p_scheduler != SCHED_FIFO) {
+       lock_dequeue(prev_ptr);		/* take it off the queues */
+       lock_enqueue(prev_ptr);		/* and reinsert it again */ 
+   }
+ 
++  /*if (prev_ptr->p_scheduler != SCHED_OTHER)
++	  kprintf("do_clocktick() sched: %d, t left: %d, n: %s \n", prev_ptr->p_scheduler, prev_ptr->p_ticks_left, prev_ptr->p_name);
++  */
+   /* Check if a clock timer expired and run its watchdog function. */
+   if (next_timeout <= realtime) { 
+   	tmrs_exptimers(&clock_timers, realtime, NULL);
+@@ -188,6 +192,7 @@ irq_hook_t *hook;
+  *		since at worst the previous process would be billed.
+  */
+   register unsigned ticks;
++  static int once =0;
+ 
+   /* Acknowledge the PS/2 clock interrupt. */
+   if (machine.ps_mca) outb(PORT_B, inb(PORT_B) | CLOCK_ACK_BIT);
+@@ -202,8 +207,12 @@ irq_hook_t *hook;
+    * process is running, charge the billable process for system time as well.
+    * Thus the unbillable process' user time is the billable user's system time.
+    */
++  /*if (proc_ptr->p_scheduler == SCHED_FIFO)
++	  kprintf("clock handler %d, %s",proc_ptr->p_user_time,proc_ptr->p_name); */
++
+   proc_ptr->p_user_time += ticks;
+-  if (priv(proc_ptr)->s_flags & PREEMPTIBLE) {
++  if (priv(proc_ptr)->s_flags & PREEMPTIBLE && proc_ptr->p_scheduler != SCHED_FIFO) {
++	  	  /*kprintf("PREEMPTIBLE -ticks %d, ticks left %d %s \n", ticks, proc_ptr->p_ticks_left, proc_ptr->p_name);*/
+       proc_ptr->p_ticks_left -= ticks;
+   }
+   if (! (priv(proc_ptr)->s_flags & BILLABLE)) {
+@@ -208,9 +217,17 @@ irq_hook_t *hook;
+   }
+   if (! (priv(proc_ptr)->s_flags & BILLABLE)) {
+       bill_ptr->p_sys_time += ticks;
++
+       bill_ptr->p_ticks_left -= ticks;
++
+   }
+ 
++  /*
++  if (proc_ptr->p_scheduler != SCHED_OTHER){
++	  kprintf("clock_handler() sched: %d, t left: %d, n: %s \n", proc_ptr->p_scheduler, proc_ptr->p_ticks_left, proc_ptr->p_name);
++  }
++  */
++
+   /* Update load average. */
+   load_update();
+ 
+diff -uprbBN minixx/src/kernel/config.h minixx6/src/kernel/config.h
+--- minixx/src/kernel/config.h	2009-01-05 19:30:06.000000000 +0100
++++ minixx6/src/kernel/config.h	2009-01-06 17:12:50.000000000 +0100
+@@ -76,6 +76,7 @@
+ /* This section allows to enable kernel debugging and timing functionality.
+  * For normal operation all options should be disabled.
+  */
++#define DEBUG_SCHED_POLICY 1     /* Assingment 6 Debug Info for schedul policy */
+ #define DEBUG_SCHED_CHECK  0	/* sanity check of scheduling queues */
+ #define DEBUG_TIME_LOCKS   0	/* measure time spent in locks */
+ 
+diff -uprbBN minixx/src/kernel/proc.c minixx6/src/kernel/proc.c
+--- minixx/src/kernel/proc.c	2009-01-03 17:43:30.000000000 +0100
++++ minixx6/src/kernel/proc.c	2009-01-15 21:44:22.000000000 +0100
+@@ -43,6 +43,7 @@
+ #include "kernel.h"
+ #include "proc.h"
+ #include <signal.h>
++#include <sys/resource.h>
+ 
+ /* Scheduling and message passing functions. The functions are available to 
+  * other parts of the kernel through lock_...(). The lock temporarily disables 
+@@ -57,7 +58,11 @@ FORWARD _PROTOTYPE( int deadlock, (int f
+ 		register struct proc *caller, int src_dst));
+ FORWARD _PROTOTYPE( void enqueue, (struct proc *rp));
+ FORWARD _PROTOTYPE( void dequeue, (struct proc *rp));
+-FORWARD _PROTOTYPE( void sched, (struct proc *rp, int *queue, int *front));
++FORWARD _PROTOTYPE( void sched, (struct proc *rp, int *q_queue, int *p_queue, int *front));
++PRIVATE void sched_other(struct proc *rp, int *q_queue, int *p_queue, int *front);
++PRIVATE void sched_fifo(struct proc *rp, int *q_queue, int *p_queue, int *front);
++PRIVATE void sched_rr(struct proc *rp, int *q_queue, int *p_queue, int *front);
++
+ FORWARD _PROTOTYPE( void pick_proc, (void));
+ 
+ #define BuildMess(m_ptr, src, dst_ptr) \
+@@ -502,12 +507,13 @@ int dst_e;			/* (endpoint) who is to be 
+ PRIVATE void enqueue(rp)
+ register struct proc *rp;	/* this process is now runnable */
+ {
+-/* Add 'rp' to one of the queues of runnable processes.  This function is 
++	/* Add 'rp' to one of the queues of runnable processes.  This function is
+  * responsible for inserting a process into one of the scheduling queues. 
+  * The mechanism is implemented here.   The actual scheduling policy is
+  * defined in sched() and pick_proc().
+  */
+   int q;	 				/* scheduling queue to use */
++	int p; /* policy queue to use */
+   int front;					/* add to front or back */
+ 
+ #if DEBUG_SCHED_CHECK
+@@ -515,21 +521,20 @@ register struct proc *rp;	/* this proces
+   if (rp->p_ready) kprintf("enqueue() already ready process\n");
+ #endif
+ 
++
+   /* Determine where to insert to process. */
+-  sched(rp, &q, &front);
++	sched(rp, &q, &p, &front);
+ 
+   /* Now add the process to the queue. */
+-  if (rdy_head[q] == NIL_PROC) {		/* add to empty queue */
+-      rdy_head[q] = rdy_tail[q] = rp; 		/* create a new queue */
++	if (rdy_head[q][p] == NIL_PROC) { /* add to empty queue */
++		rdy_head[q][p] = rdy_tail[q][p] = rp; /* create a new queue */
+       rp->p_nextready = NIL_PROC;		/* mark new end */
+-  } 
+-  else if (front) {				/* add to head of queue */
+-      rp->p_nextready = rdy_head[q];		/* chain head of queue */
+-      rdy_head[q] = rp;				/* set new queue head */
+-  } 
+-  else {					/* add to tail of queue */
+-      rdy_tail[q]->p_nextready = rp;		/* chain tail of queue */	
+-      rdy_tail[q] = rp;				/* set new queue tail */
++	} else if (front) { /* add to head of queue */
++		rp->p_nextready = rdy_head[q][p]; /* chain head of queue */
++		rdy_head[q][p] = rp; /* set new queue head */
++	} else { /* add to tail of queue */
++		rdy_tail[q][p]->p_nextready = rp; /* chain tail of queue */
++		rdy_tail[q][p] = rp; /* set new queue tail */
+       rp->p_nextready = NIL_PROC;		/* mark new end */
+   }
+ 
+@@ -553,9 +558,14 @@ register struct proc *rp;	/* this proces
+  * is picked to run by calling pick_proc().
+  */
+   register int q = rp->p_priority;		/* queue to use */
++  register int p = rp->p_scheduler; /* queue to use */
+   register struct proc **xpp;			/* iterate over queue */
+   register struct proc *prev_xp;
+ 
++
++/*	if (rp->p_scheduler == SCHED_FIFO)
++		kprintf("dequeue sched: %d ,tleft: %d ,rts: %d ,misc: %d, %s \n", rp->p_scheduler, rp->p_ticks_left, rp->p_rts_flags,rp->p_misc_flags, rp->p_name);
++*/
+   /* Side-effect for kernel: check if the task's stack still is ok? */
+   if (iskernelp(rp)) { 				
+ 	if (*priv(rp)->s_stack_guard != STACK_GUARD)
+@@ -572,12 +582,12 @@ register struct proc *rp;	/* this proces
+    * running by being sent a signal that kills it.
+    */
+   prev_xp = NIL_PROC;				
+-  for (xpp = &rdy_head[q]; *xpp != NIL_PROC; xpp = &(*xpp)->p_nextready) {
++  for (xpp = &rdy_head[q][p]; *xpp != NIL_PROC; xpp = &(*xpp)->p_nextready) {
+ 
+       if (*xpp == rp) {				/* found process to remove */
+           *xpp = (*xpp)->p_nextready;		/* replace with next chain */
+-          if (rp == rdy_tail[q])		/* queue tail removed */
+-              rdy_tail[q] = prev_xp;		/* set new tail */
++			if (rp == rdy_tail[q][p]) /* queue tail removed */
++				rdy_tail[q][p] = prev_xp; /* set new tail */
+           if (rp == proc_ptr || rp == next_ptr)	/* active process removed */
+               pick_proc();			/* pick new process to run */
+           break;
+@@ -594,22 +604,46 @@ register struct proc *rp;	/* this proces
+ /*===========================================================================*
+  *				sched					     * 
+  *===========================================================================*/
+-PRIVATE void sched(rp, queue, front)
+-register struct proc *rp;			/* process to be scheduled */
+-int *queue;					/* return: queue to use */
+-int *front;					/* return: front or back */
++PRIVATE void sched(rp, q_queue,p_queue, front)
++	register struct proc *rp; /* process to be scheduled */
++	int *q_queue; /* return: priority queue to use */
++	int *p_queue; /* return: policy queue to use */
++	int *front; /* return: front or back */
+ {
+-/* This function determines the scheduling policy.  It is called whenever a
++
++	/* This function determines the scheduling policy.  It is called whenever a
+  * process must be added to one of the scheduling queues to decide where to
+  * insert it.  As a side-effect the process' priority may be updated.  
+  */
++
++	switch (rp->p_scheduler) {
++	case SCHED_FIFO:
++		sched_fifo(rp, q_queue,p_queue, front);
++		break;
++	case SCHED_RR:
++		sched_rr(rp, q_queue,p_queue, front);
++		break;
++	default:
++		sched_other(rp, q_queue,p_queue, front);
++
++	}
++
++}
++
++PRIVATE void sched_other(rp, q_queue, p_queue, front)
++	register struct proc *rp; /* process to be scheduled */
++	int *q_queue; /* return: priority queue to use */
++	int *p_queue; /* return: policy queue to use */
++	int *front; /* return: front or back */
++{
++
+   int time_left = (rp->p_ticks_left > 0);	/* quantum fully consumed */
+ 
+   /* Check whether the process has time left. Otherwise give a new quantum 
+    * and lower the process' priority, unless the process already is in the 
+    * lowest queue.  
+    */
+-  if (! time_left) {				/* quantum consumed ? */
++	if (!time_left) { /* quantum consumed ? */
+       rp->p_ticks_left = rp->p_quantum_size; 	/* give new quantum */
+       if (rp->p_priority < (IDLE_Q-1)) {  	 
+           rp->p_priority += 1;			/* lower priority */
+@@ -620,34 +654,77 @@ int *front;					/* return: front or back
+    * so that it can immediately run. The queue to use simply is always the
+    * process' current priority. 
+    */
+-  *queue = rp->p_priority;
++	*q_queue = rp->p_priority;
++	*p_queue = rp->p_scheduler;
++	*front = time_left;
++}
++
++PRIVATE void sched_fifo(rp, q_queue, p_queue, front)
++	register struct proc *rp; /* process to be scheduled */
++	int *q_queue; /* return: priority queue to use */
++	int *p_queue; /* return: policy queue to use */
++	int *front; /* return: front or back */
++{
++
++	*q_queue = rp->p_priority;
++	*p_queue = rp->p_scheduler;
++	*front = 0;
++
++	/* dismissed: *front = (rp == prev_ptr); /* TRUE if preempted, FALSE otherwise */
++
++}
++
++PRIVATE void sched_rr(rp, q_queue, p_queue, front)
++	register struct proc *rp; /* process to be scheduled */
++	int *q_queue; /* return: priority queue to use */
++	int *p_queue; /* return: policy queue to use */
++	int *front; /* return: front or back */
++{
++
++	int time_left = (rp->p_ticks_left > 0); /* quantum fully consumed*/
++
++	/* Check whether the process has time left.
++	 * Otherwise give a new quantum and add it to the tail of the list
++	 */
++	if (!time_left) { /* quantum consumed ? */
++		rp->p_ticks_left = rp->p_quantum_size; /* give new quantum */
++	}
++
++	/* If there is time left, the process is added to the front of its queue,
++	 * so that it can immediately run. The queue to use simply is always the
++	 * process' current priority.
++	 */
++	*q_queue = rp->p_priority;
++	*p_queue = rp->p_scheduler;
+   *front = time_left;
+ }
+ 
+ /*===========================================================================*
+  *				pick_proc				     * 
+  *===========================================================================*/
+-PRIVATE void pick_proc()
+-{
+-/* Decide who to run now.  A new process is selected by setting 'next_ptr'.
++PRIVATE void pick_proc() {
++	/* Decide who to run now.  A new process is selected by setting 'next_ptr'.
+  * When a billable process is selected, record it in 'bill_ptr', so that the 
+  * clock task can tell who to bill for system time.
+  */
+   register struct proc *rp;			/* process to run */
+-  int q;					/* iterate over queues */
++	int p, q; /* iterate over queues */
+ 
+   /* Check each of the scheduling queues for ready processes. The number of
+    * queues is defined in proc.h, and priorities are set in the task table.
+    * The lowest queue contains IDLE, which is always ready.
+    */
+-  for (q=0; q < NR_SCHED_QUEUES; q++) {	
+-      if ( (rp = rdy_head[q]) != NIL_PROC) {
++	/* Within one priority level we additionally consider the different scheduling policies. */
++	for (q = 0; q < NR_SCHED_QUEUES; q++) {
++		for (p = 0; p < NR_SCHED_POLICIES; p++) {  /*see resource.h */
++			if ((rp = rdy_head[q][p]) != NIL_PROC) {
+           next_ptr = rp;			/* run process 'rp' next */
+           if (priv(rp)->s_flags & BILLABLE)	 	
+               bill_ptr = rp;			/* bill for system time */
+           return;				 
+       }
+   }
++	}
+ }
+ 
+ /*===========================================================================*
+diff -uprbBN minixx/src/kernel/proc.h minixx6/src/kernel/proc.h
+--- minixx/src/kernel/proc.h	2009-01-05 19:30:06.000000000 +0100
++++ minixx6/src/kernel/proc.h	2009-01-15 19:53:16.000000000 +0100
+@@ -83,6 +83,7 @@ struct proc {
+  * priority user processes to run round-robin with IDLE.
+  */
+ #define NR_SCHED_QUEUES   16	/* MUST equal minimum priority + 1 */
++#define NR_SCHED_POLICIES  3	/* we have one ready list (head/tail) per policy */
+ #define TASK_Q		   0	/* highest, used for kernel tasks */
+ #define MAX_USER_Q  	   0    /* highest priority for user processes */
+ #define USER_Q  	   7    /* default (should correspond to nice 0) */
+@@ -115,7 +116,7 @@ struct proc {
+  */
+ EXTERN struct proc proc[NR_TASKS + NR_PROCS];	/* process table */
+ EXTERN struct proc *pproc_addr[NR_TASKS + NR_PROCS];
+-EXTERN struct proc *rdy_head[NR_SCHED_QUEUES]; /* ptrs to ready list headers */
+-EXTERN struct proc *rdy_tail[NR_SCHED_QUEUES]; /* ptrs to ready list tails */
++EXTERN struct proc *rdy_head[NR_SCHED_QUEUES][NR_SCHED_POLICIES]; /* ptrs to ready list headers */
++EXTERN struct proc *rdy_tail[NR_SCHED_QUEUES][NR_SCHED_POLICIES]; /* ptrs to ready list tails */
+ 
+ #endif /* PROC_H */
+diff -uprbBN minixx/src/test/demo.sh minixx6/src/test/demo.sh
+--- minixx/src/test/demo.sh	1970-01-01 01:00:00.000000000 +0100
++++ minixx6/src/test/demo.sh	2009-01-15 13:25:28.000000000 +0100
+@@ -0,0 +1,39 @@
++
++if [ -z "$*" ]; then 
++	round=3
++	schedround=1
++else
++	round=1
++	fixedsched=$1
++	schedround=3
++
++fi
++
++sched=0
++while [ "$sched" -lt $round ]
++do
++	if [ ! -z $fixedsched ]; then
++		sched=$fixedsched
++	fi
++
++	case $sched in
++		0)name=F_OTHER;;
++		1)name=F_FIFO;;
++		2)name=F_RR;;
++		*)echo "Illegal scheduling policy"; exit 1 ;;
++	esac
++
++
++	i=0
++	while [ "$i" -lt $schedround ]
++	do
++		eval test -f $name$i || ln -s test_sched_fib $name$i 
++		echo Start Prozess $name$i
++		eval time /usr/src/test/$name$i 46 $sched > $name"$1".txt 2>&1 & 
++		sleep 1
++		i=`expr $i + 1`
++		#rm -f F_FIFO*
++	done
++	sched=`expr $sched + 1`
++
++done
+diff -uprbBN minixx/src/test/Makefile minixx6/src/test/Makefile
+--- minixx/src/test/Makefile	2009-01-05 19:30:06.000000000 +0100
++++ minixx6/src/test/Makefile	2009-01-11 16:47:40.000000000 +0100
+@@ -7,7 +7,7 @@ OBJ=	test1  test2  test3  test4  test5  
+ 	test10        test12 test13 test14 test15 test16 test17 test18 test19 \
+ 	       test21 test22 test23        test25 test26 test27 test28 test29 \
+ 	test30 test31 test32        test34 test35 test36 test37 test38 test39 \
+-	test40 test41 t10a t11a t11b test_scheduler
++	test40 test41 t10a t11a t11b test_scheduler	test_fibonacci	test_sched_fib
+ 
+ BIGOBJ=  test20 test24
+ ROOTOBJ= test11 test33
+@@ -77,3 +77,5 @@ test39:	test39.c
+ test40:	test40.c
+ test41: test41.c
+ test_scheduler: test_scheduler.c
++test_fibonacci: test_fibonacci.c
++test_sched_fib: test_sched_fib.c
+diff -uprbBN minixx/src/test/test_fibonacci.c minixx6/src/test/test_fibonacci.c
+--- minixx/src/test/test_fibonacci.c	1970-01-01 01:00:00.000000000 +0100
++++ minixx6/src/test/test_fibonacci.c	2009-01-11 14:00:03.000000000 +0100
+@@ -0,0 +1,25 @@
++/* calculate faculty */
++
++#include <stdlib.h>
++#include <stdio.h>
++
++
++int fib (long n) {
++	if (n <= 2) return 1;
++	else return fib(n-1) + fib(n-2);
++}
++
++
++int main(int argc, char *argv[]) {
++
++	long i = 0;
++	int arg = 0;
++
++	if (argc > 1) {
++		arg = atoi(argv[1]);
++		i = fib((long)arg);
++		printf("fib(%d) = %d\n", arg, i);
++	}
++
++	return 0;
++}
+diff -uprbBN minixx/src/test/test_sched_fib.c minixx6/src/test/test_sched_fib.c
+--- minixx/src/test/test_sched_fib.c	1970-01-01 01:00:00.000000000 +0100
++++ minixx6/src/test/test_sched_fib.c	2009-01-11 20:17:53.000000000 +0100
+@@ -0,0 +1,71 @@
++/* set different scheduling policies for a process */
++
++#include <lib.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <unistd.h>
++#include <time.h>
++#include <sys/resource.h>
++#include <sys/wait.h>
++
++
++#define NR_OF_WORKERS 3
++
++int fib (long n) {
++	if (n <= 2) return 1;
++	else return fib(n-1) + fib(n-2);
++}
++
++
++int main(int argc, char *argv[]) {
++
++	int n = 42;
++	long result = 0;
++	int pid = 0;
++	int sched = SCHED_RR;
++	int rs, status, i;
++	clock_t start_ticks, elapsed;
++
++	if (argc > 1)
++		n =  atoi(argv[1]); /*fibonacci(n)*/
++
++	if (argc > 2)
++		sched =  atoi(argv[2]);
++
++	pid = fork();
++
++	if (pid == 0) {
++		/* child calculates fibonacci */
++		printf("calculating fib(%d) \n", n);
++
++		start_ticks = clock();
++
++		result = fib(n);
++
++		elapsed = clock() - start_ticks;
++
++		printf("fib(%d) = %d \n", n, result);
++		printf("took %.2lf seconds = %d clockticks \n", (float)elapsed / (float)CLOCKS_PER_SEC, elapsed);
++
++	}else {
++		/* set the scheduling policy for the child */
++		printf("setting scheduling policy to ");
++
++		switch(sched) {
++		case SCHED_FIFO: printf("FIFO \n"); break;
++		case SCHED_RR: printf("RR \n"); break;
++		case SCHED_OTHER: printf("OTHER \n"); break;
++		default:
++			printf("wrong policy argument - using SCHED_OTHER. \n");
++			sched = SCHED_OTHER;
++		}
++
++		rs = sched_setscheduler(pid, sched, 0);
++
++		if (rs != sched)
++			printf("set policy FAILED and returned: %d \n", rs);
++	}
++	wait(&status);
++
++	return 0;
++}
+diff -uprbBN minixx/src/test/test_scheduler.c minixx6/src/test/test_scheduler.c
+--- minixx/src/test/test_scheduler.c	2009-01-06 11:51:52.000000000 +0100
++++ minixx6/src/test/test_scheduler.c	2009-01-11 16:14:25.000000000 +0100
+@@ -1,27 +1,28 @@
++/* set different scheduling policies for a process */
++
+ #include <lib.h>
+ #include <stdio.h>
+-#include "/usr/src/include/sys/resource.h"
++#include <stdlib.h>
++#include <sys/resource.h>
+ 
+-int mycall(int a, int b, int c) {
++int main(int argc, char *argv[]) {
+ 
+-	message m;
+-	m.m1_i1 = a;
+-	m.m1_i2 = b;
+-	m.m1_i3 = c;
++	int rs, rg;
++	int pid = 0;
++	int sched = SCHED_RR;
+ 
+-	return (_syscall(MM,57, &m));
++	if (argc > 1)
++		pid =  atoi(argv[1]);
+ 
+-}
++	if (argc > 2)
++		sched =  atoi(argv[2]);
+ 
+-void main(int argc, char argv[]) {
+ 
+-	int r1, r;
+-	pid_t pid = 0;
+-	if (argc > 1)
+-		pid = atoi(argv[1]);
++	rs = sched_setscheduler((pid_t) pid, sched, 0);
++
++	rg = sched_getscheduler(pid);
++	printf("r set:%d get:%d \n", rs, rg);
+ 
+-	r1 = sched_setscheduler(pid,2,0);
+ 
+-	r = sched_getscheduler(pid);
+-	printf("r %d %d \n", r1, r);
++	return 0;
+ }
