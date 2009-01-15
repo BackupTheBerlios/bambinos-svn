@@ -1,0 +1,42 @@
+=================================================
+
+PS Vertiefung Betriebssysteme Winter 2008/09
+
+ASSIGNMENT 2 
+
+Team: Gratz, Kasinger 
+
+=================================================
+
+
+What we have implemented:
+-------------------------
+
+	* All change requests of Assignment 6
+	
+
+
+Notes on the implementation:
+-----------------------------
+
+Given the somewhat unspecific POSIX-specs we implemented multiple process-ready-queues (head/tail) by using a 2dimensional array. If there are several processes at the same priority-level with different policies we prefer FIFO over RR over OTHER. 
+
+Please see the supplied diff-file for the changes made.
+
+
+
+HOW TO RUN:
+-----------
+
+For testing purposes we implemented a little program test_sched_fib.c that calcultes fibonacci-numbers using the simple, plain recursive algorithm. The program forks and the parent sets the priority of the fibonacc-calculating child-process. 
+
+The syntax is test_sched_fib [n] [s] with n defining the fibonacci-number to be calculated and s the scheduler that should be used (0=FIFO, 1=RR, 2=OTHER).
+
+For more convenience we also created a shell-script demo.sh that starts multiple test_sched_fib with different schedule policies. Syntax is demo.sh [s] (see above for values of s) - if you ommit s demo.sh creates 2 processes for each policy. For simplicity demo.sh always creates the fibonacci of 46 - depending on your cpu this might take some time. Anyway this gives you enough time to watch the processes schedule by using "top".
+  
+
+--
+Have a nice day!
+
+
+PS: Now a FIFO-process does stop "top" from working ;-) 
